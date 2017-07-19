@@ -15,8 +15,6 @@ function(input, output, session) {
     if (is.null(input$datafile))
       return(NULL)                
     data<-read.csv(input$datafile$datapath, header=input$header, sep=input$sep, quote=input$quote)
-    data <- data[, -ncol(data)]
-    
     ncol<-NCOL(data)
     label<-c()
     for(i in 1:ncol){
