@@ -6,12 +6,14 @@ library(biwavelet)
 library(data.table)
 library(stringr)
 library(ape)
+library(DT)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 
 navbarPage("Wave Analysis",
+  #### Single Sample ####
   tabPanel("Single Sample Explore",
-           #### Single Sample ####
+
            fluidPage(
              #### sidbar input and layout ####
              sidebarLayout(
@@ -209,8 +211,8 @@ navbarPage("Wave Analysis",
              )
            )
   ),
+  #### Batching Processing ####
   tabPanel("Batching Processing"
-           
   )
   
 )

@@ -6,11 +6,13 @@ library(biwavelet)
 library(data.table)
 library(stringr)
 library(ape)
+library(DT)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 #### Service Function ####
 function(input, output, session) {
-#### 00.data manipulation ####  
+###=== Single Sample Explore ===###
+  #### 00.data manipulation ####  
   dataframe<-eventReactive(input$analyze, {
     if (is.null(input$datafile))
       return(NULL)                
@@ -68,7 +70,7 @@ function(input, output, session) {
   })
     ###=== 00.end ===###
   
-#### 01.data View ####
+  #### 01.data View ####
   #=== manipulation part ===#
   plot1<-reactive({ 
     df <- dataframe()
@@ -132,7 +134,7 @@ function(input, output, session) {
   })
     ###=== 01.end ===###
   
-#### 02.wave features ####
+  #### 02.wave features ####
   #=== manipulation part ===#
   plot02.01<-reactive({ # plot among different features
     df <- res()
@@ -223,7 +225,7 @@ function(input, output, session) {
   })
       ###=== 02.end ===###
   
-#### 03.graphic results ####
+  #### 03.graphic results ####
   #=== manipulation part ===#
   waveletTransform<- reactive({
     df03.00<-dataframe()
@@ -301,7 +303,7 @@ function(input, output, session) {
                       selected = colna03[1])
   })
     ###=== 03.end ===###
-#### 04.spatial features ####
+  #### 04.spatial features ####
   #=== manipulation part ===#
   plot04.01<-reactive({
     gp04<-NULL
@@ -444,4 +446,6 @@ function(input, output, session) {
                        selected = options04[1])
   })
     ###=== 04.end ===###
+###=== Batching Processing ===###
+
 }
