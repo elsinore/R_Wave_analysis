@@ -39,12 +39,17 @@ function(input, output, session) {
     if (is.null(input$datafile))
       return(NULL)
     resin<-dataframe()
+    ## Basic feasture
     resin<-WZY.EMG.F(resin)
     resin <- resin$results
+    ## Wavelet Cluster
     resclust<-waveClust()
-    resclust<-as.matrix(resclust)
-    resclust<-resclust[,1]
-    resin <- data.frame(resin, Dissimilarity = resclust)
+    resclu<-as.matrix(resclust)
+    resclu<-resclu[,1]
+    fit <- hclust(resclust, method = "ward.D")
+    groups <- cutree(fit, k = 2)
+    ## Final combination
+    resin <- data.frame(resin, Dissimilarity = resclu, Group = groups)
     resin
   })
   dataSpa<-reactive({
@@ -182,7 +187,7 @@ function(input, output, session) {
     obin02 <- res()
     dsnames <- row.names(obin02)
     colna02 <- colnames(obin02)
-    colna02 <- c(colna02, "Dissimilarity")
+    colna02 <- c(colna02, "Dissimilarity", "Group")
     cb_options <- list()
     cb_options[ colna02] <- colna02
     updateRadioButtons(session, "yaxisGrp",
