@@ -7,6 +7,7 @@ library(data.table)
 library(stringr)
 library(ape)
 library(DT)
+library(shinyFiles)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 #### Service Function ####
@@ -447,5 +448,7 @@ function(input, output, session) {
   })
     ###=== 04.end ===###
 ###=== Batching Processing ===###
-
+  volumes <- c('Root'="/Users/HSBR")
+  shinyDirChoose(input, 'directory', roots=volumes, session=session)
+  output$directorypath <- renderPrint({parseDirPath(volumes, input$directory)})
 }

@@ -7,6 +7,7 @@ library(data.table)
 library(stringr)
 library(ape)
 library(DT)
+library(shinyFiles)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 
@@ -212,7 +213,22 @@ navbarPage("Wave Analysis",
            )
   ),
   #### Batching Processing ####
-  tabPanel("Batching Processing"
+  tabPanel("Batching Processing",
+           headerPanel(
+             'Selections with shinyFiles',
+             'shinyFiles example'
+           ),
+           sidebarPanel(
+             shinyDirButton('directory', 'Folder select', 'Please select a folder')
+             ),
+           mainPanel(
+             tags$h4('The output of a folder selection'),
+             tags$p(HTML('When a folder is selected the position of the folder is sent to 
+                         the server and can be formatted with <code>parseDirPath()</code> to reflect a
+                         standard path string as returned by e.g. <code>choose.dir()</code> on windows
+                         systems.')),
+             verbatimTextOutput('directorypath')
+                         )
   )
   
 )
