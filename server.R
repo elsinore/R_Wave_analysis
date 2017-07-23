@@ -447,8 +447,23 @@ function(input, output, session) {
                        selected = options04[1])
   })
     ###=== 04.end ===###
-###=== Batching Processing ===###
+####=== Batching Processing ===####
   volumes <- c('Root'="/Users/HSBR")
   shinyDirChoose(input, 'directory', roots=volumes, session=session)
-  output$directorypath <- renderPrint({parseDirPath(volumes, input$directory)})
+  #### 00.data manipulation ####
+  fileList<-reactive({
+    fileDir<-parseDirPath(volumes, input$directory)
+    fl<-list.files(path = fileDir, all.files = FALSE)
+    fl<-sort(fl)
+    fl
+  })
+  output$tableBatch01.00<-renderTable({
+    if(is.null(input$directory)){
+      return(NULL)
+    } else
+    tablein01.00<-fileList()
+    No.<-c(1:length(tablein01.00))
+    tablein01.00<-cbind(No., data = tablein01.00)
+    tablein01.00
+  })
 }

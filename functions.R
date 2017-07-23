@@ -172,3 +172,102 @@ wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep) {
        xlab="Frequency (Hz)", ylab="Strength",
         ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectrum")
 }
+
+#=== Function for Batching Processing ===####
+wzy.batch <- function (wzy) {
+  library("biwavelet")
+  require("biwavelet")
+  if (lastCol) {
+    wzy <- wzy[, -ncol(wzy)]
+  }
+  if (class(wzy) != "matrix") {
+    wzy <- as.matrix(wzy)
+  }
+  #### Global Variabels ####
+  wzyo<-wzy
+  wzy<-wzy[,-1]
+  ncol <- ncol(wzy)
+  nrow <- nrow(wzy)
+  ncolo <- ncol(wzyo)
+  nrowo <- nrow(wzyo)
+  #### Easy calculation features ####
+  iemg <- colSums(abs(wzy)) # Integrated EMG (IEMG)
+  mav <- iemg/nrow # Mean Absolute Value (MAV)
+  var <- colSums(wzy^2)/(nrow-1) # Variance of EMG (VAR)
+  rms <- sqrt(colSums(wzy^2)/nrow) # Root Mean Square (RMS)
+  # Finished easy part
+  ###
+  #### calculate the maximum amplitude (MA) ####
+  main<-0
+  ma<-c()
+  for (main in 1:ncol){
+    ma<-c(ma, max(wzy[, main])-min(wzy[, main]))
+  }
+  # finished calculation of Maximum Amplitude (MA)
+  ###
+  #### calculate the Waveform Length (WL) ####
+  wl <- c(0)
+  absDiff <-0
+  y<-0
+  for(j in 1:ncol) {
+    y <- 0
+    for(i in 1:(nrow-1)) {
+      absDiff <- abs(wzy[i+1,j]-wzy[i,j])
+      y <- y + absDiff
+    }
+    wl[j]<-y
+  }
+  # Finished calculation of Waveform Length (WL)
+  ###
+  #### calculate the Main Period (MP) ####
+  dw<-0
+  mp<-c()
+  for(dw in 2:ncolo){
+    x<-c()
+    y<-c()
+    s<-c()
+    max<-0
+    row<-0
+    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]))
+    y<-rowSums(abs(dwt$wave)^2)
+    x<-dwt$period
+    s<-cbind(x, y)
+    max<-max(y)
+    row<-which(s[, 2] == max)
+    out <- s[row, 1]
+    mp<-c(mp, out)
+  }
+  mp<-as.vector(mp)
+  # Finished calculation of Main Period (MP)
+  ###
+  #### calculate the Mean Power Frequency (MPF) ####
+  timeStep <- wzyo[3, 1]-wzyo[2, 1]
+  sampleSize <- nrow
+  Fs <- sampleSize/(sampleSize*timeStep)
+  N <- sampleSize
+  seq <- c(1:(N/2))
+  xv <-(seq/N)*Fs
+  mpfin <- 0
+  mpf<-c()
+  for (mpfin in 1:ncol){
+    X.k <- fft(wzy[, mpfin])
+    mod <- Mod(X.k)
+    mod<-mod[1:(N/2)]
+    mpf <- c(mpf, sum(mod*xv)/sum(mod))
+  }
+  #= finished calculation of Mean Power Frequency
+  ###
+  ##### result construction ####
+  res<-data.frame(
+    row.names = colnames(wzy),
+    Int = iemg,
+    MAV = mav,
+    VAR = var,
+    RMS = rms,
+    WL = wl,
+    MP = mp,
+    MA = ma,
+    MPF = mpf
+  )
+  return(list(data=wzyo, results=res))
+}

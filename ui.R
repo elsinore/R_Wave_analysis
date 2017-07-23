@@ -214,20 +214,27 @@ navbarPage("Wave Analysis",
   ),
   #### Batching Processing ####
   tabPanel("Batching Processing",
-           headerPanel(
-             'Selections with shinyFiles',
-             'shinyFiles example'
-           ),
+           #### sidbar input and layout ####
            sidebarPanel(
-             shinyDirButton('directory', 'Folder select', 'Please select a folder')
+             #### 01. Data Input ####
+             conditionalPanel(
+               'input.dataset2 === "Data Input"',
+               h4("Data Input"),
+               verticalLayout(
+                 shinyDirButton('directory', 'Folder select', 'Please select a folder'),
+                 actionButton("anB01", "Analyze")
+               )
+             )
              ),
+           #### The Result Window ####
            mainPanel(
-             tags$h4('The output of a folder selection'),
-             tags$p(HTML('When a folder is selected the position of the folder is sent to 
-                         the server and can be formatted with <code>parseDirPath()</code> to reflect a
-                         standard path string as returned by e.g. <code>choose.dir()</code> on windows
-                         systems.')),
-             verbatimTextOutput('directorypath')
+             tabsetPanel(
+               id = 'dataset2',
+               #### 01.Data Input ####
+               tabPanel("Data Input",
+                        tableOutput("tableBatch01.00")
+               )
+             )
                          )
   )
   
