@@ -453,7 +453,9 @@ function(input, output, session) {
   #### 00.data manipulation ####
   fileList<-reactive({
     fileDir<-parseDirPath(volumes, input$directory)
+    pat = ".csv"
     fl<-list.files(path = fileDir, all.files = FALSE)
+    fl <- grep(pat, fl, value = TRUE)
     fl<-sort(fl)
     fl
   })

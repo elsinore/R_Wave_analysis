@@ -177,9 +177,6 @@ wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep) {
 wzy.batch <- function (wzy) {
   library("biwavelet")
   require("biwavelet")
-  if (lastCol) {
-    wzy <- wzy[, -ncol(wzy)]
-  }
   if (class(wzy) != "matrix") {
     wzy <- as.matrix(wzy)
   }
@@ -257,6 +254,12 @@ wzy.batch <- function (wzy) {
   }
   #= finished calculation of Mean Power Frequency
   ###
+  #### calculate the dissimilarity ####
+  similarity<-WZY.Wavelet.clust(wzyo)
+  resclu<-as.matrix(similarity)
+  resclu<-resclu[,1]
+  fit <- hclust(similarity, method = "ward.D")
+  groups <- cutree(fit, k = 2)
   ##### result construction ####
   res<-data.frame(
     row.names = colnames(wzy),
@@ -267,7 +270,9 @@ wzy.batch <- function (wzy) {
     WL = wl,
     MP = mp,
     MA = ma,
-    MPF = mpf
+    MPF = mpf,
+    Dissimilarity = resclu,
+    Group = groups
   )
-  return(list(data=wzyo, results=res))
+  return(res)
 }
