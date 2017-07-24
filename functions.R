@@ -35,15 +35,9 @@ WZY.convertDist <- function(inDist) {
 # 9  CFMG DMNR 0.09332092
 # 10 CFMG DILG 0.02060062
 #=== Mathematical Representation of Widely used Wave Feature Extraction ####
-WZY.EMG.F <- function(wzy, lastCol = FALSE) {
+WZY.EMG.F <- function(wzy) {
   library("biwavelet")
   require("biwavelet")
-  if (lastCol) {
-    wzy <- wzy[, -ncol(wzy)]
-  }
-  if (class(wzy) != "matrix") {
-    wzy <- as.matrix(wzy)
-  }
   #### Global Variabels ####
   wzyo<-wzy
   wzy<-wzy[,-1]
@@ -170,11 +164,11 @@ wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep) {
   plot.data[xv[2:(N/2)],2] <- 2*plot.data[xv[2:(N/2)],2] 
   plot(plot.data, t="h", lwd=2, main="", 
        xlab="Frequency (Hz)", ylab="Strength",
-        ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectrum")
+       ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectrum")
 }
 
 #=== Function for Batching Processing ===####
-wzy.batch <- function (wzy) {
+wzy.batch <- function (wzy, loc) {
   library("biwavelet")
   require("biwavelet")
   if (class(wzy) != "matrix") {
@@ -274,5 +268,20 @@ wzy.batch <- function (wzy) {
     Dissimilarity = resclu,
     Group = groups
   )
+  ncol04 <- ncol(res)
+  rownames04 <- colnames(res)
+  ozone.dists<- as.matrix(dist(cbind(loc[, 2], loc[, 3])))
+  ozone.dists.inv <- 1/ozone.dists
+  diag(ozone.dists.inv) <- 0
+  P.value <- c()
+  Moran.I <- c()
+  for(resin04 in 1:ncol04){
+    moran <- Moran.I(res[, resin04], ozone.dists.inv)
+    Moran.I <- c(Moran.I, moran$observed)
+    P.value <- c(P.value, moran$p.value)
+  }
+  Moran.I <- as.numeric(Moran.I)
+  P.value <- as.numeric(P.value)
+  res<-rbind(res, "Moran Index" = Moran.I, "P value" = P.value)
   return(res)
 }

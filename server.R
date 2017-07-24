@@ -396,6 +396,8 @@ function(input, output, session) {
       ozone <- dataLoc()
       res04t <- res()
       ncol04 <- ncol(res04t)
+      res04t<-res04t[-1,]
+      ozone<-ozone[-1,]
       rownames04 <- colnames(res04t)
       ozone.dists<- as.matrix(dist(cbind(ozone[, 2], ozone[, 3])))
       ozone.dists.inv <- 1/ozone.dists
@@ -453,7 +455,7 @@ function(input, output, session) {
   #### 00.data manipulation ####
   fileList<-reactive({
     fileDir<-parseDirPath(volumes, input$directory)
-    pat = ".csv"
+    pat = "\\.csv"
     fl<-list.files(path = fileDir, all.files = FALSE)
     fl <- grep(pat, fl, value = TRUE)
     fl<-sort(fl)
