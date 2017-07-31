@@ -8,6 +8,7 @@ library(stringr)
 library(ape)
 library(DT)
 library(shinyFiles)
+library(shinyjs)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 #### Service Function ####
@@ -31,11 +32,17 @@ function(input, output, session) {
     colnames(data)<-label
     data
   })
+
   waveClust<-eventReactive(input$analyze, {
     if (is.null(input$datafile))
       return(NULL)    
     similarity<-dataframe()
-    similarity<-WZY.Wavelet.clust(similarity)
+    withBusyIndicatorServer("analyze", {
+      similarity<-WZY.Wavelet.clust(similarity)
+      if (is.null(input$datafile)) {
+        stop("choose another option")
+      }
+    })
     similarity
   })
   res<-eventReactive(input$analyze, {
@@ -133,6 +140,7 @@ function(input, output, session) {
                            selected = "")
     }
   })
+
     ###=== 01.end ===###
   
   #### 02.wave features ####
@@ -453,6 +461,46 @@ function(input, output, session) {
   volumes <- c('Root'="/Users/HSBR")
   shinyDirChoose(input, 'directory', roots=volumes, session=session)
   #### 00.data manipulation ####
+  #=== manipulation part ===#
+  resB01<-eventReactive(input$anB01, {
+    Dir<-parseDirPath(volumes, input$directory)
+    fl<-fileList()
+    pat01<-"TIF"
+    pat01_01<-"00"
+    pat02<-"02"
+    prefix_position<-unlist(gregexpr(pattern = pat01, fl))
+    prefix<-substr(fl, 1, prefix_position-1)
+    res<-data.frame()
+    ids<-c()
+    while(length(prefix) >= 2){
+      id<-c()
+      InUseName<-grep(paste(pat01, pat01_01, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
+      InUseName02<-grep(paste(pat01, pat02, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
+      file01<-read.csv(paste(Dir, "/",InUseName, sep = ""), header = TRUE, sep = ",")
+      file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
+      res00<-wzy.batch(wzy = file01, loc = file02)
+      ids<-c(ids, prefix[1])
+      res00<-cbind(res00, id = prefix[1])
+      res<-rbind(res, res00)
+      prefix<-prefix[! prefix %in% prefix[1]]
+    }
+    res
+  })
+  
+  #=== output part ===#
+  output$tableBatch01.00<-renderTable({
+    if(is.null(input$directory)){
+      return(NULL)
+    } else
+      tablein01.00<-fileList()
+    No.<-c(1:length(tablein01.00))
+    tablein01.00<-cbind(No., data = tablein01.00)
+    tablein01.00
+  })
+  output$test<-renderTable({
+  resB01()
+  })
+  #=== input update part ===#
   fileList<-reactive({
     fileDir<-parseDirPath(volumes, input$directory)
     pat = "\\.csv"
@@ -460,14 +508,5 @@ function(input, output, session) {
     fl <- grep(pat, fl, value = TRUE)
     fl<-sort(fl)
     fl
-  })
-  output$tableBatch01.00<-renderTable({
-    if(is.null(input$directory)){
-      return(NULL)
-    } else
-    tablein01.00<-fileList()
-    No.<-c(1:length(tablein01.00))
-    tablein01.00<-cbind(No., data = tablein01.00)
-    tablein01.00
   })
 }

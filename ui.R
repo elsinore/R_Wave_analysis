@@ -8,6 +8,7 @@ library(stringr)
 library(ape)
 library(DT)
 library(shinyFiles)
+library(shinyjs)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 
@@ -16,6 +17,8 @@ navbarPage("Wave Analysis",
   tabPanel("Single Sample Explore",
 
            fluidPage(
+             useShinyjs(),
+             tags$style(appCSS),
              #### sidbar input and layout ####
              sidebarLayout(
                sidebarPanel(
@@ -28,7 +31,13 @@ navbarPage("Wave Analysis",
                    checkboxInput('header', 'Header', TRUE),
                    radioButtons('sep', 'Separator', c(Comma=',', Semicolon=';', Tab='\t'), ','),
                    radioButtons('quote', 'Quote', c(None='', 'Double Quote'='"', 'Single Quote'="'"), ''),
-                   actionButton("analyze", "Analyze"),
+                   withBusyIndicatorUI(
+                     actionButton(
+                       "analyze",
+                       "Analyze",
+                       class = "btn-primary"
+                     )
+                   ),
                    #= end of file inpur
                    # select column
                    checkboxInput('selall01', 'Select All Cells', TRUE),
@@ -232,7 +241,10 @@ navbarPage("Wave Analysis",
                id = 'dataset2',
                #### 01.Data Input ####
                tabPanel("Data Input",
-                        tableOutput("tableBatch01.00")
+                        verticalLayout(
+                          tableOutput("tableBatch01.00"),
+                          tableOutput("test")
+                        )
                )
              )
                          )
