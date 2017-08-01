@@ -18,7 +18,6 @@ navbarPage("Wave Analysis",
 
            fluidPage(
              useShinyjs(),
-             tags$style(appCSS),
              #### sidbar input and layout ####
              sidebarLayout(
                sidebarPanel(
@@ -57,7 +56,7 @@ navbarPage("Wave Analysis",
                    checkboxInput('resSlect', 'Select All Cells', TRUE),
                    selectizeInput('c2', 'Select Cells', choices = NULL, multiple = TRUE),
                    checkboxGroupInput('c2.2', 'Select features', choices = NULL),
-                   withMathJax(
+                   withMathJax.local(
                      helpText("Details of each feature:"),
                      helpText("Here \\(N\\) denotes the length of the signal and \\(x_n\\) represents the wave in a segment"),
                      helpText("01. Integrated (Int): $$Int = \\sum_{n=1}^N |x_n|$$"),
@@ -74,7 +73,8 @@ navbarPage("Wave Analysis",
                      tags$hr(),
                      helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
                      tags$hr(),
-                     helpText("08. Mean Power Frequency (MPF): $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)")
+                     helpText("08. Mean Power Frequency (MPF): 
+                              $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)")
                    )
                  ),
                  #=== end.02 ===#
@@ -230,9 +230,36 @@ navbarPage("Wave Analysis",
                'input.dataset2 === "Data Input"',
                h4("Data Input"),
                verticalLayout(
+                 textInput("postfix", "File format", ".csv"),
                  shinyDirButton('directory', 'Folder select', 'Please select a folder'),
-                 actionButton("anB01", "Analyze")
+                 textInput("pat01", "Prefix mark", "TIF"),
+                 textInput("pat01_01", "Image file number", "00"),
+                 textInput("pat02", "Location file number", "02"),
+                 tags$hr(),
+                 withBusyIndicatorUI(
+                   actionButton(
+                     "anB01",
+                     "Analyze",
+                     class = "btn-primary"
+                   )
+                 )
                )
+             ),
+             #### 02. Statistical Analysis ####
+             conditionalPanel(
+               'input.dataset2 == "Statistical Analysis"',
+               h4("Statistical Analysis"),
+                 numericInput("GroupMarkB02", "Select Group and Set Number", value = 1, min = 0),
+                 actionButton("AssigB02", "Assign"),
+                 actionButton("updateB02", "Initialize"),
+               tags$hr(),
+                 withBusyIndicatorUI(
+                   actionButton(
+                     "staB02",
+                     "Statistical Analysis",
+                     class = "btn-primary"
+                   )
+                 )
              )
              ),
            #### The Result Window ####
@@ -243,11 +270,19 @@ navbarPage("Wave Analysis",
                tabPanel("Data Input",
                         verticalLayout(
                           tableOutput("tableBatch01.00"),
-                          tableOutput("test")
+                          DT::dataTableOutput('tableB01.01'),
+                          DT::dataTableOutput('tableB01.02')
                         )
+               ),
+               tabPanel("Statistical Analysis",
+                        verticalLayout(
+                          tags$hr("Group Setting"),
+                          DT::dataTableOutput('tableB02.00')
+                        )
+
                )
              )
-                         )
+           )
   )
   
 )

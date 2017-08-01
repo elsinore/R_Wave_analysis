@@ -285,7 +285,6 @@ wzy.batch <- function (wzy, loc) {
   res<-rbind(res, "Moran Index" = Moran.I, "P value" = P.value)
   return(res)
 }
-
 #=== UI Functions ####
 # All the code in this file needs to be copied to your Shiny app, and you need
 # to call `withBusyIndicatorUI()` and `withBusyIndicatorServer()` in your app.
@@ -351,24 +350,13 @@ errorFunc <- function(err, buttonId) {
   shinyjs::html(html = errMessage, selector = errElMsg)
   shinyjs::show(selector = errEl, anim = TRUE, animType = "fade")
 }
-appCSS <- "
-.btn-loading-container {
-margin-left: 10px;
-font-size: 1.2em;
-}
-.btn-done-indicator {
-color: green;
-}
-.btn-err {
-margin-top: 10px;
-color: red;
-}
-"
-
-foo <- function() {
-  message("one message")
-  Sys.sleep(1)
-  message("two messages")
-  Sys.sleep(1)
-  warning("...and a warning")
+withMathJax.local <- function(...) {
+  path <- "MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+  tagList(
+    tags$head(
+      singleton(tags$script(src = path, type = 'text/javascript'))
+    ),
+    ...,
+    tags$script(HTML('if (window.MathJax) MathJax.Hub.Queue(["Typeset", MathJax.Hub]);'))
+  )
 }

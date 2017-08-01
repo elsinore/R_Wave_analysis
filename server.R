@@ -13,6 +13,7 @@ source("functions.R")
   ###=== end of packages and functions loading ===###
 #### Service Function ####
 function(input, output, session) {
+  values<-reactiveValues()
 ###=== Single Sample Explore ===###
   #### 00.data manipulation ####  
   dataframe<-eventReactive(input$analyze, {
@@ -32,7 +33,6 @@ function(input, output, session) {
     colnames(data)<-label
     data
   })
-
   waveClust<-eventReactive(input$analyze, {
     if (is.null(input$datafile))
       return(NULL)    
@@ -460,33 +460,55 @@ function(input, output, session) {
 ####=== Batching Processing ===####
   volumes <- c('Root'="/Users/HSBR")
   shinyDirChoose(input, 'directory', roots=volumes, session=session)
-  #### 00.data manipulation ####
+  #### 01.data input ####
   #=== manipulation part ===#
   resB01<-eventReactive(input$anB01, {
     Dir<-parseDirPath(volumes, input$directory)
     fl<-fileList()
-    pat01<-"TIF"
-    pat01_01<-"00"
-    pat02<-"02"
+    pat01<-input$pat01
+    pat01_01<-input$pat01_01
+    pat02<-input$pat02
     prefix_position<-unlist(gregexpr(pattern = pat01, fl))
     prefix<-substr(fl, 1, prefix_position-1)
     res<-data.frame()
     ids<-c()
-    while(length(prefix) >= 2){
+    withBusyIndicatorServer("anB01",{
       id<-c()
       InUseName<-grep(paste(pat01, pat01_01, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
       InUseName02<-grep(paste(pat01, pat02, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
-      file01<-read.csv(paste(Dir, "/",InUseName, sep = ""), header = TRUE, sep = ",")
+      file01<-read.csv(paste(Dir, "/", InUseName, sep = ""), header = TRUE, sep = ",")
       file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
+      rawBatchData<-file01
       res00<-wzy.batch(wzy = file01, loc = file02)
       ids<-c(ids, prefix[1])
       res00<-cbind(res00, id = prefix[1])
       res<-rbind(res, res00)
       prefix<-prefix[! prefix %in% prefix[1]]
-    }
+      while(length(prefix) > 1){
+        id<-c()
+        InUseName<-grep(paste(pat01, pat01_01, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
+        InUseName02<-grep(paste(pat01, pat02, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
+        file01<-read.csv(paste(Dir, "/", InUseName, sep = ""), header = TRUE, sep = ",")
+        file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
+        rawBatchData<-cbind(rawBatchData, file01[,-1])
+        res00<-wzy.batch(wzy = file01, loc = file02)
+        ids<-c(ids, prefix[1])
+        res00<-cbind(res00, id = prefix[1])
+        res<-rbind(res, res00)
+        prefix<-prefix[! prefix %in% prefix[1]]
+      }
+    })
+    res<-list(res, ids, rawBatchData)
     res
   })
-  
+  fileList<-reactive({
+    fileDir<-parseDirPath(volumes, input$directory)
+    pat = input$postfix
+    fl<-list.files(path = fileDir, all.files = FALSE)
+    fl <- grep(pat, fl, value = TRUE)
+    fl<-sort(fl)
+    fl
+  })
   #=== output part ===#
   output$tableBatch01.00<-renderTable({
     if(is.null(input$directory)){
@@ -497,16 +519,36 @@ function(input, output, session) {
     tablein01.00<-cbind(No., data = tablein01.00)
     tablein01.00
   })
-  output$test<-renderTable({
-  resB01()
+  output$tableB01.01<-DT::renderDataTable({
+  res<-resB01()
+  aout<-as.data.frame((res[1]))
+  aout
+  })
+  output$tableB01.02<-DT::renderDataTable({
+    res<-resB01()
+    aout<-as.data.frame((res[3]))
+    aout
   })
   #=== input update part ===#
-  fileList<-reactive({
-    fileDir<-parseDirPath(volumes, input$directory)
-    pat = "\\.csv"
-    fl<-list.files(path = fileDir, all.files = FALSE)
-    fl <- grep(pat, fl, value = TRUE)
-    fl<-sort(fl)
-    fl
+  
+    #=== 01.end ===#
+  
+  #### 02.Statistical Analysis ####
+  #=== manipulation part ===#
+  observeEvent(input$updateB02, {
+      ID<-resB01()
+      ID<-as.vector(unlist(ID[2]))
+      ID<-data.frame(ID = ID, Group = NA)
+      isolate(values$tableB02<-ID)
+  })
+  #=== output part ===#
+  output$tableB02.00<-DT::renderDataTable({
+      values$tableB02
+  })
+  #=== input updata part ===#
+  values$tableB02 <- data.frame()
+  observeEvent(input$AssigB02,{
+    seRowB02<-input$tableB02.00_rows_selected
+    isolate(values$tableB02[seRowB02,2]<-as.numeric(input$GroupMarkB02))
   })
 }
