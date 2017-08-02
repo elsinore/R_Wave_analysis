@@ -100,7 +100,8 @@ navbarPage("Wave Analysis",
                      tags$hr(),
                      helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
                      tags$hr(),
-                     helpText("08. Mean Power Frequency (MPF): $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)")
+                     helpText("08. Mean Power Frequency (MPF): 
+                              $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)")
                    )
                  ),
                  #=== end.03 ===#
@@ -144,7 +145,8 @@ navbarPage("Wave Analysis",
                          tags$hr(),
                          helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
                          tags$hr(),
-                         helpText("08. Mean Power Frequency (MPF): $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)")
+                         helpText("08. Mean Power Frequency (MPF): 
+                                  $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)")
                        )
                      ),
                      column(6, radioButtons("col04","Choose Method", c("NULL"="NULL")))
