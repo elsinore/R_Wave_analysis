@@ -235,22 +235,39 @@ ui<-navbarPage("Wave Analysis",
                             )
                           ),
                           tags$hr(),
-                          fileInput('tableB01.00', 'Choose CSV file for table 1', accept=c('csv', '.csv')),
-                          fileInput('tableB01.01', 'Choose CSV file for table 2', accept=c('csv', '.csv')),
-                          fileInput('tableB01.02', 'Choose CSV file for table 3', accept=c('csv', '.csv')),
-                          fileInput('tableB01.03', 'Choose CSV file for table 4', accept=c('csv', '.csv'))
+                          verticalLayout(
+                            splitLayout(
+                              fileInput('tableB01.00', 'Upload table 1', accept=c('csv', '.csv')),
+                              downloadButton('downloadTable1', 'Download table 1')
+                            ),
+                            splitLayout(
+                              fileInput('tableB01.01', 'Upload table 2', accept=c('csv', '.csv')),
+                              downloadButton('downloadTable2', 'Download table 2')
+                            ),
+                            splitLayout(
+                              fileInput('tableB01.02', 'Upload table 3', accept=c('csv', '.csv')),
+                              downloadButton('downloadTable3', 'Download table 3')
+                            ),
+                            splitLayout(
+                              fileInput('tableB01.03', 'Upload table 4', accept=c('csv', '.csv')),
+                              downloadButton('downloadTable4', 'Download table 4')
+                            )
+                          )
                         )
                       ),
                       #### 02. Statistical Analysis ####
                       conditionalPanel(
                         'input.dataset2 == "Statistical Analysis"',
                         h4("Statistical Analysis"),
-                        splitLayout(
-                          numericInput("GroupMarkB02", "Select rows and Number", value = 0, min = 0),
-                          textInput("LabelB02", "Set Group Name", placeholder = "Type a group label")
-                        ),
+                          splitLayout(
+                            numericInput("GroupMarkB02", "Select rows and Number", value = 0, min = 0),
+                            textInput("LabelB02", "Set Group Name", placeholder = "Type a group label")
+                          ),
                         actionButton("AssigB02", "Assign"),
                         actionButton("updateB02", "Initialize"),
+                        downloadButton('downloadGroupSet', 'Download Group Setting'),
+                        tags$hr(),
+                        fileInput('GroupSetB02', 'Upload Group Set', accept=c('csv', '.csv')),
                         tags$hr(),
                         withBusyIndicatorUI(
                           actionButton(
@@ -419,7 +436,6 @@ server<-function(input, output, session) {
   })
 
     ###=== 01.end ===###
-  
   #### 02.wave features ####
   #=== manipulation part ===#
   plot02.01<-reactive({ # plot among different features
@@ -734,7 +750,7 @@ server<-function(input, output, session) {
   }) #col04
     ###=== 04.end ===###
 ####=== Batching Processing ===####
-  volumes <- c('Root'="/Users/HSBR")
+  volumes <- c('Root'="/")
   shinyDirChoose(input, 'directory', roots=volumes, session=session)
   #### 01.data input ####
   #=== manipulation part ===#
@@ -749,10 +765,24 @@ server<-function(input, output, session) {
     res<-data.frame()
     ids<-c()
     withBusyIndicatorServer("anB01",{
+      if(is.null(Dir)){
+        stop("Please choose the directory first")
+      }
       id<-c()
       InUseName<-grep(paste(pat01, pat01_01, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
       InUseName02<-grep(paste(pat01, pat02, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
       file01<-read.csv(paste(Dir, "/", InUseName, sep = ""), header = TRUE, sep = ",")
+      ncol<-NCOL(file01)
+      label<-c()
+      for(i in 1:ncol){
+        if(i == 1){
+          label[1] <- "Time"
+        } else if (i == 2){
+          label[i] <- "Region"
+        } else
+          label[i] <- str_c("S", prefix[1], "Cell", " ", i-2)
+      }
+      colnames(file01)<-label
       file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
       rawBatchData<-file01
       res00<-wzy.batch(wzy = file01, loc = file02)
@@ -765,6 +795,17 @@ server<-function(input, output, session) {
         InUseName<-grep(paste(pat01, pat01_01, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
         InUseName02<-grep(paste(pat01, pat02, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
         file01<-read.csv(paste(Dir, "/", InUseName, sep = ""), header = TRUE, sep = ",")
+        ncol<-NCOL(file01)
+        label<-c()
+        for(i in 1:ncol){
+          if(i == 1){
+            label[1] <- "Time"
+          } else if (i == 2){
+            label[i] <- "Region"
+          } else
+            label[i] <- str_c("S", prefix[1], "Cell", " ", i-2)
+        }
+        colnames(file01)<-label
         file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
         rawBatchData<-cbind(rawBatchData, file01[,-1])
         res00<-wzy.batch(wzy = file01, loc = file02)
@@ -808,6 +849,30 @@ server<-function(input, output, session) {
     values$tableB01.03, 
     caption = 'Table4: Samples ID',
     rownames = FALSE
+  )
+  output$downloadTable1 <- downloadHandler(
+    filename = "Table_1.csv",
+    content = function(file) {
+      write.csv(values$tableB01.00, file, row.names = FALSE)
+    }
+  )
+  output$downloadTable2 <- downloadHandler(
+    filename = "Table_2.csv",
+    content = function(file) {
+      write.csv(values$tableB01.01, file, row.names = FALSE)
+    }
+  )
+  output$downloadTable3 <- downloadHandler(
+    filename = "Table_3.csv",
+    content = function(file) {
+      write.csv(values$tableB01.02, file, row.names = FALSE)
+    }
+  )
+  output$downloadTable4 <- downloadHandler(
+    filename = "Table_4.csv",
+    content = function(file) {
+      write.csv(values$tableB01.03, file, row.names = FALSE)
+    }
   )
   #=== input update part ===#
   values$tableB01.00<-data.frame(V1 = NA, V2 = NA)
@@ -865,8 +930,22 @@ server<-function(input, output, session) {
       lengthChange = FALSE
     )
   )
+  output$downloadGroupSet<-downloadHandler(
+    filename = "Group_Set.csv",
+    content = function(file){
+      write.csv(values$tableB02, file, row.names = FALSE)
+    }
+  )
   #=== input updata part ===#
-  values$tableB02 <- data.frame(ID = NA, Group = NA, Label = NA)
+  values$tableB02 <- data.frame()
+  observe({
+    if(is.null(input$GroupSetB02)){
+      isolate(values$tableB02 <- data.frame(ID = NA, Group = NA, Label = NA))
+    } else {
+      GroupSetB02<-read.csv(input$GroupSetB02$datapath, header = TRUE, sep = ",")
+      isolate(values$tableB02 <- GroupSetB02)
+    }
+  })
   observeEvent(input$AssigB02,{
     seRowB02<-input$tableB02.00_rows_selected
     isolate(values$tableB02[seRowB02,2]<-as.numeric(input$GroupMarkB02))
