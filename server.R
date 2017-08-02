@@ -1,6 +1,5 @@
 #### Required Packages and Functions ####
 library(shiny)
-library(shinydashboard)
 library(ggplot2)
 library(biwavelet)
 library(data.table)
@@ -455,7 +454,7 @@ function(input, output, session) {
                        label = "Choose Method",
                        choices = options04,
                        selected = options04[1])
-  })
+  }) #col04
     ###=== 04.end ===###
 ####=== Batching Processing ===####
   volumes <- c('Root'="/Users/HSBR")
@@ -498,6 +497,9 @@ function(input, output, session) {
         prefix<-prefix[! prefix %in% prefix[1]]
       }
     })
+    Row_names<-rownames(res)
+    rownames(res)<-NULL
+    res<-cbind(Row_names, res)
     res<-list(res, ids, rawBatchData)
     res
   })
@@ -510,45 +512,101 @@ function(input, output, session) {
     fl
   })
   #=== output part ===#
-  output$tableBatch01.00<-renderTable({
-    if(is.null(input$directory)){
-      return(NULL)
-    } else
-      tablein01.00<-fileList()
-    No.<-c(1:length(tablein01.00))
-    tablein01.00<-cbind(No., data = tablein01.00)
-    tablein01.00
-  })
-  output$tableB01.01<-DT::renderDataTable({
-  res<-resB01()
-  aout<-as.data.frame((res[1]))
-  aout
-  })
-  output$tableB01.02<-DT::renderDataTable({
-    res<-resB01()
-    aout<-as.data.frame((res[3]))
-    aout
-  })
+  output$tableB01.00<-DT::renderDataTable(
+    head(values$tableB01.00), 
+    caption = 'Table1: Files List',
+    rownames = FALSE,
+    extensions = 'Buttons', options = list(
+      dom = 'Bfrtip',
+      buttons = c('copy', 'csv')
+    )
+  )
+  output$tableB01.01<-DT::renderDataTable(
+    head(values$tableB01.01), 
+    caption = 'Table2: Files List',
+    rownames = FALSE,
+    extensions = 'Buttons', options = list(
+      dom = 'Bfrtip',
+      buttons = c('copy', 'csv')
+    )
+  )
+  output$tableB01.02<-DT::renderDataTable(
+    head(values$tableB01.02), 
+    caption = 'Table3: Files List',
+    rownames = FALSE,
+    extensions = 'Buttons', options = list(
+      dom = 'Bfrtip',
+      buttons = c('copy', 'csv')
+    )
+  )
+  output$tableB01.03<-DT::renderDataTable(
+    head(values$tableB01.03), 
+    caption = 'Table4: Samples ID',
+    rownames = FALSE,
+    extensions = 'Buttons', options = list(
+      dom = 'Bfrtip',
+      buttons = c('copy', 'csv')
+    )
+  )
   #=== input update part ===#
-  
+  values$tableB01.00<-data.frame(V1 = NA, V2 = NA)
+  values$tableB01.01<-data.frame(V1 = NA, V2 = NA)
+  values$tableB01.02<-data.frame(V1 = NA, V2 = NA)
+  values$tableB01.03<-data.frame(V1 = NA, V2 = NA)
+  observe({
+    if(is.null(input$tableB01.00)){
+      tableB01.00<-fileList()
+      No.<-c(1:length(tableB01.00))
+      tableB01.00<-cbind(No., data = tableB01.00)
+    } else {
+      tableB01.00<-read.csv(input$tableB01.00$datapath, header=TRUE, sep=",")
+    }
+    isolate(values$tableB01.00<-tableB01.00)
+  }) #TableB01.00
+  observe({
+    if(is.null(input$tableB01.01)){
+      res<-resB01()
+      tableB01.01<-as.data.frame((res[1]))
+    } else {
+      tableB01.01<-read.csv(input$tableB01.01$datapath, header=TRUE, sep=",")
+    }
+    isolate(values$tableB01.01<-tableB01.01)
+  }) #TableB01.01
+  observe({
+    if(is.null(input$tableB01.02)){
+      res<-resB01()
+      tableB01.02<-as.data.frame((res[3]))
+    } else {
+      tableB01.02<-read.csv(input$tableB01.02$datapath, header=TRUE, sep=",")
+    }
+    isolate(values$tableB01.02<-tableB01.02)
+  }) #TableB01.02
+  observe({
+    if(is.null(input$tableB01.03)){
+      tableB01.03<-resB01()
+      tableB01.03<-as.vector(unlist(tableB01.03[2]))
+      tableB01.03<-data.frame(ID = tableB01.03, Group = 0)
+    } else {
+      tableB01.03<-read.csv(input$tableB01.03$datapath, header=TRUE, sep=",")
+    }
+    isolate(values$tableB01.03<-tableB01.03)
+  }) #TableB01.03
     #=== 01.end ===#
-  
   #### 02.Statistical Analysis ####
   #=== manipulation part ===#
-  observeEvent(input$updateB02, {
-      ID<-resB01()
-      ID<-as.vector(unlist(ID[2]))
-      ID<-data.frame(ID = ID, Group = NA)
-      isolate(values$tableB02<-ID)
-  })
+  values$tableB02 <- data.frame(ID = NA, Group = NA)
   #=== output part ===#
   output$tableB02.00<-DT::renderDataTable({
       values$tableB02
   })
   #=== input updata part ===#
-  values$tableB02 <- data.frame()
   observeEvent(input$AssigB02,{
     seRowB02<-input$tableB02.00_rows_selected
     isolate(values$tableB02[seRowB02,2]<-as.numeric(input$GroupMarkB02))
   })
+  observeEvent(input$updateB02, {
+    isolate(values$tableB02<-values$tableB01.03)
+  })
+  #### Global Setting ####
+  session$onSessionEnded(stopApp)
 }

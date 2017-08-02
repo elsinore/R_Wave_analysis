@@ -1,6 +1,5 @@
 #### required packages and functions ####
 library(shiny)
-library(shinydashboard)
 library(ggplot2)
 library(biwavelet)
 library(data.table)
@@ -11,11 +10,10 @@ library(shinyFiles)
 library(shinyjs)
 source("functions.R")
   ###=== end of packages and functions loading ===###
-
+#### UI Function ####
 navbarPage("Wave Analysis",
   #### Single Sample ####
   tabPanel("Single Sample Explore",
-
            fluidPage(
              useShinyjs(),
              #### sidbar input and layout ####
@@ -235,14 +233,18 @@ navbarPage("Wave Analysis",
                  textInput("pat01", "Prefix mark", "TIF"),
                  textInput("pat01_01", "Image file number", "00"),
                  textInput("pat02", "Location file number", "02"),
-                 tags$hr(),
                  withBusyIndicatorUI(
                    actionButton(
                      "anB01",
                      "Analyze",
                      class = "btn-primary"
                    )
-                 )
+                 ),
+                 tags$hr(),
+                 fileInput('tableB01.00', 'Choose CSV file for table 1', accept=c('csv', '.csv')),
+                 fileInput('tableB01.01', 'Choose CSV file for table 2', accept=c('csv', '.csv')),
+                 fileInput('tableB01.02', 'Choose CSV file for table 3', accept=c('csv', '.csv')),
+                 fileInput('tableB01.03', 'Choose CSV file for table 4', accept=c('csv', '.csv'))
                )
              ),
              #### 02. Statistical Analysis ####
@@ -269,9 +271,13 @@ navbarPage("Wave Analysis",
                #### 01.Data Input ####
                tabPanel("Data Input",
                         verticalLayout(
-                          tableOutput("tableBatch01.00"),
+                          DT::dataTableOutput("tableB01.00"),
+                          tags$hr(),
                           DT::dataTableOutput('tableB01.01'),
-                          DT::dataTableOutput('tableB01.02')
+                          tags$hr(),
+                          DT::dataTableOutput('tableB01.02'),
+                          tags$hr(),
+                          DT::dataTableOutput('tableB01.03')
                         )
                ),
                tabPanel("Statistical Analysis",
