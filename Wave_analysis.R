@@ -1,4 +1,4 @@
-#### Required Packages and Functions ####
+# +++00. Required Packages and Functions -----------------------------------------
 library(shiny)
 library(ggplot2)
 library(biwavelet)
@@ -10,7 +10,7 @@ library(shinyFiles)
 library(shinyjs)
 source("functions.R")
   ###=== end of packages and functions loading ===###
-#### UI Function ####
+# +++01. UI Function -------------------------------------------------------------
 ui<-navbarPage("Wave Analysis",
            #### Single Sample ####
            tabPanel("Single Sample Explore",
@@ -42,7 +42,6 @@ ui<-navbarPage("Wave Analysis",
                             #= end of select column
                           ),
                           #=== end.01 ===#
-                          
                           #### 02.wave features ####
                           conditionalPanel(
                             'input.dataset === "Wave Features"',
@@ -76,7 +75,6 @@ ui<-navbarPage("Wave Analysis",
                               )
                             ),
                           #=== end.02 ===#
-                          
                           #### 03.graphic results ####
                           conditionalPanel(
                             'input.dataset === "Graphic View"',
@@ -105,7 +103,6 @@ ui<-navbarPage("Wave Analysis",
                             )
                           ),
                           #=== end.03 ===#
-                          
                           #### 04.spatial features ####
                           conditionalPanel(
                             'input.dataset === "Spatial Features"',
@@ -154,10 +151,8 @@ ui<-navbarPage("Wave Analysis",
                             
                           )
                           #=== end.03 ===#
-                          
                           ),
                         ###=== end of sidbar input and layout ===###
-                        
                         #### the result windows ####
                         mainPanel(
                           tabsetPanel(
@@ -173,7 +168,6 @@ ui<-navbarPage("Wave Analysis",
                                      )
                             ),
                             #=== end.01 ===#
-                            
                             #### 02.basic results ####
                             tabPanel("Wave Features", 
                                      verticalLayout(
@@ -189,7 +183,6 @@ ui<-navbarPage("Wave Analysis",
                                      )
                             ),
                             #=== end.02 ===#
-                            
                             #### 03.graphic results ####
                             tabPanel("Graphic View",
                                      verticalLayout(
@@ -205,7 +198,6 @@ ui<-navbarPage("Wave Analysis",
                                      )
                             ),
                             #===end.03 ===#
-                            
                             #### 04.spatial features ####
                             tabPanel("Spatial Features",
                                      splitLayout(
@@ -253,7 +245,10 @@ ui<-navbarPage("Wave Analysis",
                       conditionalPanel(
                         'input.dataset2 == "Statistical Analysis"',
                         h4("Statistical Analysis"),
-                        numericInput("GroupMarkB02", "Select Group and Set Number", value = 1, min = 0),
+                        splitLayout(
+                          numericInput("GroupMarkB02", "Select rows and Number", value = 0, min = 0),
+                          textInput("LabelB02", "Set Group Name", placeholder = "Type a group label")
+                        ),
                         actionButton("AssigB02", "Assign"),
                         actionButton("updateB02", "Initialize"),
                         tags$hr(),
@@ -282,9 +277,9 @@ ui<-navbarPage("Wave Analysis",
                                    DT::dataTableOutput('tableB01.03')
                                  )
                         ),
+                        #### 01.Statistical Analysis ####
                         tabPanel("Statistical Analysis",
                                  verticalLayout(
-                                   tags$hr("Group Setting"),
                                    DT::dataTableOutput('tableB02.00')
                                  )
                                  
@@ -292,11 +287,8 @@ ui<-navbarPage("Wave Analysis",
                       )
                     )
            )
-           
-           )
-
-
-#### Service Function ####
+)
+# +++02. Service Function --------------------------------------------------------
 server<-function(input, output, session) {
   values<-reactiveValues()
 ###=== Single Sample Explore ===###
@@ -518,7 +510,6 @@ server<-function(input, output, session) {
     
   })
       ###=== 02.end ===###
-  
   #### 03.graphic results ####
   #=== manipulation part ===#
   waveletTransform<- reactive({
@@ -799,40 +790,24 @@ server<-function(input, output, session) {
   })
   #=== output part ===#
   output$tableB01.00<-DT::renderDataTable(
-    head(values$tableB01.00), 
-    caption = 'Table1: Files List',
-    rownames = FALSE,
-    extensions = 'Buttons', options = list(
-      dom = 'Bfrtip',
-      buttons = c('copy', 'csv')
-    )
+      values$tableB01.00, 
+      caption = 'Table1: Files List',
+      rownames = FALSE
   )
   output$tableB01.01<-DT::renderDataTable(
-    head(values$tableB01.01), 
-    caption = 'Table2: Files List',
-    rownames = FALSE,
-    extensions = 'Buttons', options = list(
-      dom = 'Bfrtip',
-      buttons = c('copy', 'csv')
-    )
+    values$tableB01.01,
+    caption = 'Table3: Files List',
+    rownames = FALSE
   )
   output$tableB01.02<-DT::renderDataTable(
-    head(values$tableB01.02), 
+    values$tableB01.02, 
     caption = 'Table3: Files List',
-    rownames = FALSE,
-    extensions = 'Buttons', options = list(
-      dom = 'Bfrtip',
-      buttons = c('copy', 'csv')
-    )
+    rownames = FALSE
   )
   output$tableB01.03<-DT::renderDataTable(
-    head(values$tableB01.03), 
+    values$tableB01.03, 
     caption = 'Table4: Samples ID',
-    rownames = FALSE,
-    extensions = 'Buttons', options = list(
-      dom = 'Bfrtip',
-      buttons = c('copy', 'csv')
-    )
+    rownames = FALSE
   )
   #=== input update part ===#
   values$tableB01.00<-data.frame(V1 = NA, V2 = NA)
@@ -871,7 +846,7 @@ server<-function(input, output, session) {
     if(is.null(input$tableB01.03)){
       tableB01.03<-resB01()
       tableB01.03<-as.vector(unlist(tableB01.03[2]))
-      tableB01.03<-data.frame(ID = tableB01.03, Group = 0)
+      tableB01.03<-data.frame(ID = tableB01.03, Group = NA, Label = NA)
     } else {
       tableB01.03<-read.csv(input$tableB01.03$datapath, header=TRUE, sep=",")
     }
@@ -880,21 +855,28 @@ server<-function(input, output, session) {
     #=== 01.end ===#
   #### 02.Statistical Analysis ####
   #=== manipulation part ===#
-  values$tableB02 <- data.frame(ID = NA, Group = NA)
+  
   #=== output part ===#
-  output$tableB02.00<-DT::renderDataTable({
-      values$tableB02
-  })
+  output$tableB02.00<-DT::renderDataTable(
+    values$tableB02,
+    caption = 'Group Setting',
+    rownames = FALSE,
+    options = list(
+      lengthChange = FALSE
+    )
+  )
   #=== input updata part ===#
+  values$tableB02 <- data.frame(ID = NA, Group = NA, Label = NA)
   observeEvent(input$AssigB02,{
     seRowB02<-input$tableB02.00_rows_selected
     isolate(values$tableB02[seRowB02,2]<-as.numeric(input$GroupMarkB02))
+    isolate(values$tableB02[seRowB02,3]<-input$LabelB02)
   })
   observeEvent(input$updateB02, {
     isolate(values$tableB02<-values$tableB01.03)
   })
+    #=== 02.end ===#
   #### Global Setting ####
   session$onSessionEnded(stopApp)
 }
-
 shinyApp(ui = ui, server = server)
