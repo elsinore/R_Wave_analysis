@@ -268,6 +268,8 @@ wzy.batch <- function (wzy, loc) {
     Dissimilarity = resclu,
     Group = groups
   )
+  res.m<-res[-1, ] #remove the data from region
+  loc<-loc[-1, ] #remove the data from region
   ncol04 <- ncol(res)
   rownames04 <- colnames(res)
   ozone.dists<- as.matrix(dist(cbind(loc[, 2], loc[, 3])))
@@ -276,7 +278,7 @@ wzy.batch <- function (wzy, loc) {
   P.value <- c()
   Moran.I <- c()
   for(resin04 in 1:ncol04){
-    moran <- Moran.I(res[, resin04], ozone.dists.inv)
+    moran <- Moran.I(res.m[, resin04], ozone.dists.inv)
     Moran.I <- c(Moran.I, moran$observed)
     P.value <- c(P.value, moran$p.value)
   }
@@ -302,14 +304,6 @@ withBusyIndicatorUI <- function(button) {
       hidden(
         img(src = "ajax-loader-bar.gif", class = "btn-loading-indicator"),
         icon("check", class = "btn-done-indicator")
-      )
-    ),
-    hidden(
-      div(class = "btn-err",
-          div(icon("exclamation-circle"),
-              tags$b("Error: "),
-              span(class = "btn-err-msg")
-          )
       )
     )
   )

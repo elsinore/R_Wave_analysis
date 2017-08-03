@@ -333,9 +333,6 @@ server<-function(input, output, session) {
     similarity<-dataframe()
     withBusyIndicatorServer("analyze", {
       similarity<-WZY.Wavelet.clust(similarity)
-      if (is.null(input$datafile)) {
-        stop("choose another option")
-      }
     })
     similarity
   })
@@ -696,8 +693,8 @@ server<-function(input, output, session) {
       ozone <- dataLoc()
       res04t <- res()
       ncol04 <- ncol(res04t)
-      res04t<-res04t[-1,]
-      ozone<-ozone[-1,]
+      res04t<-res04t[-1,] #remove the data from region
+      ozone<-ozone[-1,] #remove the data from region
       rownames04 <- colnames(res04t)
       ozone.dists<- as.matrix(dist(cbind(ozone[, 2], ozone[, 3])))
       ozone.dists.inv <- 1/ozone.dists
@@ -755,6 +752,9 @@ server<-function(input, output, session) {
   #### 01.data input ####
   #=== manipulation part ===#
   resB01<-eventReactive(input$anB01, {
+    if(is.null(input$directory)) {
+      stop("Please choose a directory")
+    }
     Dir<-parseDirPath(volumes, input$directory)
     fl<-fileList()
     pat01<-input$pat01
@@ -765,9 +765,6 @@ server<-function(input, output, session) {
     res<-data.frame()
     ids<-c()
     withBusyIndicatorServer("anB01",{
-      if(is.null(Dir)){
-        stop("Please choose the directory first")
-      }
       id<-c()
       InUseName<-grep(paste(pat01, pat01_01, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
       InUseName02<-grep(paste(pat01, pat02, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
@@ -776,9 +773,9 @@ server<-function(input, output, session) {
       label<-c()
       for(i in 1:ncol){
         if(i == 1){
-          label[1] <- "Time"
+          label[1] <- "Time (s)"
         } else if (i == 2){
-          label[i] <- "Region"
+          label[i] <- str_c("S", prefix[1], "Region") 
         } else
           label[i] <- str_c("S", prefix[1], "Cell", " ", i-2)
       }
@@ -786,6 +783,8 @@ server<-function(input, output, session) {
       file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
       rawBatchData<-file01
       res00<-wzy.batch(wzy = file01, loc = file02)
+      rownames(res00)[rownames(res00) == "Moran Index"] <- str_c("S", prefix[1], "Moran Index")
+      rownames(res00)[rownames(res00) == "P value"] <- str_c("S", prefix[1], "P value")
       ids<-c(ids, prefix[1])
       res00<-cbind(res00, id = prefix[1])
       res<-rbind(res, res00)
@@ -799,9 +798,9 @@ server<-function(input, output, session) {
         label<-c()
         for(i in 1:ncol){
           if(i == 1){
-            label[1] <- "Time"
+            label[1] <- "Time (s)"
           } else if (i == 2){
-            label[i] <- "Region"
+            label[i] <- str_c("S", prefix[1], "Region") 
           } else
             label[i] <- str_c("S", prefix[1], "Cell", " ", i-2)
         }
@@ -809,6 +808,8 @@ server<-function(input, output, session) {
         file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
         rawBatchData<-cbind(rawBatchData, file01[,-1])
         res00<-wzy.batch(wzy = file01, loc = file02)
+        rownames(res00)[rownames(res00) == "Moran Index"] <- str_c("S", prefix[1], "Moran Index")
+        rownames(res00)[rownames(res00) == "P value"] <- str_c("S", prefix[1], "P value")
         ids<-c(ids, prefix[1])
         res00<-cbind(res00, id = prefix[1])
         res<-rbind(res, res00)
@@ -833,22 +834,34 @@ server<-function(input, output, session) {
   output$tableB01.00<-DT::renderDataTable(
       values$tableB01.00, 
       caption = 'Table1: Files List',
-      rownames = FALSE
+      rownames = FALSE,
+      options = list(
+        searching = FALSE
+      )
   )
   output$tableB01.01<-DT::renderDataTable(
     values$tableB01.01,
     caption = 'Table3: Files List',
-    rownames = FALSE
+    rownames = FALSE,
+    options = list(
+      searching = FALSE
+    )
   )
   output$tableB01.02<-DT::renderDataTable(
     values$tableB01.02, 
     caption = 'Table3: Files List',
-    rownames = FALSE
+    rownames = FALSE,
+    options = list(
+      searching = FALSE
+    )
   )
   output$tableB01.03<-DT::renderDataTable(
     values$tableB01.03, 
     caption = 'Table4: Samples ID',
-    rownames = FALSE
+    rownames = FALSE,
+    options = list(
+      searching = FALSE
+    )
   )
   output$downloadTable1 <- downloadHandler(
     filename = "Table_1.csv",
@@ -920,14 +933,29 @@ server<-function(input, output, session) {
     #=== 01.end ===#
   #### 02.Statistical Analysis ####
   #=== manipulation part ===#
-  
+  values$wavefeatureB02<-c()
+  values$distributionB02<-c()
+  observeEvent(input$staB02, {
+    if(is.null(values$tableB01.01)) {
+      return(NULL)
+    }
+    isolate(values$tableB01.01$id <- as.character(values$tableB01.01$id))
+    for(i in 1:dim(values$tableB02)[1]) {
+      isolate(values$tableB01.01$id[values$tableB01.01$id == values$tableB02$ID[i]] <- as.character(values$tableB02$Group[i]))
+    }
+    isolate(colnames(values$tableB01.01)[colnames(values$tableB01.01) == "id"] <- "Label")
+    isolate(rownames(values$tableB01.01)<-values$tableB01.01$Row_names)
+    isolate(values$wavefeatureB02 <- values$tableB01.01[grep("Cell", values$tableB01.01$Row_names, value = TRUE), ])
+    isolate(values$wavefeatureB02 <- values$wavefeatureB02[order(values$wavefeatureB02$Label),])
+  })
   #=== output part ===#
   output$tableB02.00<-DT::renderDataTable(
     values$tableB02,
     caption = 'Group Setting',
     rownames = FALSE,
     options = list(
-      lengthChange = FALSE
+      lengthChange = FALSE,
+      searching = FALSE
     )
   )
   output$downloadGroupSet<-downloadHandler(
