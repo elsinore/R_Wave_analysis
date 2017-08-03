@@ -277,9 +277,15 @@ ui<-navbarPage("Wave Analysis",
                           )
                         )
                       ),
+                      #### 03. Results ####
                       conditionalPanel(
                         'input.dataset2 == "Results"',
                         h4("Statistical Results")
+                      ),
+                      #### 04. Plot Output ####
+                      conditionalPanel(
+                        'input.dataset2 == "Plot Output"',
+                        h4("Plot Output")
                       )
                     ),
                     #### The Result Window ####
@@ -307,8 +313,13 @@ ui<-navbarPage("Wave Analysis",
                                    DT::dataTableOutput('tableMoranPB02')
                                  )
                         ),
+                        #### 03.Results ####
                         tabPanel("Results"
                                  
+                        ),
+                        #### 04.Plot Output ####
+                        tabPanel("Plot Output"
+                          
                         )
                       )
                     )
@@ -355,7 +366,7 @@ server<-function(input, output, session) {
     ## Wavelet Cluster
     resclust<-waveClust()
     resclu<-as.matrix(resclust)
-    resclu<-resclu[,1]
+    resclu<-resclu[,1] #the dissimilarity of each cell to region
     fit <- hclust(resclust, method = "ward.D")
     groups <- cutree(fit, k = 2)
     ## Final combination
@@ -758,6 +769,7 @@ server<-function(input, output, session) {
 ####=== Batching Processing ===####
   volumes <- c('Root'="/")
   shinyDirChoose(input, 'directory', roots=volumes, session=session)
+  values$colnames<-NULL
   #### 01.data input ####
   #=== manipulation part ===#
   resB01<-eventReactive(input$anB01, {
@@ -829,7 +841,8 @@ server<-function(input, output, session) {
     rownames(res)<-NULL
     res<-cbind(Row_names, res)
     res<-list(res, ids, rawBatchData)
-    res
+    isolate(values$colnames <- colnames(rawBatchData))
+    return(res)
   })
   fileList<-reactive({
     if(is.null(input$directory)){
@@ -845,7 +858,7 @@ server<-function(input, output, session) {
   #=== output part ===#
   output$tableB01.00<-DT::renderDataTable(
       values$tableB01.00, 
-      caption = 'Table1: Files List',
+      caption = 'Table 1: Files List',
       rownames = FALSE,
       options = list(
         searching = FALSE
@@ -853,7 +866,7 @@ server<-function(input, output, session) {
   )
   output$tableB01.01<-DT::renderDataTable(
     values$tableB01.01,
-    caption = 'Table3: Files List',
+    caption = 'Table 2: Wave Feature',
     rownames = FALSE,
     options = list(
       searching = FALSE
@@ -861,7 +874,7 @@ server<-function(input, output, session) {
   )
   output$tableB01.02<-DT::renderDataTable(
     values$tableB01.02, 
-    caption = 'Table3: Files List',
+    caption = 'Table 3: Raw Data',
     rownames = FALSE,
     options = list(
       searching = FALSE
@@ -869,7 +882,7 @@ server<-function(input, output, session) {
   )
   output$tableB01.03<-DT::renderDataTable(
     values$tableB01.03, 
-    caption = 'Table4: Samples ID',
+    caption = 'Table 4: Samples ID',
     rownames = FALSE,
     options = list(
       searching = FALSE
@@ -900,14 +913,15 @@ server<-function(input, output, session) {
     }
   )
   #=== input update part ===#
-  values$tableB01.00<-NULL
-  values$tableB01.01<-NULL
-  values$tableB01.02<-NULL
-  values$tableB01.03<-NULL
+  values$tableB01.00<-data.frame("Table 1"=NA)
+  values$tableB01.01<-data.frame("Table 2"=NA)
+  values$tableB01.02<-data.frame("Table 3"=NA)
+  values$tableB01.03<-data.frame("Table 4"=NA)
   observe({
     if(is.null(input$directory)){
-      return(NULL)
-    } else if(is.null(input$tableB01.00)){
+      null<-data.frame("Table 1"=NA)
+      return(null)
+    }else if(is.null(input$tableB01.00)){
       tableB01.00<-fileList()
       No.<-c(1:length(tableB01.00))
       tableB01.00<-cbind(No., data = tableB01.00)
@@ -936,8 +950,8 @@ server<-function(input, output, session) {
   }) #TableB01.02
   observe({
     if(is.null(input$tableB01.03)){
-      tableB01.03<-resB01()
-      tableB01.03<-as.vector(unlist(tableB01.03[2]))
+      res<-resB01()
+      tableB01.03<-as.vector(unlist(res[2]))
       tableB01.03<-data.frame(ID = tableB01.03, Group = NA, Label = NA)
     } else {
       tableB01.03<-read.csv(input$tableB01.03$datapath, header=TRUE, sep=",")
@@ -947,16 +961,19 @@ server<-function(input, output, session) {
     #=== 01.end ===#
   #### 02.Statistical Analysis ####
   #=== manipulation part ===#
-  values$wavefeatureB02<-c()
-  values$distributionB02<-c()
-  values$MoranPB02<-c()
+  values$wavefeatureB02<-data.frame("NoData"=NA)
+  values$distributionB02<-data.frame("NoData"=NA)
+  values$MoranPB02<-data.frame("NoData"=NA)
   observeEvent(input$staB02, {
     if(is.null(values$tableB01.01)) {
       return(NULL)
     }
     isolate(values$tableB01.01$id <- as.character(values$tableB01.01$id))
+    isolate(values$tableB01.01$Row_names <- as.character(values$tableB01.01$Row_names))
+    isolate(colnames(values$tableB01.02) <- values$colnames)
     for(i in 1:dim(values$tableB02)[1]) {
       isolate(values$tableB01.01$id[values$tableB01.01$id == values$tableB02$ID[i]] <- as.character(values$tableB02$Group[i]))
+      isolate(colnames(values$tableB01.02) <- str_replace_all(colnames(values$tableB01.02), pattern = str_c("S", as.character(values$tableB02$ID[i]), sep = ""), str_c("G", as.character(values$tableB02$Group[i]), "_", sep = "")))
     }
     isolate(colnames(values$tableB01.01)[colnames(values$tableB01.01) == "id"] <- "Label")
     isolate(rownames(values$tableB01.01)<-values$tableB01.01$Row_names)
