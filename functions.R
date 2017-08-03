@@ -150,6 +150,27 @@ WZY.Wavelet.clust <- function(input){ # wave clust in a same sample
   w.arr.dis<-as.dist(w.arr.dis)
   return(w.arr.dis)
 }
+WZY.Wavelet.clust2 <- function(input){ # wave clust in a same sample
+  library("biwavelet")
+  library("stringr")
+  require("stringr")
+  require("biwavelet")
+  ncol<-NCOL(input)
+  wt.t1 <- wt(cbind(input[ , 1], input[ , 2]))
+  w.arr <- array(NA, dim = c(ncol-1, NROW(wt.t1$wave), NCOL(wt.t1$wave)))
+  for(i in 2:ncol) {
+    wt.t<-wt(cbind(input[ , 1], input[ , i]))
+    w.arr[i-1, , ] <- wt.t$wave
+  }
+  w.arr.dis<-wclust(w.arr)
+  w.arr.dis<-w.arr.dis$dist.mat
+  w.arr.dis<-as.matrix(w.arr.dis)
+  label <- colnames(input[, 2:ncol])
+  colnames(w.arr.dis)<-label
+  row.names(w.arr.dis)<-label
+  w.arr.dis<-as.dist(w.arr.dis)
+  return(w.arr.dis)
+}
 #=== Frequency Spectrum ===####
 # From: (http://www.di.fc.ul.pt/~jpn/r/fourier/fourier.html)
 wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep) {
@@ -353,4 +374,8 @@ withMathJax.local <- function(...) {
     ...,
     tags$script(HTML('if (window.MathJax) MathJax.Hub.Queue(["Typeset", MathJax.Hub]);'))
   )
+}
+wzy.force.format.colname <- function(x, colname) {
+  colnames(x)<-colname
+  return(x)
 }

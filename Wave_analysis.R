@@ -308,14 +308,15 @@ ui<-navbarPage("Wave Analysis",
                         tabPanel("Statistical Analysis",
                                  verticalLayout(
                                    DT::dataTableOutput('tableB02.00'),
+                                   DT::dataTableOutput('tableRegionB02'),
                                    DT::dataTableOutput('tableWavefeatureB02'),
                                    DT::dataTableOutput('tableDistributionB02'),
                                    DT::dataTableOutput('tableMoranPB02')
                                  )
                         ),
                         #### 03.Results ####
-                        tabPanel("Results"
-                                 
+                        tabPanel("Results",
+                          plotOutput("plotClustB03", width = "1600px", height = "800px")
                         ),
                         #### 04.Plot Output ####
                         tabPanel("Plot Output"
@@ -867,13 +868,10 @@ server<-function(input, output, session) {
   output$tableB01.01<-DT::renderDataTable(
     values$tableB01.01,
     caption = 'Table 2: Wave Feature',
-    rownames = FALSE,
-    options = list(
-      searching = FALSE
-    )
+    rownames = FALSE
   )
   output$tableB01.02<-DT::renderDataTable(
-    values$tableB01.02, 
+    tableB01.02 <- wzy.force.format.colname(x = values$tableB01.02, colname = values$colnames),
     caption = 'Table 3: Raw Data',
     rownames = FALSE,
     options = list(
@@ -903,6 +901,7 @@ server<-function(input, output, session) {
   output$downloadTable3 <- downloadHandler(
     filename = "Table_3.csv",
     content = function(file) {
+      colnames(values$tableB01.02) <- values$colnames
       write.csv(values$tableB01.02, file, row.names = FALSE)
     }
   )
@@ -913,15 +912,12 @@ server<-function(input, output, session) {
     }
   )
   #=== input update part ===#
-  values$tableB01.00<-data.frame("Table 1"=NA)
+  values$tableB01.00<-data.frame("Table 2"=NA)
   values$tableB01.01<-data.frame("Table 2"=NA)
   values$tableB01.02<-data.frame("Table 3"=NA)
   values$tableB01.03<-data.frame("Table 4"=NA)
   observe({
-    if(is.null(input$directory)){
-      null<-data.frame("Table 1"=NA)
-      return(null)
-    }else if(is.null(input$tableB01.00)){
+    if(is.null(input$tableB01.00)){
       tableB01.00<-fileList()
       No.<-c(1:length(tableB01.00))
       tableB01.00<-cbind(No., data = tableB01.00)
@@ -929,7 +925,7 @@ server<-function(input, output, session) {
       tableB01.00<-read.csv(input$tableB01.00$datapath, header=TRUE, sep=",")
     }
     isolate(values$tableB01.00<-tableB01.00)
-  }) #TableB01.00
+  }) #TableB01.00 | Table 1
   observe({
     if(is.null(input$tableB01.01)){
       res<-resB01()
@@ -938,16 +934,18 @@ server<-function(input, output, session) {
       tableB01.01<-read.csv(input$tableB01.01$datapath, header=TRUE, sep=",")
     }
     isolate(values$tableB01.01<-tableB01.01)
-  }) #TableB01.01
+  }) #TableB01.01 | Table 2
   observe({
     if(is.null(input$tableB01.02)){
       res<-resB01()
       tableB01.02<-as.data.frame((res[3]))
     } else {
+      tableB01.02<-read.csv(input$tableB01.02$datapath, header=FALSE, sep=",")
+      isolate(values$colnames <- as.vector(unlist(tableB01.02[1,])))
       tableB01.02<-read.csv(input$tableB01.02$datapath, header=TRUE, sep=",")
     }
     isolate(values$tableB01.02<-tableB01.02)
-  }) #TableB01.02
+  }) #TableB01.02 | Table 3
   observe({
     if(is.null(input$tableB01.03)){
       res<-resB01()
@@ -957,13 +955,16 @@ server<-function(input, output, session) {
       tableB01.03<-read.csv(input$tableB01.03$datapath, header=TRUE, sep=",")
     }
     isolate(values$tableB01.03<-tableB01.03)
-  }) #TableB01.03
+  }) #TableB01.03 | Table 4
     #=== 01.end ===#
   #### 02.Statistical Analysis ####
   #=== manipulation part ===#
-  values$wavefeatureB02<-data.frame("NoData"=NA)
-  values$distributionB02<-data.frame("NoData"=NA)
-  values$MoranPB02<-data.frame("NoData"=NA)
+  values$wavefeatureB02 <- data.frame("NoData" = NA)
+  values$distributionB02 <- data.frame("NoData" = NA)
+  values$MoranPB02 <- data.frame("NoData" = NA)
+  values$regionB02 <- data.frame("NoData" =NA)
+  values$GlobalClustB02 <- NULL
+  
   observeEvent(input$staB02, {
     if(is.null(values$tableB01.01)) {
       return(NULL)
@@ -973,16 +974,33 @@ server<-function(input, output, session) {
     isolate(colnames(values$tableB01.02) <- values$colnames)
     for(i in 1:dim(values$tableB02)[1]) {
       isolate(values$tableB01.01$id[values$tableB01.01$id == values$tableB02$ID[i]] <- as.character(values$tableB02$Group[i]))
-      isolate(colnames(values$tableB01.02) <- str_replace_all(colnames(values$tableB01.02), pattern = str_c("S", as.character(values$tableB02$ID[i]), sep = ""), str_c("G", as.character(values$tableB02$Group[i]), "_", sep = "")))
+      isolate(colnames(values$tableB01.02) <- str_replace_all(colnames(values$tableB01.02), pattern = str_c("S", as.character(values$tableB02$ID[i]), sep = ""), str_c("G", as.character(values$tableB02$Group[i]), "_", 
+                                                                                                                                                                       as.character(values$tableB02$ID[i]), sep = "")))
     }
     isolate(colnames(values$tableB01.01)[colnames(values$tableB01.01) == "id"] <- "Label")
     isolate(rownames(values$tableB01.01)<-values$tableB01.01$Row_names)
-    isolate(values$wavefeatureB02 <- values$tableB01.01[grep("Cell", values$tableB01.01$Row_names, value = TRUE), ])
-    isolate(values$wavefeatureB02 <- values$wavefeatureB02[order(values$wavefeatureB02$Label),])
+
+    withBusyIndicatorServer("staB02", {
+      GlobalClustB02<-WZY.Wavelet.clust2(values$tableB01.02)
+    })
+    fit <- hclust(GlobalClustB02, method = "ward.D")
+    groups <- cutree(fit, k = 2)
+    
     isolate(values$distributionB02 <- values$tableB01.01[grep("Moran Index", values$tableB01.01$Row_names, value = TRUE), ])
-    isolate(values$distributionB02 <- values$distributionB02[order(values$distributionB02$Label),])
+    isolate(values$distributionB02 <- values$distributionB02[order(values$distributionB02$Label), ])
+    isolate(values$tableB01.01 <- values$tableB01.01[! rownames(values$tableB01.01) %in% grep("Moran Index", rownames(values$tableB01.01), value = TRUE), ])
     isolate(values$MoranPB02 <- values$tableB01.01[grep("P value", values$tableB01.01$Row_names, value = TRUE), ])
     isolate(values$MoranPB02 <- values$MoranPB02[order(values$MoranPB02$Label),])
+    isolate(values$tableB01.01 <- values$tableB01.01[! rownames(values$tableB01.01) %in% grep("P value", rownames(values$tableB01.01), value = TRUE), ])
+    
+    isolate(values$GlobalClustB02 <- GlobalClustB02)
+    isolate(values$tableB01.01 <- cbind(values$tableB01.01, Global_Group = groups))
+    
+    isolate(values$wavefeatureB02 <- values$tableB01.01[grep("Cell", values$tableB01.01$Row_names, value = TRUE), ])
+    isolate(values$wavefeatureB02 <- values$wavefeatureB02[order(values$wavefeatureB02$Label),])
+    isolate(values$regionB02 <- values$tableB01.01[grep("Region", values$tableB01.01$Row_names, value = TRUE), ])
+    isolate(values$regionB02 <- values$regionB02[order(values$regionB02$Label),])
+
   })
   #=== output part ===#
   output$tableB02.00<-DT::renderDataTable(
@@ -999,6 +1017,11 @@ server<-function(input, output, session) {
     content = function(file){
       write.csv(values$tableB02, file, row.names = FALSE)
     }
+  )
+  output$tableRegionB02<-DT::renderDataTable(
+    values$regionB02,
+    caption = 'Raw Results of each entire sample check',
+    rownames = FALSE
   )
   output$tableWavefeatureB02<-DT::renderDataTable(
     values$wavefeatureB02,
@@ -1034,6 +1057,17 @@ server<-function(input, output, session) {
     isolate(values$tableB02<-values$tableB01.03)
   })
     #=== 02.end ===#
+  plotClustB03 <- reactive({
+    gp<-NULL
+    GlobalClustB02 <- values$GlobalClustB02
+    gp<-plot(hclust(GlobalClustB02, method = "ward.D"), sub = " ", main = "Wave Cluster", ylab = "Dissimilarity to reference", xlab = "", hang = -1)
+    gp
+  })
+  
+  
+  
+  output$plotClustB03<-renderPlot(plotClustB03())
+  
   #### Global Setting ####
   session$onSessionEnded(stopApp)
 }
