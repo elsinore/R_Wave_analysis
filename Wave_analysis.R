@@ -276,6 +276,10 @@ ui<-navbarPage("Wave Analysis",
                             class = "btn-primary"
                           )
                         )
+                      ),
+                      conditionalPanel(
+                        'input.dataset2 == "Results"',
+                        h4("Statistical Results")
                       )
                     ),
                     #### The Result Window ####
@@ -294,11 +298,16 @@ ui<-navbarPage("Wave Analysis",
                                    DT::dataTableOutput('tableB01.03')
                                  )
                         ),
-                        #### 01.Statistical Analysis ####
+                        #### 02.Statistical Analysis ####
                         tabPanel("Statistical Analysis",
                                  verticalLayout(
-                                   DT::dataTableOutput('tableB02.00')
+                                   DT::dataTableOutput('tableB02.00'),
+                                   DT::dataTableOutput('tableWavefeatureB02'),
+                                   DT::dataTableOutput('tableDistributionB02'),
+                                   DT::dataTableOutput('tableMoranPB02')
                                  )
+                        ),
+                        tabPanel("Results"
                                  
                         )
                       )
@@ -823,6 +832,9 @@ server<-function(input, output, session) {
     res
   })
   fileList<-reactive({
+    if(is.null(input$directory)){
+      return(NULL)
+    }
     fileDir<-parseDirPath(volumes, input$directory)
     pat = input$postfix
     fl<-list.files(path = fileDir, all.files = FALSE)
@@ -888,12 +900,14 @@ server<-function(input, output, session) {
     }
   )
   #=== input update part ===#
-  values$tableB01.00<-data.frame(V1 = NA, V2 = NA)
-  values$tableB01.01<-data.frame(V1 = NA, V2 = NA)
-  values$tableB01.02<-data.frame(V1 = NA, V2 = NA)
-  values$tableB01.03<-data.frame(V1 = NA, V2 = NA)
+  values$tableB01.00<-NULL
+  values$tableB01.01<-NULL
+  values$tableB01.02<-NULL
+  values$tableB01.03<-NULL
   observe({
-    if(is.null(input$tableB01.00)){
+    if(is.null(input$directory)){
+      return(NULL)
+    } else if(is.null(input$tableB01.00)){
       tableB01.00<-fileList()
       No.<-c(1:length(tableB01.00))
       tableB01.00<-cbind(No., data = tableB01.00)
@@ -935,6 +949,7 @@ server<-function(input, output, session) {
   #=== manipulation part ===#
   values$wavefeatureB02<-c()
   values$distributionB02<-c()
+  values$MoranPB02<-c()
   observeEvent(input$staB02, {
     if(is.null(values$tableB01.01)) {
       return(NULL)
@@ -947,6 +962,10 @@ server<-function(input, output, session) {
     isolate(rownames(values$tableB01.01)<-values$tableB01.01$Row_names)
     isolate(values$wavefeatureB02 <- values$tableB01.01[grep("Cell", values$tableB01.01$Row_names, value = TRUE), ])
     isolate(values$wavefeatureB02 <- values$wavefeatureB02[order(values$wavefeatureB02$Label),])
+    isolate(values$distributionB02 <- values$tableB01.01[grep("Moran Index", values$tableB01.01$Row_names, value = TRUE), ])
+    isolate(values$distributionB02 <- values$distributionB02[order(values$distributionB02$Label),])
+    isolate(values$MoranPB02 <- values$tableB01.01[grep("P value", values$tableB01.01$Row_names, value = TRUE), ])
+    isolate(values$MoranPB02 <- values$MoranPB02[order(values$MoranPB02$Label),])
   })
   #=== output part ===#
   output$tableB02.00<-DT::renderDataTable(
@@ -963,6 +982,21 @@ server<-function(input, output, session) {
     content = function(file){
       write.csv(values$tableB02, file, row.names = FALSE)
     }
+  )
+  output$tableWavefeatureB02<-DT::renderDataTable(
+    values$wavefeatureB02,
+    caption = 'Raw Results of Wave feature check',
+    rownames = FALSE
+  )
+  output$tableDistributionB02<-DT::renderDataTable(
+    values$distributionB02,
+    caption = 'Raw Results of distribution check',
+    rownames = FALSE
+  )
+  output$tableMoranPB02<-DT::renderDataTable(
+    values$MoranPB02,
+    caption = 'Raw Results of P value check',
+    rownames = FALSE
   )
   #=== input updata part ===#
   values$tableB02 <- data.frame()
