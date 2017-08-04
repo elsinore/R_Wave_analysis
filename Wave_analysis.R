@@ -1101,7 +1101,7 @@ server<-function(input, output, session) {
     #=== output part ===#
   output$plotClustB03<-renderPlot(plotClustB03())
   output$tableWaveB03<-DT::renderDataTable(
-    format(SummaryWaveB03(), digits = 3, scientific = FALSE),
+    format(SummaryWaveB03(), digits = 2, scientific = FALSE),
     caption = 'Results 1: wave feature for each cell',
     options = list(
       pageLength = length(SummaryWaveB03()[,1]),
@@ -1109,7 +1109,7 @@ server<-function(input, output, session) {
     )
   )
   output$tableRegionB03<-DT::renderDataTable(
-    format(SummaryRegionB03(), digits = 3, scientific = FALSE),
+    format(SummaryRegionB03(), digits = 2, na.encode = TRUE, scientific = FALSE),
     caption = 'Results 2: wave feature for region',
     options = list(
       pageLength = length(SummaryRegionB03()[,1]),
@@ -1117,7 +1117,7 @@ server<-function(input, output, session) {
     )
   )
   output$tableMoranIndexB03<-DT::renderDataTable(
-    format(SummaryMoranIndexB03(), digits = 3, scientific = FALSE),
+    format(SummaryMoranIndexB03(), digits = 2, scientific = FALSE),
     caption = 'Results 3: Moran index for each wave feature',
     options = list(
       pageLength = length(SummaryMoranIndexB03()[,1]),
@@ -1125,7 +1125,7 @@ server<-function(input, output, session) {
     )
   )
   output$tableMoranPB03<-DT::renderDataTable(
-    format(SummaryMoranPB03(), digits = 3, scientific = FALSE),
+    format(SummaryMoranPB03(), digits = 2, scientific = FALSE),
     caption = 'Results 4: P value of Moran index for each wave feature',
     options = list(
       pageLength = length(SummaryMoranPB03()[,1]),
@@ -1135,7 +1135,7 @@ server<-function(input, output, session) {
     #=== input update part ===#
   
   #### Global Setting ####
-  options(scipen = 6)
+  options(scipen = 5)
   session$onSessionEnded(stopApp)
 }
 shinyApp(ui = ui, server = server)
