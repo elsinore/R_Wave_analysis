@@ -1,4 +1,7 @@
 # +++00. Required Packages and Functions -----------------------------------------
+list.of.packages <- c("shiny", "ggplot2", "biwavelet", "data.table", "stringr", "ape", "DT", "shinyFiles", "shinyjs", "psych", "ggsignif")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
 library(shiny)
 library(ggplot2)
 library(biwavelet)
@@ -311,8 +314,8 @@ ui<-navbarPage("Wave Analysis",
                           DT::dataTableOutput('tableMoranPB03')
                         ),
                         #### 04.Plot Output ####
-                        tabPanel("Plot Output"
-                          
+                        tabPanel("Plot Output",
+                          plotOutput("plotBoxB04.00")
                         )
                       )
                     )
@@ -881,34 +884,18 @@ server<-function(input, output, session) {
       searching = FALSE
     )
   )
-  output$downloadAnaRes <- downloadHandler(
+  output$downloadAnaResB01 <- downloadHandler(
     filename = "Table_1.csv",
     content = function(file) {
       dir.create(paste(parseDirPath(volumes, input$directory), "/AnalysisResults/", sep = ""), showWarnings = FALSE)
       write.csv(values$tableB01.00, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_1.csv", sep = ""), row.names = FALSE)
-    }
-  )
-  output$downloadAnaRes <- downloadHandler(
-    filename = "Table_2.csv",
-    content = function(file) {
-      dir.create(paste(parseDirPath(volumes, input$directory), "/AnalysisResults/", sep = ""), showWarnings = FALSE)
       write.csv(values$tableB01.01, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_2.csv", sep = ""), row.names = FALSE)
-    }
-  )
-  output$downloadAnaRes <- downloadHandler(
-    filename = "Table_3.csv",
-    content = function(file) {
-      dir.create(paste(parseDirPath(volumes, input$directory), "/AnalysisResults/", sep = ""), showWarnings = FALSE)
       write.csv(values$tableB01.02, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.csv", sep = ""), row.names = FALSE)
-    }
-  )
-  output$downloadAnaRes <- downloadHandler(
-    filename = "Table_4.csv",
-    content = function(file) {
-      dir.create(paste(parseDirPath(volumes, input$directory), "/AnalysisResults/", sep = ""), showWarnings = FALSE)
       write.csv(values$tableB01.03, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_4.csv", sep = ""), row.names = FALSE)
     }
+    
   )
+
   #=== input update part ===#
   values$tableB01.00<-data.frame("Table 2"=NA)
   values$tableB01.01<-data.frame("Table 2"=NA)
@@ -1056,42 +1043,73 @@ server<-function(input, output, session) {
   #### 03. Statistical Results ####
     #=== maniupaltion part ===#
   SummaryWaveB03 <- eventReactive(input$staB02, {
+    P.value <- c()
+    Statistic <- c()
+    for(i in 2:10){
+      test <- wilcox.test(values$wavefeatureB02[, i] ~ values$wavefeatureB02$Label)
+      P.value <-c(P.value, test$p.value) 
+      Statistic <- c(Statistic, test$statistic)
+    }
     group.n <- as.numeric(max(values$tableB02$Group))+1
     summary <- describeBy(values$wavefeatureB02[, 2:10], values$wavefeatureB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
     }
+    out<-rbind(out, P.value = P.value, Statistic = Statistic)
     return(out)
   })
   SummaryRegionB03 <- eventReactive(input$staB02, {
+    P.value <- c()
+    Statistic <- c()
+    for(i in 2:9){
+      test <- wilcox.test(values$regionB02[, i] ~ values$regionB02$Label)
+      P.value <-c(P.value, test$p.value) 
+      Statistic <- c(Statistic, test$statistic)
+    }
     group.n <- as.numeric(max(values$tableB02$Group))+1
     summary <- describeBy(values$regionB02[, 2:9], values$regionB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
     }
+    out<-rbind(out, P.value = P.value, Statistic = Statistic)
     return(out)
   })
   SummaryMoranIndexB03 <- eventReactive(input$staB02, {
+    P.value <- c()
+    Statistic <- c()
+    for(i in 2:10){
+      test <- wilcox.test(values$distributionB02[, i] ~ values$distributionB02$Label)
+      P.value <-c(P.value, test$p.value) 
+      Statistic <- c(Statistic, test$statistic)
+    }
     group.n <- as.numeric(max(values$tableB02$Group))+1
     summary <- describeBy(values$distributionB02[, 2:10], values$distributionB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
     }
+    out<-rbind(out, P.value = P.value, Statistic = Statistic)
     return(out)
   })
   SummaryMoranPB03 <- eventReactive(input$staB02, {
+    P.value <- c()
+    Statistic <- c()
+    for(i in 2:10){
+      test <- wilcox.test(values$MoranPB02[, i] ~ values$MoranPB02$Label)
+      P.value <-c(P.value, test$p.value) 
+      Statistic <- c(Statistic, test$statistic)
+    }
     group.n <- as.numeric(max(values$tableB02$Group))+1
     summary <- describeBy(values$MoranPB02[, 2:10], values$MoranPB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
     }
+    out<-rbind(out, P.value = P.value, Statistic = Statistic)
     return(out)
   })
-  
   plotClustB03 <- reactive({
     gp<-NULL
     GlobalClustB02 <- values$GlobalClustB02
@@ -1132,6 +1150,20 @@ server<-function(input, output, session) {
       lengthChange = FALSE
     )
   )
+    #=== 03.end ===#
+  #### 04. Plot Output ####
+    #=== manipulation part ===#
+  plotBoxB04.00<-reactive({
+    anno<-SummaryWaveB03()["P.value", 1]
+    ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 5])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno, digits=2),
+                  y_position=max(values$wavefeatureB02[, 5])+max(values$wavefeatureB02[, 5])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))
+  })
+    #=== output part ===#
+  output$plotBoxB04.00<-renderPlot(plotBoxB04.00())
     #=== input update part ===#
   
   #### Global Setting ####
