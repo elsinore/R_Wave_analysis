@@ -1080,13 +1080,13 @@ server<-function(input, output, session) {
   SummaryMoranIndexB03 <- eventReactive(input$staB02, {
     P.value <- c()
     Statistic <- c()
-    for(i in 2:10){
+    for(i in 2:11){
       test <- wilcox.test(values$distributionB02[, i] ~ values$distributionB02$Label)
       P.value <-c(P.value, test$p.value) 
       Statistic <- c(Statistic, test$statistic)
     }
     group.n <- as.numeric(max(values$tableB02$Group))+1
-    summary <- describeBy(values$distributionB02[, 2:10], values$distributionB02$Tag)
+    summary <- describeBy(values$distributionB02[, 2:11], values$distributionB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
@@ -1097,13 +1097,13 @@ server<-function(input, output, session) {
   SummaryMoranPB03 <- eventReactive(input$staB02, {
     P.value <- c()
     Statistic <- c()
-    for(i in 2:10){
+    for(i in 2:11){
       test <- wilcox.test(values$MoranPB02[, i] ~ values$MoranPB02$Label)
       P.value <-c(P.value, test$p.value) 
       Statistic <- c(Statistic, test$statistic)
     }
     group.n <- as.numeric(max(values$tableB02$Group))+1
-    summary <- describeBy(values$MoranPB02[, 2:10], values$MoranPB02$Tag)
+    summary <- describeBy(values$MoranPB02[, 2:11], values$MoranPB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
@@ -1155,19 +1155,187 @@ server<-function(input, output, session) {
   #### 04. Plot Output ####
     #=== manipulation part ===#
   plotBoxB04.00<-reactive({
-    multiplot<-c()
-    for(i in 2:10){
-      anno<-SummaryWaveB03()["P.value", i-1]
-      multiplot <- c(multiplot, ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, i])) +
-        geom_boxplot(position="dodge") +
-        geom_signif(annotation=formatC(anno, digits=2),
-                    y_position=max(values$wavefeatureB02[, i])+max(values$wavefeatureB02[, i])*0.22, xmin=1, xmax=2, 
-                    map_signif_level = TRUE,
-                    tip_length = c(0.2, 0.04))+
-        labs(x = "Group", y = "Arbitrary Unit", title = colnames(values$wavefeatureB02)[i]) +
-        theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), axis.text=element_text(size=14), axis.title=element_text(size=14,face="bold")))
+    # Figure_1 
+    anno1 <- if(SummaryWaveB03()["P.value", 1]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 1]<0.05 && SummaryWaveB03()["P.value", 1]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 1]<0.01 && SummaryWaveB03()["P.value", 1]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 1]<0.001 && SummaryWaveB03()["P.value", 1]>0.0001){
+      "***"
     }
-    multiplot(multiplot, cols=3)
+    g1 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 2])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno1, digits=2),
+                  y_position=max(values$wavefeatureB02[, 2])+max(values$wavefeatureB02[, 2])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Integrated" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+    # Figure_2 
+    anno2 <- if(SummaryWaveB03()["P.value", 2]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 2]<0.05 && SummaryWaveB03()["P.value", 2]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 2]<0.01 && SummaryWaveB03()["P.value", 2]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 2]<0.001 && SummaryWaveB03()["P.value", 2]>0.0001){
+      "***"
+    }
+    g2 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 3])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno2, digits=2),
+                  y_position=max(values$wavefeatureB02[, 3])+max(values$wavefeatureB02[, 3])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Mean Absolute Value" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+    # Figure_3
+    anno3 <- if(SummaryWaveB03()["P.value", 3]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 3]<0.05 && SummaryWaveB03()["P.value", 3]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 3]<0.01 && SummaryWaveB03()["P.value", 3]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 3]<0.001 && SummaryWaveB03()["P.value", 3]>0.0001){
+      "***"
+    }
+    g3 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 4])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno3, digits=2),
+                  y_position=max(values$wavefeatureB02[, 4])+max(values$wavefeatureB02[, 4])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Variance" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+    # Figure_4
+    anno4 <- if(SummaryWaveB03()["P.value", 4]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 4]<0.05 && SummaryWaveB03()["P.value", 4]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 4]<0.01 && SummaryWaveB03()["P.value", 4]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 4]<0.001 && SummaryWaveB03()["P.value", 4]>0.0001){
+      "***"
+    }
+    g4 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 5])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno4, digits=2),
+                  y_position=max(values$wavefeatureB02[, 5])+max(values$wavefeatureB02[, 5])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Root Mean Square" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+    # Figure_5
+    anno5 <- if(SummaryWaveB03()["P.value", 5]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 5]<0.05 && SummaryWaveB03()["P.value", 5]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 5]<0.01 && SummaryWaveB03()["P.value", 5]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 5]<0.001 && SummaryWaveB03()["P.value", 5]>0.0001){
+      "***"
+    }
+    g5 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 6])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno5, digits=2),
+                  y_position=max(values$wavefeatureB02[, 6])+max(values$wavefeatureB02[, 6])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Waveform Length" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+    # Figure_6 
+    anno6 <- if(SummaryWaveB03()["P.value", 6]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 6]<0.05 && SummaryWaveB03()["P.value", 6]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 6]<0.01 && SummaryWaveB03()["P.value", 6]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 6]<0.001 && SummaryWaveB03()["P.value", 6]>0.0001){
+      "***"
+    }
+    g6 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 7])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno6, digits=2),
+                  y_position=max(values$wavefeatureB02[, 7])+max(values$wavefeatureB02[, 7])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Main Period" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+    # Figure_7
+    anno7 <- if(SummaryWaveB03()["P.value", 7]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 7]<0.05 && SummaryWaveB03()["P.value", 7]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 7]<0.01 && SummaryWaveB03()["P.value", 7]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 7]<0.001 && SummaryWaveB03()["P.value", 7]>0.0001){
+      "***"
+    }
+    g7 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 8])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno7, digits=2),
+                  y_position=max(values$wavefeatureB02[, 8])+max(values$wavefeatureB02[, 8])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Maximal Amplitude" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+    # Figure_8
+    anno8 <- if(SummaryWaveB03()["P.value", 8]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 8]<0.05 && SummaryWaveB03()["P.value", 8]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 8]<0.01 && SummaryWaveB03()["P.value", 8]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 8]<0.001 && SummaryWaveB03()["P.value", 8]>0.0001){
+      "***"
+    }
+    g8 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 9])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno8, digits=2),
+                  y_position=max(values$wavefeatureB02[, 9])+max(values$wavefeatureB02[, 9])*0.22, xmin=1, xmax=2, 
+                  map_signif_level = TRUE,
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Mean Power Frequency" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+    # Figure_9 
+    anno9 <- if(SummaryWaveB03()["P.value", 9]>0.05){
+      "NULL"
+    } else if(SummaryWaveB03()["P.value", 9]<0.05 && SummaryWaveB03()["P.value", 9]>0.01){
+      "*"
+    } else if(SummaryWaveB03()["P.value", 9]<0.01 && SummaryWaveB03()["P.value", 9]>0.001){
+      "**"
+    }else if(SummaryWaveB03()["P.value", 9]<0.001 && SummaryWaveB03()["P.value", 9]>0.0001){
+      "***"
+    }
+    g9 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 10])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno9, digits=2),
+                  y_position=max(values$wavefeatureB02[, 10])+max(values$wavefeatureB02[, 10])*0.22, xmin=1, xmax=2, 
+                  tip_length = c(0.2, 0.04))+
+      labs(y = "Arbitrary Unit", title = "Dissimilarity to Region" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold"))
+   
+    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, cols=3)
   })
     #=== output part ===#
   output$plotBoxB04.00<-renderPlot(plotBoxB04.00())
