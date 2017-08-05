@@ -1,5 +1,5 @@
 # +++00. Required Packages and Functions -----------------------------------------
-list.of.packages <- c("shiny", "ggplot2", "biwavelet", "data.table", "stringr", "ape", "DT", "shinyFiles", "shinyjs", "psych", "ggsignif")
+list.of.packages <- c("shiny", "ggplot2", "biwavelet", "data.table", "stringr", "ape", "DT", "shinyFiles", "shinyjs", "psych", "ggsignif", "grid")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 library(shiny)
@@ -13,6 +13,7 @@ library(shinyFiles)
 library(shinyjs)
 library(psych)
 library(ggsignif)
+library(grid)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 # +++01. UI Function -------------------------------------------------------------
@@ -1154,13 +1155,19 @@ server<-function(input, output, session) {
   #### 04. Plot Output ####
     #=== manipulation part ===#
   plotBoxB04.00<-reactive({
-    anno<-SummaryWaveB03()["P.value", 1]
-    ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 5])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno, digits=2),
-                  y_position=max(values$wavefeatureB02[, 5])+max(values$wavefeatureB02[, 5])*0.22, xmin=1, xmax=2, 
-                  map_signif_level = TRUE,
-                  tip_length = c(0.2, 0.04))
+    multiplot<-c()
+    for(i in 2:10){
+      anno<-SummaryWaveB03()["P.value", i-1]
+      multiplot <- c(multiplot, ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, i])) +
+        geom_boxplot(position="dodge") +
+        geom_signif(annotation=formatC(anno, digits=2),
+                    y_position=max(values$wavefeatureB02[, i])+max(values$wavefeatureB02[, i])*0.22, xmin=1, xmax=2, 
+                    map_signif_level = TRUE,
+                    tip_length = c(0.2, 0.04))+
+        labs(x = "Group", y = "Arbitrary Unit", title = colnames(values$wavefeatureB02)[i]) +
+        theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), axis.text=element_text(size=14), axis.title=element_text(size=14,face="bold")))
+    }
+    multiplot(multiplot, cols=3)
   })
     #=== output part ===#
   output$plotBoxB04.00<-renderPlot(plotBoxB04.00())
