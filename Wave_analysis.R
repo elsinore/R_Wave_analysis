@@ -1694,7 +1694,7 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$distributionB02[, 9])*1.23)
     # Figure_9
-    anno8 <- if(SummaryMoranIndexB03()["P.value", 9]>0.05){
+    anno9 <- if(SummaryMoranIndexB03()["P.value", 9]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 9]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 9]<0.05 && SummaryMoranIndexB03()["P.value", 9]>0.01){
       "*"
@@ -1703,9 +1703,9 @@ server<-function(input, output, session) {
     }else if(SummaryMoranIndexB03()["P.value", 9]<0.001 && SummaryMoranIndexB03()["P.value", 9]>0.0001){
       "***"
     } else {"****"}
-    g8 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 10])) +
+    g9 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 10])) +
       geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno8, digits=2),
+      geom_signif(annotation=formatC(anno9, digits=2),
                   y_position=max(values$distributionB02[, 10])*1.16, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$distributionB02[, 10][values$distributionB02$Label == 0])/(max(values$distributionB02[, 10])*1.12)), 
                                                           1-(max(values$distributionB02[, 10][values$distributionB02$Label == 1])/(max(values$distributionB02[, 10])*1.12))))+
@@ -1714,7 +1714,7 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$distributionB02[, 10])*1.23)
     # Figure_10
-    anno8 <- if(SummaryMoranIndexB03()["P.value", 10]>0.05){
+    anno10 <- if(SummaryMoranIndexB03()["P.value", 10]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 10]<0.05 && SummaryMoranIndexB03()["P.value", 10]>0.01){
       "*"
@@ -1723,9 +1723,9 @@ server<-function(input, output, session) {
     }else if(SummaryMoranIndexB03()["P.value", 10]<0.001 && SummaryMoranIndexB03()["P.value", 10]>0.0001){
       "***"
     } else {"****"}
-    g8 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 11])) +
+    g10 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 11])) +
       geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno8, digits=2),
+      geom_signif(annotation=formatC(anno10, digits=2),
                   y_position=max(values$distributionB02[, 11])*1.16, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$distributionB02[, 11][values$distributionB02$Label == 0])/(max(values$distributionB02[, 11])*1.12)), 
                                                           1-(max(values$distributionB02[, 11][values$distributionB02$Label == 1])/(max(values$distributionB02[, 11])*1.12))))+
@@ -1902,7 +1902,7 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 9])*1.23)
     # Figure_9
-    anno8 <- if(SummaryMoranPB03()["P.value", 9]>0.05){
+    anno9 <- if(SummaryMoranPB03()["P.value", 9]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 9]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 9]<0.05 && SummaryMoranPB03()["P.value", 9]>0.01){
       "*"
@@ -1911,9 +1911,9 @@ server<-function(input, output, session) {
     }else if(SummaryMoranPB03()["P.value", 9]<0.001 && SummaryMoranPB03()["P.value", 9]>0.0001){
       "***"
     } else {"****"}
-    g8 <- ggplot(values$MoranPB02, aes(x=values$MoranPB02$Tag, y=values$MoranPB02[, 10])) +
+    g9 <- ggplot(values$MoranPB02, aes(x=values$MoranPB02$Tag, y=values$MoranPB02[, 10])) +
       geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno8, digits=2),
+      geom_signif(annotation=formatC(anno9, digits=2),
                   y_position=max(values$MoranPB02[, 10])*1.16, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$MoranPB02[, 10][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 10])*1.12)), 
                                                           1-(max(values$MoranPB02[, 10][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 10])*1.12))))+
@@ -1922,7 +1922,7 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 10])*1.23)
     # Figure_10
-    anno8 <- if(SummaryMoranPB03()["P.value", 10]>0.05){
+    anno10 <- if(SummaryMoranPB03()["P.value", 10]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 10]<0.05 && SummaryMoranPB03()["P.value", 10]>0.01){
       "*"
@@ -1931,9 +1931,9 @@ server<-function(input, output, session) {
     }else if(SummaryMoranPB03()["P.value", 10]<0.001 && SummaryMoranPB03()["P.value", 10]>0.0001){
       "***"
     } else {"****"}
-    g8 <- ggplot(values$MoranPB02, aes(x=values$MoranPB02$Tag, y=values$MoranPB02[, 11])) +
+    g10 <- ggplot(values$MoranPB02, aes(x=values$MoranPB02$Tag, y=values$MoranPB02[, 11])) +
       geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno8, digits=2),
+      geom_signif(annotation=formatC(anno10, digits=2),
                   y_position=max(values$MoranPB02[, 11])*1.16, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$MoranPB02[, 11][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 11])*1.12)), 
                                                           1-(max(values$MoranPB02[, 11][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 11])*1.12))))+
@@ -1946,6 +1946,9 @@ server<-function(input, output, session) {
   })
     #=== output part ===#
   output$plotBoxB04.00<-renderPlot(plotBoxB04.00())
+  output$plotBoxB04.01<-renderPlot(plotBoxB04.01())
+  output$plotBoxB04.02<-renderPlot(plotBoxB04.02())
+  output$plotBoxB04.03<-renderPlot(plotBoxB04.03())
   output$uiB04 <- renderUI({
     switch(input$levelB04,
       "Cell Level" = list(
@@ -1961,12 +1964,12 @@ server<-function(input, output, session) {
       "Moran Index" = list(
         tags$h4("Moran index for each wave feature"),
         tags$hr(),
-        plotOutput("plotBoxB04.02", width = "800px", height = "800px")
+        plotOutput("plotBoxB04.02", width = "800px", height = "1067px")
       ),
       "Significance of Moran Index" = list(
         tags$h4(" P value of Moran index for each wave feature"),
         tags$hr(),
-        plotOutput("plotBoxB04.03", width = "800px", height = "800px")
+        plotOutput("plotBoxB04.03", width = "800px", height = "1067px")
       )
     )
   })

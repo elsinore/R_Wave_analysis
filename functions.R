@@ -83,7 +83,7 @@ WZY.EMG.F <- function(wzy) {
     s<-c()
     max<-0
     row<-0
-    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]))
+    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]), do.sig = FALSE)
     y<-rowSums(abs(dwt$wave)^2)
     x<-dwt$period
     s<-cbind(x, y)
@@ -134,10 +134,10 @@ WZY.Wavelet.clust <- function(input){ # wave clust in a same sample
   require("stringr")
   require("biwavelet")
   ncol<-NCOL(input)
-  wt.t1 <- wt(cbind(input[ , 1], input[ , 2]))
+  wt.t1 <- wt(cbind(input[ , 1], input[ , 2]), do.sig = FALSE)
   w.arr <- array(NA, dim = c(ncol-1, NROW(wt.t1$wave), NCOL(wt.t1$wave)))
   for(i in 2:ncol) {
-    wt.t<-wt(cbind(input[ , 1], input[ , i]))
+    wt.t<-wt(cbind(input[ , 1], input[ , i]), do.sig = FALSE)
     w.arr[i-1, , ] <- wt.t$wave
   }
   w.arr.dis<-wclust(w.arr)
@@ -156,10 +156,10 @@ WZY.Wavelet.clust2 <- function(input){ # wave clust in a same sample
   require("stringr")
   require("biwavelet")
   ncol<-NCOL(input)
-  wt.t1 <- wt(cbind(input[ , 1], input[ , 2]))
+  wt.t1 <- wt(cbind(input[ , 1], input[ , 2]), do.sig = FALSE)
   w.arr <- array(NA, dim = c(ncol-1, NROW(wt.t1$wave), NCOL(wt.t1$wave)))
   for(i in 2:ncol) {
-    wt.t<-wt(cbind(input[ , 1], input[ , i]))
+    wt.t<-wt(cbind(input[ , 1], input[ , i]), do.sig = FALSE)
     w.arr[i-1, , ] <- wt.t$wave
   }
   w.arr.dis<-wclust(w.arr)
@@ -240,7 +240,7 @@ wzy.batch <- function (wzy, loc) {
     s<-c()
     max<-0
     row<-0
-    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]))
+    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]), do.sig = FALSE)
     y<-rowSums(abs(dwt$wave)^2)
     x<-dwt$period
     s<-cbind(x, y)
@@ -410,8 +410,8 @@ multiplot.wzy <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
       
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$col,
-                                      layout.pos.col = matchidx$row))
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
     }
   }
 }
