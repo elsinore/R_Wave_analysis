@@ -270,7 +270,7 @@ wzy.batch <- function (wzy, loc) {
   #= finished calculation of Mean Power Frequency
   ###
   #### calculate the dissimilarity ####
-  similarity<-WZY.Wavelet.clust(wzyo)
+  similarity<-WZY.Wavelet.clust2(wzyo)
   resclu<-as.matrix(similarity)
   resclu<-resclu[,1]
   fit <- hclust(similarity, method = "ward.D")
@@ -410,8 +410,8 @@ multiplot.wzy <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
       
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$col,
+                                      layout.pos.col = matchidx$row))
     }
   }
 }
