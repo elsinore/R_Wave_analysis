@@ -274,7 +274,8 @@ ui<-navbarPage("Wave Analysis",
                         'input.dataset2 == "Results"',
                         h4("Statistical Results"),
                         shinyDirButton('ChooseDirB03', 'Select a folder to save the results', 'Please select a folder'),
-                        downloadButton('downloadStaResB03', 'Download the statistic result')
+                        downloadButton('downloadStaResB03', 'Download the statistic result'),
+                        sliderInput("widthB03", "Plot Width", min = 800, max = 9000, value = 3000)
                       ),
                       #### 04. Plot Output ####
                       conditionalPanel(
@@ -314,7 +315,7 @@ ui<-navbarPage("Wave Analysis",
                         ),
                         #### 03.Results ####
                         tabPanel("Results",
-                          plotOutput("plotClustB03", width = "3000px", height = "800px"),
+                          uiOutput("ClustB03"),
                           DT::dataTableOutput('tableWaveB03'),
                           DT::dataTableOutput('tableRegionB03'),
                           DT::dataTableOutput('tableMoranIndexB03'),
@@ -898,7 +899,7 @@ server<-function(input, output, session) {
       dir.create(paste(parseDirPath(volumes, input$directory), "/AnalysisResults/", sep = ""), showWarnings = FALSE)
       write.csv(values$tableB01.00, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_1.csv", sep = ""), row.names = FALSE)
       write.csv(values$tableB01.01, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_2.csv", sep = ""), row.names = FALSE)
-      write.csv(values$tableB01.02, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.csv", sep = ""), row.names = FALSE)
+      write.table(values$tableB01.02, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.csv", sep = ""), row.names = FALSE, col.names = values$colnames, sep = ",")
       write.csv(values$tableB01.03, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_4.csv", sep = ""), row.names = FALSE)
     }
   )
@@ -1131,10 +1132,10 @@ server<-function(input, output, session) {
       write.csv(values$regionB02, file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/SplitData_2.csv", sep = ""), row.names = FALSE)
       write.csv(values$distributionB02, file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/SplitData_3.csv", sep = ""), row.names = FALSE)
       write.csv(values$MoranPB02, file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/SplitData_4.csv", sep = ""), row.names = FALSE)
-      write.csv(SummaryWaveB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_1.csv", sep = ""), row.names = FALSE)
-      write.csv(SummaryRegionB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_2.csv", sep = ""), row.names = FALSE)
-      write.csv(SummaryMoranIndexB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_3.csv", sep = ""), row.names = FALSE)
-      write.csv(SummaryMoranPB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_4.csv", sep = ""), row.names = FALSE)
+      write.csv(SummaryWaveB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_1.csv", sep = ""), row.names = TRUE)
+      write.csv(SummaryRegionB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_2.csv", sep = ""), row.names = TRUE)
+      write.csv(SummaryMoranIndexB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_3.csv", sep = ""), row.names = TRUE)
+      write.csv(SummaryMoranPB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_4.csv", sep = ""), row.names = TRUE)
     }
   )
   output$plotClustB03<-renderPlot(plotClustB03())
@@ -1169,6 +1170,9 @@ server<-function(input, output, session) {
       pageLength = length(SummaryMoranPB03()[,1]),
       lengthChange = FALSE
     )
+  )
+  output$ClustB03 <- renderUI(
+    plotOutput("plotClustB03", width = input$widthB03, height = "800px")
   )
     #=== 03.end ===#
   #### 04. Plot Output ####
@@ -1645,7 +1649,7 @@ server<-function(input, output, session) {
     g6 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 7])) +
       geom_boxplot(position="dodge") +
       geom_signif(annotation=formatC(anno6, digits=2),
-                  y_position=(max(values$distributionB02[, 7])-min(values$distributionB02[, 7])), xmin=1, xmax=2, 
+                  y_position=(max(values$distributionB02[, 7])-min(values$distributionB02[, 7]))*input$parTPB04.02, xmin=1, xmax=2, 
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-((max(values$distributionB02[, 7][values$distributionB02$Label == 0])-min(values$distributionB02[, 7][values$distributionB02$Label == 0]))/((max(values$distributionB02[, 7])-min(values$distributionB02[, 7]))*input$parTLB04.02)), 
                                  1-((max(values$distributionB02[, 7][values$distributionB02$Label == 1])-min(values$distributionB02[, 7][values$distributionB02$Label == 1]))/((max(values$distributionB02[, 7])-min(values$distributionB02[, 7]))*input$parTLB04.02))))+
@@ -1666,8 +1670,7 @@ server<-function(input, output, session) {
     g7 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 8])) +
       geom_boxplot(position="dodge") +
       geom_signif(annotation=formatC(anno7, digits=2),
-                  y_position=(max(values$distributionB02[, 8])-min(values$distributionB02[, 8]))*input$parTPB04.02, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
+                  y_position=(max(values$distributionB02[, 8])-min(values$distributionB02[, 8]))*input$parTPB04.02, xmin=1, xmax=2, textsize = 7,
                   tip_length = c(1-((max(values$distributionB02[, 8][values$distributionB02$Label == 0])-min(values$distributionB02[, 8][values$distributionB02$Label == 0]))/((max(values$distributionB02[, 8])-min(values$distributionB02[, 8]))*input$parTLB04.02)), 
                                  1-((max(values$distributionB02[, 8][values$distributionB02$Label == 1])-min(values$distributionB02[, 8][values$distributionB02$Label == 1]))/((max(values$distributionB02[, 8])-min(values$distributionB02[, 8]))*input$parTLB04.02))))+
       labs(y = "Arbitrary Unit", title = "Maximal Amplitude" ) +
@@ -1966,9 +1969,9 @@ server<-function(input, output, session) {
            ),
            "Moran Index" = list(
              tags$hr(),
-             sliderInput("parTPB04.02", "Tip Position", min = 1, max = 2, value = 1.16, step = 0.01),
+             sliderInput("parTPB04.02", "Tip Position", min = 1, max = 2, value = 1, step = 0.01),
              sliderInput("parTLB04.02", "Tip Length", min = 1, max = 2, value = 1.12, step = 0.01),
-             sliderInput("parGHB04.02", "Graph Heigth", min = 1, max = 2, value = 1.23, step = 0.01)
+             sliderInput("parGHB04.02", "Graph Heigth", min = 1, max = 2, value = 1.14, step = 0.01)
            ),
            "Significance of Moran Index" = list(
              tags$hr(),
