@@ -140,6 +140,7 @@ WZY.Wavelet.clust <- function(input){ # wave clust in a same sample
     wt.t<-wt(cbind(input[ , 1], input[ , i]), do.sig = FALSE)
     w.arr[i-1, , ] <- wt.t$wave
   }
+  w.arr <- round(w.arr, digits = 5)
   w.arr.dis<-wclust(w.arr)
   w.arr.dis<-w.arr.dis$dist.mat
   w.arr.dis<-as.matrix(w.arr.dis)
@@ -162,9 +163,10 @@ WZY.Wavelet.clust2 <- function(input){ # wave clust in a same sample
     wt.t<-wt(cbind(input[ , 1], input[ , i]), do.sig = FALSE)
     w.arr[i-1, , ] <- wt.t$wave
   }
-  w.arr.dis<-wclust(w.arr)
-  w.arr.dis<-w.arr.dis$dist.mat
-  w.arr.dis<-as.matrix(w.arr.dis)
+  w.arr <- round(w.arr, digits = 5)
+  w.arr.dis <- wclust(w.arr)
+  w.arr.dis <- w.arr.dis$dist.mat
+  w.arr.dis <- as.matrix(w.arr.dis)
   label <- colnames(input[, 2:ncol])
   colnames(w.arr.dis)<-label
   row.names(w.arr.dis)<-label
