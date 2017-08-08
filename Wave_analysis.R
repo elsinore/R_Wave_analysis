@@ -780,6 +780,7 @@ server<-function(input, output, session) {
   shinyDirChoose(input, 'ChooseDirB03', roots = volumes, session = session)
   values$colnames<-NULL
   values$sampleSize <- NULL
+  values$Row_names <- NULL
   #### 01.data input ####
   #=== manipulation part ===#
   resB01<-eventReactive(input$anB01, {
@@ -817,8 +818,9 @@ server<-function(input, output, session) {
       file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
       rawBatchData<-file01
       res00<-wzy.batch(wzy = file01, loc = file02)
-      rownames(res00)[rownames(res00) == "Moran Index"] <- str_c("S", prefix[1], "Moran Index")
-      rownames(res00)[rownames(res00) == "P value"] <- str_c("S", prefix[1], "P value")
+      label <- c(label, str_c("S", prefix[1], "Moran Index"), str_c("S", prefix[1], "P value"))
+      rownames(res00) <- label[-1]
+      isolate(values$Row_names <- c(values$Row_names, label[-1]))
       ids<-c(ids, prefix[1])
       res00<-cbind(res00, id = prefix[1])
       res<-rbind(res, res00)
@@ -842,8 +844,9 @@ server<-function(input, output, session) {
         file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
         rawBatchData<-cbind(rawBatchData, file01[,-1])
         res00<-wzy.batch(wzy = file01, loc = file02)
-        rownames(res00)[rownames(res00) == "Moran Index"] <- str_c("S", prefix[1], "Moran Index")
-        rownames(res00)[rownames(res00) == "P value"] <- str_c("S", prefix[1], "P value")
+        label <- c(label, str_c("S", prefix[1], "Moran Index"), str_c("S", prefix[1], "P value"))
+        rownames(res00) <- label[-1]
+        isolate(values$Row_names <- c(values$Row_names, label[-1]))
         ids<-c(ids, prefix[1])
         res00<-cbind(res00, id = prefix[1])
         res<-rbind(res, res00)
@@ -851,7 +854,7 @@ server<-function(input, output, session) {
       }
     })
     isolate(values$sampleSize <- as.numeric(length(ids)))
-    Row_names<-rownames(res)
+    Row_names<-values$Row_names
     rownames(res)<-NULL
     res<-cbind(Row_names, res)
     res<-list(res, ids, rawBatchData)
@@ -1799,7 +1802,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   y_position=max(values$MoranPB02[, 2])*input$parTPB04.03, xmin=1, xmax=2, textsize = 7, 
                   tip_length = c(1-(max(values$MoranPB02[, 2][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 2])*input$parTLB04.03)), 
                                  1-(max(values$MoranPB02[, 2][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 2])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Integrated" ) +
+      labs(y = "Arbitrary Unit", title = "Integrated" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 2])*input$parGHB04.03)
@@ -1819,7 +1822,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   y_position=max(values$MoranPB02[, 3])*input$parTPB04.03, xmin=1, xmax=2, textsize = 7,
                   tip_length = c(1-(max(values$MoranPB02[, 3][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 3])*input$parTLB04.03)), 
                                  1-(max(values$MoranPB02[, 3][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 3])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Mean Absolute Value" ) +
+      labs(y = "Arbitrary Unit", title = "Mean Absolute Value" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 3])*input$parGHB04.03)
@@ -1839,7 +1842,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   y_position=max(values$MoranPB02[, 4])*input$parTPB04.03, xmin=1, xmax=2, textsize = 7,
                   tip_length = c(1-(max(values$MoranPB02[, 4][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 4])*input$parTLB04.03)), 
                                  1-(max(values$MoranPB02[, 4][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 4])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Variance" ) +
+      labs(y = "Arbitrary Unit", title = "Variance" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 4])*input$parGHB04.03)
@@ -1860,7 +1863,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$MoranPB02[, 5][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 5])*input$parTLB04.03)), 
                                  1-(max(values$MoranPB02[, 5][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 5])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Root Mean Square" ) +
+      labs(y = "Arbitrary Unit", title = "Root Mean Square" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 5])*input$parGHB04.03)
@@ -1881,7 +1884,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$MoranPB02[, 6][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 6])*input$parTLB04.03)), 
                                  1-(max(values$MoranPB02[, 6][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 6])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Waveform Length" ) +
+      labs(y = "Arbitrary Unit", title = "Waveform Length" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 6])*input$parGHB04.03)
@@ -1902,7 +1905,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$MoranPB02[, 7][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 7])*input$parTLB04.03)), 
                                  1-(max(values$MoranPB02[, 7][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 7])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Main Period" ) +
+      labs(y = "Arbitrary Unit", title = "Main Period" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 7])*input$parGHB04.03)
@@ -1923,7 +1926,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$MoranPB02[, 8][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 8])*input$parTLB04.03)), 
                                  1-(max(values$MoranPB02[, 8][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 8])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Maximal Amplitude" ) +
+      labs(y = "Arbitrary Unit", title = "Maximal Amplitude" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 8])*input$parGHB04.03)
@@ -1943,7 +1946,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   y_position=max(values$MoranPB02[, 9])*input$parTPB04.03, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$MoranPB02[, 9][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 9])*input$parTLB04.03)), 
                                                           1-(max(values$MoranPB02[, 9][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 9])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Mean Power Frequency" ) +
+      labs(y = "Arbitrary Unit", title = "Mean Power Frequency" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 9])*input$parGHB04.03)
@@ -1963,7 +1966,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   y_position=max(values$MoranPB02[, 10])*input$parTPB04.03, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$MoranPB02[, 10][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 10])*input$parTLB04.03)), 
                                                           1-(max(values$MoranPB02[, 10][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 10])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Dissimilarity to Region" ) +
+      labs(y = "Arbitrary Unit", title = "Dissimilarity to Region" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 10])*input$parGHB04.03)
@@ -1983,7 +1986,7 @@ multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
                   y_position=max(values$MoranPB02[, 11])*input$parTPB04.03, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$MoranPB02[, 11][values$MoranPB02$Label == 0])/(max(values$MoranPB02[, 11])*input$parTLB04.03)), 
                                                           1-(max(values$MoranPB02[, 11][values$MoranPB02$Label == 1])/(max(values$MoranPB02[, 11])*input$parTLB04.03))))+
-      labs(y = "Arbitrary Unit", title = "Global Group" ) +
+      labs(y = "Arbitrary Unit", title = "Global Group" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 11])*input$parGHB04.03)
