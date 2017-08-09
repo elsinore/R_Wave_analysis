@@ -277,6 +277,7 @@ wzy.batch <- function (wzy, loc) {
   resclu<-resclu[,1]
   fit <- hclust(similarity, method = "ward.D")
   groups <- cutree(fit, k = 2)
+  ratio <- as.numeric(length(groups[groups == 1])/length(groups))*100
   ##### result construction ####
   res<-data.frame(
     row.names = colnames(wzy),
@@ -308,6 +309,7 @@ wzy.batch <- function (wzy, loc) {
   Moran.I <- as.numeric(Moran.I)
   P.value <- as.numeric(P.value)
   res<-rbind(res, "Moran Index" = Moran.I, "P value" = P.value)
+  res<-cbind(res, Ratio = ratio)
   return(res)
 }
 #=== UI Functions ####

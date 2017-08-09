@@ -1022,8 +1022,10 @@ server<-function(input, output, session) {
       isolate(values$tableB01.01 <- values$tableB01.01[! rownames(values$tableB01.01) %in% grep("P value", rownames(values$tableB01.01), value = TRUE), ])
       isolate(values$wavefeatureB02 <- values$tableB01.01[grep("Cell", values$tableB01.01$Row_names, value = TRUE), ])
       isolate(values$wavefeatureB02 <- values$wavefeatureB02[order(values$wavefeatureB02$Label),])
+      isolate(values$wavefeatureB02 <- values$wavefeatureB02 <- values$wavefeatureB02[, -12])
       isolate(values$regionB02 <- values$tableB01.01[grep("Region", values$tableB01.01$Row_names, value = TRUE), ])
       isolate(values$regionB02 <- values$regionB02[order(values$regionB02$Label),])
+      isolate(values$regionB02$Ratio[values$regionB02$Label == 0]<- 100 - values$regionB02$Ratio[values$regionB02$Label == 0])
     })
   })
   #=== output part ===#
@@ -1104,13 +1106,13 @@ server<-function(input, output, session) {
   SummaryRegionB03 <- eventReactive(input$staB02, {
     P.value <- c()
     Statistic <- c()
-    for(i in 2:9){
+    for(i in c(2:9, 12)){
       test <- wilcox.test(values$regionB02[, i] ~ values$regionB02$Label)
       P.value <-c(P.value, test$p.value) 
       Statistic <- c(Statistic, test$statistic)
     }
     group.n <- as.numeric(max(values$tableB02$Group))+1
-    summary <- describeBy(values$regionB02[, 2:9], values$regionB02$Tag)
+    summary <- describeBy(values$regionB02[, c(2:9, 12)], values$regionB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
@@ -1138,8 +1140,16 @@ server<-function(input, output, session) {
   SummaryMoranPB03 <- eventReactive(input$staB02, {
     P.value <- c()
     Statistic <- c()
+    x <- values$MoranPB02
     for(i in 2:11){
-      test <- wilcox.test(values$MoranPB02[, i] ~ values$MoranPB02$Label)
+      groupChisqB04<-data.frame(Group1 = c(0,0), Group2 = c(0,0))
+      rownames(groupChisqB04) <- c(x$Tag[x$Label == 0][1],
+                                   x$Tag[x$Label == 1][1])
+      groupChisqB04[1,1] <- length(x$Label[x[, i] < 0.05][x$Label[x[, i] < 0.05]==0])
+      groupChisqB04[1,2] <- length(x$Label[x[, i] < 0.05][x$Label[x[, i] < 0.05]==1])
+      groupChisqB04[2,1] <- length(x$Label[x[, i] >= 0.05][x$Label[x[, i] >= 0.051]==0])
+      groupChisqB04[2,2] <- length(x$Label[x[, i] >= 0.05][x$Label[x[, i] >= 0.05]==1])
+      test <- chisq.test(groupChisqB04, correct = FALSE)
       P.value <-c(P.value, test$p.value) 
       Statistic <- c(Statistic, test$statistic)
     }
@@ -1388,35 +1398,7 @@ server<-function(input, output, session) {
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 10])*input$parGHB04.00)
-    # Figure_10 
-    groupChisqB04<-data.frame(Group1 = c(0,0), Group2 = c(0,0))
-    rownames(groupChisqB04) <- c(values$wavefeatureB02$Tag[values$wavefeatureB02$Label == 0][1],
-                                 values$wavefeatureB02$Tag[values$wavefeatureB02$Label == 1][1])
-    groupChisqB04[1,1] <- length(values$wavefeatureB02$Group[values$wavefeatureB02$Label == 0][values$wavefeatureB02$Group[values$wavefeatureB02$Label == 0]==1])
-    groupChisqB04[1,2] <- length(values$wavefeatureB02$Group[values$wavefeatureB02$Label == 0][values$wavefeatureB02$Group[values$wavefeatureB02$Label == 0]==2])
-    groupChisqB04[2,1] <- length(values$wavefeatureB02$Group[values$wavefeatureB02$Label == 1][values$wavefeatureB02$Group[values$wavefeatureB02$Label == 1]==1])
-    groupChisqB04[2,2] <- length(values$wavefeatureB02$Group[values$wavefeatureB02$Label == 1][values$wavefeatureB02$Group[values$wavefeatureB02$Label == 1]==2])
-    
-    anno10 <- if(SummaryWaveB03()["P.value", 10]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 10]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 10]<0.05 && SummaryWaveB03()["P.value", 10]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 10]<0.01 && SummaryWaveB03()["P.value", 10]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 10]<0.001 && SummaryWaveB03()["P.value", 10]>0.0001){
-      "***"
-    } else {"****"}
-    g10 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 11], fill = values$wavefeatureB02$Group == 1)) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=anno10,
-                  y_position=max(values$wavefeatureB02[, 11])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7,
-                  tip_length =  c(1-(max(values$wavefeatureB02[, 11][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 11])*input$parTLB04.00)), 
-                                  1-(max(values$wavefeatureB02[, 11][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 11])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Dissimilarity to Region" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position="none",
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 11])*input$parGHB04.00) 
-    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
+    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, cols=3)
   })
   plotBoxB04.01<-reactive({
     # Figure_1 
@@ -1583,6 +1565,26 @@ server<-function(input, output, session) {
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 9])*input$parGHB04.01)
+    # Figure_9
+    anno9 <- if(SummaryRegionB03()["P.value", 9]>0.05){
+      paste("P>", floor(SummaryRegionB03()["P.value", 9]*100)/100, sep = "") 
+    } else if(SummaryRegionB03()["P.value", 9]<0.05 && SummaryRegionB03()["P.value", 9]>0.01){
+      "*"
+    } else if(SummaryRegionB03()["P.value", 9]<0.01 && SummaryRegionB03()["P.value", 9]>0.001){
+      "**"
+    }else if(SummaryRegionB03()["P.value", 9]<0.001 && SummaryRegionB03()["P.value", 9]>0.0001){
+      "***"
+    } else {"****"}
+    g8 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 12])) +
+      geom_boxplot(position="dodge") +
+      geom_signif(annotation=formatC(anno9, digits=2),
+                  y_position=max(values$regionB02[, 12])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
+                  tip_length = c(1-(max(values$regionB02[, 12][values$regionB02$Label == 0])/(max(values$regionB02[, 12])*input$parTLB04.01)), 
+                                 1-(max(values$regionB02[, 12][values$regionB02$Label == 1])/(max(values$regionB02[, 12])*input$parTLB04.01))))+
+      labs(y = "Arbitrary Unit", title = "Group" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 12])*input$parGHB04.01)
     
     multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, cols=3)
   })
