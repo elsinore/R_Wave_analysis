@@ -286,7 +286,7 @@ ui<-navbarPage("Wave Analysis",
                         'input.dataset2 == "Plot Output"',
                         h4("Plot Output"),
                         selectInput("levelB04", "Select the view level", 
-                          c("Cell Level", "Region Level", "Moran Index", "Significance of Moran Index")
+                          c("Cell Level", "Region Level", "Moran Index", "Significance of Moran Index", "Comparsion among Groups")
                         ),
                         uiOutput("uiB04.side")
                       )
@@ -322,7 +322,8 @@ ui<-navbarPage("Wave Analysis",
                           DT::dataTableOutput('tableWaveB03'),
                           DT::dataTableOutput('tableRegionB03'),
                           DT::dataTableOutput('tableMoranIndexB03'),
-                          DT::dataTableOutput('tableMoranPB03')
+                          DT::dataTableOutput('tableMoranPB03'),
+                          DT::dataTableOutput('tableGroupComparB03')
                         ),
                         #### 04.Plot Output ####
                         tabPanel("Plot Output",
@@ -1086,6 +1087,7 @@ server<-function(input, output, session) {
     #=== 02.end ===#
   #### 03. Statistical Results ####
     #=== maniupaltion part ===#
+  values$GroupComparB03 <- NULL
   SummaryWaveB03 <- eventReactive(input$staB02, {
     P.value <- c()
     Statistic <- c()
@@ -1162,6 +1164,41 @@ server<-function(input, output, session) {
     out<-rbind(out, P.value = P.value, Statistic = Statistic)
     return(out)
   })
+  SummaryGroupComparB03 <- eventReactive(input$staB02, {
+    x<-values$wavefeatureB02
+    df<-x[1:10]
+    Row_names <- c(rep(paste(x$Tag[x$Label == 0][1], "Group1", sep = "."), length(x[, 1][x$Label == 0][x$Group[x$Label == 0]==1])),
+                   rep(paste(x$Tag[x$Label == 0][1], "Group2", sep = "."), length(x[, 1][x$Label == 0][x$Group[x$Label == 0]==2])),
+                   rep(paste(x$Tag[x$Label == 1][1], "Group1", sep = "."), length(x[, 1][x$Label == 1][x$Group[x$Label == 1]==1])),
+                   rep(paste(x$Tag[x$Label == 1][1], "Group2", sep = "."), length(x[, 1][x$Label == 1][x$Group[x$Label == 1]==2])))
+    for (i in 2:10) {
+      data.group<-c(x[, i][x$Label == 0][x$Group[x$Label == 0]==1],
+                    x[, i][x$Label == 0][x$Group[x$Label == 0]==2],
+                    x[, i][x$Label == 1][x$Group[x$Label == 1]==1],
+                    x[, i][x$Label == 1][x$Group[x$Label == 1]==2])
+      df[, i]<-data.group
+    }
+    df$Row_names <- Row_names
+    isolate(values$GroupComparB03<-df)
+    summary <- describeBy(df[, 2:10], df$Row_names)
+    p.adjusted<-data.frame()
+    for (i in 2:10) {
+      test<-dunn.test(df[,i], df[,1], kw = FALSE, method = "by")
+      if (i == 2) {
+        p.adjusted<-data.frame(test$comparisons, test$P.adjusted)
+      } else {
+        p.adjusted<-cbind(p.adjusted, test$P.adjusted)
+      }
+    }
+    out <- data.frame()
+    for(i in 1:4) {
+      out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
+    }
+    out<-cbind(Row_names = rownames(out), out)
+    colnames(p.adjusted) <- colnames(df)
+    out<-rbind(out, p.adjusted)
+    return(out)
+  })
     #=== output part ===#
   output$downloadStaResB03 <- downloadHandler(
     filename = "Result_1.csv",
@@ -1175,6 +1212,7 @@ server<-function(input, output, session) {
       write.csv(SummaryRegionB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_2.csv", sep = ""), row.names = TRUE)
       write.csv(SummaryMoranIndexB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_3.csv", sep = ""), row.names = TRUE)
       write.csv(SummaryMoranPB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_4.csv", sep = ""), row.names = TRUE)
+      write.csv(SummaryGroupComparB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_5.csv", sep = ""), row.names = TRUE)
     }
   )
   output$plotClustB03<-renderPlot(plotClustB03())
@@ -1207,6 +1245,14 @@ server<-function(input, output, session) {
     caption = 'Results 4: P value of Moran index for each wave feature',
     options = list(
       pageLength = length(SummaryMoranPB03()[,1]),
+      lengthChange = FALSE
+    )
+  )
+  output$tableGroupComparB03<-DT::renderDataTable(
+    format(SummaryGroupComparB03(), digits = 2, scientific = FALSE),
+    caption = 'Results 5: Wave Feature among Groups',
+    options = list(
+      pageLength = length(SummaryGroupComparB03()[,1]),
       lengthChange = FALSE
     )
   )
@@ -1250,7 +1296,7 @@ server<-function(input, output, session) {
                   y_position=max(values$wavefeatureB02[, 3])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7,
                   tip_length = c(1-(max(values$wavefeatureB02[, 3][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 3])*input$parTLB04.00)), 
                                  1-(max(values$wavefeatureB02[, 3][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 3])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Mean Absolute Value" ) +
+      labs(y = "Gray Level", title = "Mean Absolute Value" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 3])*input$parGHB04.00)
@@ -1270,7 +1316,7 @@ server<-function(input, output, session) {
                   y_position=max(values$wavefeatureB02[, 4])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7,
                   tip_length = c(1-(max(values$wavefeatureB02[, 4][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 4])*input$parTLB04.00)), 
                                  1-(max(values$wavefeatureB02[, 4][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 4])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Variance" ) +
+      labs(y = "Gray Level", title = "Variance" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 4])*input$parGHB04.00)
@@ -1291,7 +1337,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$wavefeatureB02[, 5][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 5])*input$parTLB04.00)), 
                                  1-(max(values$wavefeatureB02[, 5][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 5])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Root Mean Square" ) +
+      labs(y = "Gray Level", title = "Root Mean Square" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 5])*input$parGHB04.00)
@@ -1312,7 +1358,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$wavefeatureB02[, 6][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 6])*input$parTLB04.00)), 
                                  1-(max(values$wavefeatureB02[, 6][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 6])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Waveform Length" ) +
+      labs(y = "Gray Level", title = "Waveform Length" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 6])*input$parGHB04.00)
@@ -1333,7 +1379,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$wavefeatureB02[, 7][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 7])*input$parTLB04.00)), 
                                  1-(max(values$wavefeatureB02[, 7][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 7])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Main Period" ) +
+      labs(y = "Time (s)", title = "Main Period" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 7])*input$parGHB04.00)
@@ -1354,7 +1400,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$wavefeatureB02[, 8][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 8])*input$parTLB04.00)), 
                                  1-(max(values$wavefeatureB02[, 8][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 8])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Maximal Amplitude" ) +
+      labs(y = "Gray Level", title = "Maximal Amplitude" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 8])*input$parGHB04.00)
@@ -1374,7 +1420,7 @@ server<-function(input, output, session) {
                   y_position=max(values$wavefeatureB02[, 9])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$wavefeatureB02[, 9][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 9])*input$parTLB04.00)), 
                                                           1-(max(values$wavefeatureB02[, 9][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 9])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Mean Power Frequency" ) +
+      labs(y = "Hz", title = "Mean Power Frequency" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 9])*input$parGHB04.00)
@@ -2039,11 +2085,166 @@ server<-function(input, output, session) {
     
     multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
   })
+  plotBoxB04.04<-reactive({
+    x<-values$wavefeatureB02
+    df<-SummaryGroupComparB03()
+    # p.value ####
+    geom<-c()
+    for (i in 2:10) { 
+      anno1 <- if(df[53,i]>0.025){
+        paste("P>", floor(df[53,i]*1000)/1000, sep = "") 
+      } else if(df[53,i]<0.025 && df[53,i]>0.005){
+        "*"
+      } else if(df[53,i]<0.005 && df[53,i]>0.0025){
+        "**"
+      }else if(df[53,i]<0.0025 && df[53,i]>0.00005){
+        "***"
+      } else {"****"}
+      g1<-geom_signif(annotation=formatC(anno1, digits=2),
+                      y_position=max(x[, i])*1.17, xmin=0.75, xmax=1.23, textsize = 5, 
+                      tip_length = c(0,0))
+      
+      anno2 <-if(df[54,i]>0.025){
+        paste("P>", floor(df[54,i]*1000)/1000, sep = "") 
+      } else if(df[54,i]<0.025 && df[54,i]>0.005){
+        "*"
+      } else if(df[54,i]<0.005 && df[54,i]>0.0025){
+        "**"
+      }else if(df[54,i]<0.0025 && df[54,i]>0.00005){
+        "***"
+      } else {"****"}
+      g2<-geom_signif(annotation=formatC(anno2, digits=2),
+                      y_position=max(x[, i])*1.29, xmin=1.77, xmax=2.25, textsize = 5, 
+                      tip_length = c(0,0))
+      
+      anno3 <-if(df[55,i]>0.025){
+        paste("P>", floor(df[55,i]*1000)/1000, sep = "") 
+      } else if(df[55,i]<0.025 && df[55,i]>0.005){
+        "*"
+      } else if(df[55,i]<0.005 && df[55,i]>0.0025){
+        "**"
+      }else if(df[55,i]<0.0025 && df[55,i]>0.00005){
+        "***"
+      } else {"****"}
+      g3<-geom_signif(annotation=formatC(anno3, digits=2),
+                      y_position=max(x[, i])*1.17, xmin=1.27, xmax=2.25, textsize = 5, 
+                      tip_length = c(0,0))
+      
+      anno4 <-if(df[56,i]>0.025){
+        paste("P>", floor(df[56,i]*1000)/1000, sep = "") 
+      } else if(x[56,i]<0.025 && df[56,i]>0.005){
+        "*"
+      } else if(x[56,i]<0.005 && df[56,i]>0.0025){
+        "**"
+      }else if(x[56,i]<0.0025 && df[56,i]>0.00005){
+        "***"
+      } else {"****"}
+      g4<-  geom_signif(annotation=formatC(anno4, digits=2),
+                        y_position=max(x[, i])*1.41, xmin=0.75, xmax=2.25, textsize = 5, 
+                        tip_length = c(0,0))
+      anno5 <-if(df[57,i]>0.025){
+        paste("P>", floor(df[57,i]*1000)/1000, sep = "") 
+      } else if(df[57,i]<0.025 && df[57,i]>0.005){
+        "*"
+      } else if(df[57,i]<0.005 && df[57,i]>0.0025){
+        "**"
+      }else if(df[57,i]<0.0025 && df[57,i]>0.00005){
+        "***"
+      } else {"****"}
+      g5<-geom_signif(annotation=formatC(anno5, digits=2),
+                      y_position=max(x[, i])*1.05, xmin=1.3, xmax=1.7, textsize = 5, 
+                      tip_length = c(0,0))
+      anno6 <-if(df[58,i]>0.025){
+        paste("P>", floor(df[58,i]*1000)/1000, sep = "") 
+      } else if(df[58,i]<0.025 && df[58,i]>0.005){
+        "*"
+      } else if(df[58,i]<0.005 && df[58,i]>0.0025){
+        "**"
+      }else if(df[58,i]<0.0025 && df[58,i]>0.00005){
+        "***"
+      } else {"****"}
+      g6<- geom_signif(annotation=formatC(anno6, digits=2),
+                       y_position=max(x[, i])*1.29, xmin=0.75, xmax=1.73, textsize = 5, 
+                       tip_length = c(0,0))
+      temGeom<-c(g1, g2, g3, g4, g5, g6)
+      geom<-c(geom, temGeom)
+    }
+    # Plot ####
+    # figure 1
+    gp1<-ggplot(x, aes(x=x$Tag, y=x[, 2], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[1:6] +
+      labs(y = "Arbitrary Unit", title = "Integrated" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 2])*1.43)
+    # figure 2
+    gp2<-ggplot(x, aes(x=x$Tag, y=x[, 3], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[7:12] +
+      labs(y = "Gray Level", title = "Mean Absolute Value" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 3])*1.43)
+    
+    # figure 3
+    gp3<-ggplot(x, aes(x=x$Tag, y=x[, 4], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[13:18] +
+      labs(y = "Gray Level", title = "Variance" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 4])*1.43)
+    
+    # figure 4
+    gp4<-ggplot(x, aes(x=x$Tag, y=x[, 5], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[19:24] +
+      labs(y = "Gray Level", title = "Root Mean Square" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 5])*1.43)
+    
+    # figure 5
+    gp5<-ggplot(x, aes(x=x$Tag, y=x[, 6], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[25:30] +
+      labs(y = "Gray Level", title = "Waveform Length" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 6])*1.43)
+    # figure 6
+    gp6<-ggplot(x, aes(x=x$Tag, y=x[, 7], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[31:36] +
+      labs(y = "Time (s)", title = "Main Period" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 7])*1.43)
+    # figure 7
+    gp7<-ggplot(x, aes(x=x$Tag, y=x[, 8], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[37:42] +
+      labs(y = "Gray Level", title = "Maximal Amplitude" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 8])*1.43)
+    # figure 8
+    gp8<-ggplot(x, aes(x=x$Tag, y=x[, 9], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[43:48] +
+      labs(y = "Hz", title = "Mean Power Frequency" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 9])*1.43)
+    # figure 9
+    gp9<-ggplot(x, aes(x=x$Tag, y=x[, 10], fill = x$Group == 1)) +
+      geom_boxplot(position=position_dodge(1)) + geom[49:54] +
+      labs(y = "Arbitrary Unit", title = "Dissimilarity to Region" ) +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+            axis.title.x=element_blank(), axis.text=element_text(size=14), 
+            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 10])*1.43)
+    gpf<-multiplot.wzy(gp1, gp2, gp3, gp4, gp5, gp6, gp7, gp8, gp9, cols=3)
+    return(gpf)
+  })
     #=== output part ===#
   output$plotBoxB04.00<-renderPlot(plotBoxB04.00())
   output$plotBoxB04.01<-renderPlot(plotBoxB04.01())
   output$plotBoxB04.02<-renderPlot(plotBoxB04.02())
   output$plotBoxB04.03<-renderPlot(plotBoxB04.03())
+  output$plotBoxB04.04<-renderPlot(plotBoxB04.04())
   output$uiB04.side <- renderUI({
     switch(input$levelB04,
            "Cell Level" = list(
@@ -2069,7 +2270,8 @@ server<-function(input, output, session) {
              sliderInput("parTPB04.03", "Tip Position", min = 1, max = 2, value = 1.16, step = 0.01),
              sliderInput("parTLB04.03", "Tip Length", min = 1, max = 2, value = 1.12, step = 0.01),
              sliderInput("parGHB04.03", "Graph Heigth", min = 1, max = 2, value = 1.23, step = 0.01)
-           )
+           ),
+           "Comparsion among Groups" = NULL
     )
   })
   output$uiB04 <- renderUI({
@@ -2090,9 +2292,14 @@ server<-function(input, output, session) {
         plotOutput("plotBoxB04.02", width = "800px", height = "1067px")
       ),
       "Significance of Moran Index" = list(
-        tags$h4(" P value of Moran index for each wave feature"),
+        tags$h4("P value of Moran index for each wave feature"),
         tags$hr(),
         plotOutput("plotBoxB04.03", width = "800px", height = "1067px")
+      ),
+      "Comparsion among Groups" = list(
+        tags$h4("Comparsion among Groups"),
+        tags$hr(),
+        plotOutput("plotBoxB04.04", width = "900px", height = "1300px")
       )
     )
   })
