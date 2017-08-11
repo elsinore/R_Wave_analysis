@@ -1,5 +1,5 @@
 # +++00. Required Packages and Functions -----------------------------------------
-list.of.packages <- c("shiny", "ggplot2", "biwavelet", "data.table", "stringr", "ape", "DT", "shinyFiles", "shinyjs", "psych", "ggsignif", "grid")
+list.of.packages <- c("shiny", "ggplot2", "biwavelet", "data.table", "stringr", "ape", "DT", "shinyFiles", "shinyjs", "psych", "ggsignif", "grid", "dunn.test")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 library(shiny)
@@ -14,6 +14,7 @@ library(shinyjs)
 library(psych)
 library(ggsignif)
 library(grid)
+library(dunn.test)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 # +++01. UI Function -------------------------------------------------------------
@@ -2171,14 +2172,14 @@ server<-function(input, output, session) {
     }
     # Plot ####
     # figure 1
-    gp1<-ggplot(x, aes(x=x$Tag, y=x[, 2], fill = x$Group == 1)) +
+    gp1<-ggplot(x, aes(x=x$Tag, y=x[, 2], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[1:6] +
       labs(y = "Arbitrary Unit", title = "Integrated" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 2])*1.43)
     # figure 2
-    gp2<-ggplot(x, aes(x=x$Tag, y=x[, 3], fill = x$Group == 1)) +
+    gp2<-ggplot(x, aes(x=x$Tag, y=x[, 3], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[7:12] +
       labs(y = "Gray Level", title = "Mean Absolute Value" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
@@ -2186,7 +2187,7 @@ server<-function(input, output, session) {
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 3])*1.43)
     
     # figure 3
-    gp3<-ggplot(x, aes(x=x$Tag, y=x[, 4], fill = x$Group == 1)) +
+    gp3<-ggplot(x, aes(x=x$Tag, y=x[, 4], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[13:18] +
       labs(y = "Gray Level", title = "Variance" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
@@ -2194,7 +2195,7 @@ server<-function(input, output, session) {
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 4])*1.43)
     
     # figure 4
-    gp4<-ggplot(x, aes(x=x$Tag, y=x[, 5], fill = x$Group == 1)) +
+    gp4<-ggplot(x, aes(x=x$Tag, y=x[, 5], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[19:24] +
       labs(y = "Gray Level", title = "Root Mean Square" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
@@ -2202,35 +2203,35 @@ server<-function(input, output, session) {
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 5])*1.43)
     
     # figure 5
-    gp5<-ggplot(x, aes(x=x$Tag, y=x[, 6], fill = x$Group == 1)) +
+    gp5<-ggplot(x, aes(x=x$Tag, y=x[, 6], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[25:30] +
       labs(y = "Gray Level", title = "Waveform Length" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 6])*1.43)
     # figure 6
-    gp6<-ggplot(x, aes(x=x$Tag, y=x[, 7], fill = x$Group == 1)) +
+    gp6<-ggplot(x, aes(x=x$Tag, y=x[, 7], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[31:36] +
       labs(y = "Time (s)", title = "Main Period" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 7])*1.43)
     # figure 7
-    gp7<-ggplot(x, aes(x=x$Tag, y=x[, 8], fill = x$Group == 1)) +
+    gp7<-ggplot(x, aes(x=x$Tag, y=x[, 8], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[37:42] +
       labs(y = "Gray Level", title = "Maximal Amplitude" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 8])*1.43)
     # figure 8
-    gp8<-ggplot(x, aes(x=x$Tag, y=x[, 9], fill = x$Group == 1)) +
+    gp8<-ggplot(x, aes(x=x$Tag, y=x[, 9], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[43:48] +
       labs(y = "Hz", title = "Mean Power Frequency" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 9])*1.43)
     # figure 9
-    gp9<-ggplot(x, aes(x=x$Tag, y=x[, 10], fill = x$Group == 1)) +
+    gp9<-ggplot(x, aes(x=x$Tag, y=x[, 10], fill = x$Group == 2)) +
       geom_boxplot(position=position_dodge(1)) + geom[49:54] +
       labs(y = "Arbitrary Unit", title = "Dissimilarity to Region" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
