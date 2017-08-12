@@ -238,7 +238,7 @@ ui<-navbarPage("Wave Analysis",
                           shinyDirButton('directory', 'Folder select', 'Please select a folder'),
                           textInput("pat01", "Prefix mark", "TIF"),
                           textInput("pat01_01", "Image file number", "00"),
-                          textInput("pat02", "Location file number", "02"),
+                          textInput("pat02", "Location file number", "02.Location"),
                           withBusyIndicatorUI(
                             actionButton(
                               "anB01",
@@ -400,7 +400,6 @@ server<-function(input, output, session) {
     return(data04)
   })
     ###=== 00.end ===###
-  
   #### 01.data View ####
   #=== manipulation part ===#
   plot1<-reactive({ 
@@ -828,8 +827,8 @@ server<-function(input, output, session) {
     ids<-c()
     withBusyIndicatorServer("anB01",{
       id<-c()
-      InUseName<-grep(paste(pat01, pat01_01, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
-      InUseName02<-grep(paste(pat01, pat02, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
+      InUseName<-paste(prefix[1], pat01, pat01_01, ".csv", sep = "")
+      InUseName02<-paste(prefix[1], pat01, pat02, ".csv", sep = "")
       file01<-read.csv(paste(Dir, "/", InUseName, sep = ""), header = TRUE, sep = ",")
       ncol<-NCOL(file01)
       label<-c()
@@ -857,8 +856,8 @@ server<-function(input, output, session) {
       prefix<-prefix[! prefix %in% prefix[1]]
       while(length(prefix) > 1){
         id<-c()
-        InUseName<-grep(paste(pat01, pat01_01, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
-        InUseName02<-grep(paste(pat01, pat02, sep = ""), grep(prefix[1], fl, value = TRUE, invert = FALSE), value = TRUE, invert = FALSE)
+        InUseName<-paste(prefix[1], pat01, pat01_01, ".csv", sep = "")
+        InUseName02<-paste(prefix[1], pat01, pat02, ".csv", sep = "")
         file01<-read.csv(paste(Dir, "/", InUseName, sep = ""), header = TRUE, sep = ",")
         ncol<-NCOL(file01)
         label<-c()
@@ -1153,8 +1152,16 @@ server<-function(input, output, session) {
       groupChisqB04[2,1] <- length(x$Label[x[, i] >= 0.05][x$Label[x[, i] >= 0.051]==0])
       groupChisqB04[2,2] <- length(x$Label[x[, i] >= 0.05][x$Label[x[, i] >= 0.05]==1])
       test <- chisq.test(groupChisqB04, correct = FALSE)
-      P.value <-c(P.value, test$p.value) 
-      Statistic <- c(Statistic, test$statistic)
+      if(test$p.value == "NaN") {
+        P.value <-c(P.value, 1)
+      } else {
+        P.value <-c(P.value, test$p.value) 
+      }
+      if(test$statistic == "NaN") {
+        Statistic <- c(Statistic, 0)
+      } else {
+        Statistic <- c(Statistic, test$statistic)
+      }
     }
     group.n <- as.numeric(max(values$tableB02$Group))+1
     summary <- describeBy(values$MoranPB02[, 2:11], values$MoranPB02$Tag)
@@ -1277,7 +1284,7 @@ server<-function(input, output, session) {
                   y_position=max(values$wavefeatureB02[, 2])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7, 
                   tip_length = c(1-(max(values$wavefeatureB02[, 2][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 2])*input$parTLB04.00)), 
                                  1-(max(values$wavefeatureB02[, 2][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 2])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Integrated" ) +
+      labs(y = "Gray Level", title = "Integrated" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 2])*input$parGHB04.00)
@@ -1484,7 +1491,7 @@ server<-function(input, output, session) {
                   y_position=max(values$regionB02[, 3])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
                   tip_length = c(1-(max(values$regionB02[, 3][values$regionB02$Label == 0])/(max(values$regionB02[, 3])*input$parTLB04.01)), 
                                  1-(max(values$regionB02[, 3][values$regionB02$Label == 1])/(max(values$regionB02[, 3])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Mean Absolute Value" ) +
+      labs(y = "Gray Level", title = "Mean Absolute Value" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 3])*input$parGHB04.01)
@@ -1504,7 +1511,7 @@ server<-function(input, output, session) {
                   y_position=max(values$regionB02[, 4])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
                   tip_length = c(1-(max(values$regionB02[, 4][values$regionB02$Label == 0])/(max(values$regionB02[, 4])*input$parTLB04.01)), 
                                  1-(max(values$regionB02[, 4][values$regionB02$Label == 1])/(max(values$regionB02[, 4])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Variance" ) +
+      labs(y = "Gray Level", title = "Variance" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 4])*input$parGHB04.01)
@@ -1525,7 +1532,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$regionB02[, 5][values$regionB02$Label == 0])/(max(values$regionB02[, 5])*input$parTLB04.01)), 
                                  1-(max(values$regionB02[, 5][values$regionB02$Label == 1])/(max(values$regionB02[, 5])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Root Mean Square" ) +
+      labs(y = "Gray Level", title = "Root Mean Square" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 5])*input$parGHB04.01)
@@ -1546,7 +1553,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$regionB02[, 6][values$regionB02$Label == 0])/(max(values$regionB02[, 6])*input$parTLB04.01)), 
                                  1-(max(values$regionB02[, 6][values$regionB02$Label == 1])/(max(values$regionB02[, 6])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Waveform Length" ) +
+      labs(y = "Gray Level", title = "Waveform Length" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 6])*input$parGHB04.01)
@@ -1567,7 +1574,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$regionB02[, 7][values$regionB02$Label == 0])/(max(values$regionB02[, 7])*input$parTLB04.01)), 
                                  1-(max(values$regionB02[, 7][values$regionB02$Label == 1])/(max(values$regionB02[, 7])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Main Period" ) +
+      labs(y = "Time (s)", title = "Main Period" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 7])*input$parGHB04.01)
@@ -1588,7 +1595,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$regionB02[, 8][values$regionB02$Label == 0])/(max(values$regionB02[, 8])*input$parTLB04.01)), 
                                  1-(max(values$regionB02[, 8][values$regionB02$Label == 1])/(max(values$regionB02[, 8])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Maximal Amplitude" ) +
+      labs(y = "Gray Level", title = "Maximal Amplitude" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 8])*input$parGHB04.01)
@@ -1608,7 +1615,7 @@ server<-function(input, output, session) {
                   y_position=max(values$regionB02[, 9])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
                   map_signif_level = TRUE, tip_length = c(1-(max(values$regionB02[, 9][values$regionB02$Label == 0])/(max(values$regionB02[, 9])*input$parTLB04.01)), 
                                                           1-(max(values$regionB02[, 9][values$regionB02$Label == 1])/(max(values$regionB02[, 9])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Mean Power Frequency" ) +
+      labs(y = "Hz", title = "Mean Power Frequency" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 9])*input$parGHB04.01)
@@ -1628,7 +1635,7 @@ server<-function(input, output, session) {
                   y_position=max(values$regionB02[, 12])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
                   tip_length = c(1-(max(values$regionB02[, 12][values$regionB02$Label == 0])/(max(values$regionB02[, 12])*input$parTLB04.01)), 
                                  1-(max(values$regionB02[, 12][values$regionB02$Label == 1])/(max(values$regionB02[, 12])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Group" ) +
+      labs(y = "Percentage of Group 1", title = "Group" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 12])*input$parGHB04.01)

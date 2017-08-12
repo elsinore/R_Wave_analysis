@@ -126,7 +126,6 @@ WZY.EMG.F <- function(wzy) {
   )
   return(list(data=wzyo, results=res))
 }
-
 #=== Wavelet Analysis ####
 WZY.Wavelet.clust <- function(input){ # wave clust in a same sample
   library("biwavelet")
@@ -189,7 +188,6 @@ wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep) {
        xlab="Frequency (Hz)", ylab="Strength",
        ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectrum")
 }
-
 #=== Function for Batching Processing ===####
 wzy.batch <- function (wzy, loc) {
   library("biwavelet")
@@ -333,7 +331,6 @@ withBusyIndicatorUI <- function(button) {
     )
   )
 }
-
 # Call this function from the server with the button id that is clicked and the
 # expression to run when the button is clicked
 withBusyIndicatorUI <- function(button) {
@@ -358,7 +355,6 @@ withBusyIndicatorUI <- function(button) {
     )
   )
 }
-
 # Call this function from the server with the button id that is clicked and the
 # expression to run when the button is clicked
 withBusyIndicatorServer <- function(buttonId, expr) {
@@ -385,7 +381,6 @@ withBusyIndicatorServer <- function(buttonId, expr) {
     value
   }, error = function(err) { errorFunc(err, buttonId) })
 }
-
 # When an error happens after a button click, show the error
 errorFunc <- function(err, buttonId) {
   errEl <- sprintf("[data-for-btn=%s] .btn-err", buttonId)
@@ -394,8 +389,6 @@ errorFunc <- function(err, buttonId) {
   shinyjs::html(html = errMessage, selector = errElMsg)
   shinyjs::show(selector = errEl, anim = TRUE, animType = "fade")
 }
-
-
 withMathJax.local <- function(...) {
   path <- "MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
   tagList(
@@ -410,7 +403,6 @@ wzy.force.format.colname <- function(x, colname) {
   colnames(x)<-colname
   return(x)
 }
-
 multiplot.wzy <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   require(grid)
   
