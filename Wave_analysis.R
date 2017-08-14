@@ -1278,7 +1278,9 @@ server<-function(input, output, session) {
     #=== manipulation part ===#
   plotBoxB04.00<-reactive({
     # Figure_1 
-    anno1 <- if(SummaryWaveB03()["P.value", 1]>0.05){
+    anno1 <- if(SummaryWaveB03()["P.value", 1]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 1]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 1]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 1]<0.05 && SummaryWaveB03()["P.value", 1]>0.01){
       "*"
@@ -1298,7 +1300,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 2])*input$parGHB04.00)
     # Figure_2 
-    anno2 <- if(SummaryWaveB03()["P.value", 2]>0.05){
+    anno2 <- if(SummaryWaveB03()["P.value", 2]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 2]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 2]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 2]<0.05 && SummaryWaveB03()["P.value", 2]>0.01){
       "*"
@@ -1318,7 +1322,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 3])*input$parGHB04.00)
     # Figure_3
-    anno3 <- if(SummaryWaveB03()["P.value", 3]>0.05){
+    anno3 <- if(SummaryWaveB03()["P.value", 3]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 3]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 3]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 3]<0.05 && SummaryWaveB03()["P.value", 3]>0.01){
       "*"
@@ -1338,7 +1344,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 4])*input$parGHB04.00)
     # Figure_4
-    anno4 <- if(SummaryWaveB03()["P.value", 4]>0.05){
+    anno4 <- if(SummaryWaveB03()["P.value", 4]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 4]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 4]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 4]<0.05 && SummaryWaveB03()["P.value", 4]>0.01){
       "*"
@@ -1359,7 +1367,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 5])*input$parGHB04.00)
     # Figure_5
-    anno5 <- if(SummaryWaveB03()["P.value", 5]>0.05){
+    anno5 <- if(SummaryWaveB03()["P.value", 5]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 5]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 5]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 5]<0.05 && SummaryWaveB03()["P.value", 5]>0.01){
       "*"
@@ -1380,7 +1390,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 6])*input$parGHB04.00)
     # Figure_6 
-    anno6 <- if(SummaryWaveB03()["P.value", 6]>0.05){
+    anno6 <- if(SummaryWaveB03()["P.value", 6]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 6]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 6]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 6]<0.05 && SummaryWaveB03()["P.value", 6]>0.01){
       "*"
@@ -1401,7 +1413,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 7])*input$parGHB04.00)
     # Figure_7
-    anno7 <- if(SummaryWaveB03()["P.value", 7]>0.05){
+    anno7 <- if(SummaryWaveB03()["P.value", 7]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 7]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 7]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 7]<0.05 && SummaryWaveB03()["P.value", 7]>0.01){
       "*"
@@ -1422,7 +1436,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 8])*input$parGHB04.00)
     # Figure_8
-    anno8 <- if(SummaryWaveB03()["P.value", 8]>0.05){
+    anno8 <- if(SummaryWaveB03()["P.value", 8]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 8]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 8]<0.05 && SummaryWaveB03()["P.value", 8]>0.01){
       "*"
@@ -1442,7 +1458,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 9])*input$parGHB04.00)
     # Figure_9 
-    anno9 <- if(SummaryWaveB03()["P.value", 9]>0.05){
+    anno9 <- if(SummaryWaveB03()["P.value", 9]>=0.9999){
+      "P>0.999"
+    } else if(SummaryWaveB03()["P.value", 9]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 9]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 9]<0.05 && SummaryWaveB03()["P.value", 9]>0.01){
       "*"
@@ -1465,7 +1483,9 @@ server<-function(input, output, session) {
   })
   plotBoxB04.01<-reactive({
     # Figure_1 
-    anno1 <- if(SummaryRegionB03()["P.value", 1]>0.05){
+    anno1 <- if(SummaryRegionB03()["P.value", 1]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 1]<0.9999 && SummaryRegionB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 1]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 1]<0.05 && SummaryRegionB03()["P.value", 1]>0.01){
       "*"
@@ -1485,7 +1505,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 2])*input$parGHB04.01)
     # Figure_2 
-    anno2 <- if(SummaryRegionB03()["P.value", 2]>0.05){
+    anno2 <- if(SummaryRegionB03()["P.value", 2]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 2]<0.9999 && SummaryRegionB03()["P.value", 2]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 2]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 2]<0.05 && SummaryRegionB03()["P.value", 2]>0.01){
       "*"
@@ -1505,7 +1527,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 3])*input$parGHB04.01)
     # Figure_3
-    anno3 <- if(SummaryRegionB03()["P.value", 3]>0.05){
+    anno3 <- if(SummaryRegionB03()["P.value", 3]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 3]<0.9999 && SummaryRegionB03()["P.value", 3]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 3]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 3]<0.05 && SummaryRegionB03()["P.value", 3]>0.01){
       "*"
@@ -1525,7 +1549,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 4])*input$parGHB04.01)
     # Figure_4
-    anno4 <- if(SummaryRegionB03()["P.value", 4]>0.05){
+    anno4 <- if(SummaryRegionB03()["P.value", 4]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 4]<0.9999 && SummaryRegionB03()["P.value", 4]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 4]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 4]<0.05 && SummaryRegionB03()["P.value", 4]>0.01){
       "*"
@@ -1546,7 +1572,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 5])*input$parGHB04.01)
     # Figure_5
-    anno5 <- if(SummaryRegionB03()["P.value", 5]>0.05){
+    anno5 <- if(SummaryRegionB03()["P.value", 5]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 5]<0.9999 && SummaryRegionB03()["P.value", 5]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 5]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 5]<0.05 && SummaryRegionB03()["P.value", 5]>0.01){
       "*"
@@ -1567,7 +1595,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 6])*input$parGHB04.01)
     # Figure_6 
-    anno6 <- if(SummaryRegionB03()["P.value", 6]>0.05){
+    anno6 <- if(SummaryRegionB03()["P.value", 6]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 6]<0.9999 && SummaryRegionB03()["P.value", 6]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 6]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 6]<0.05 && SummaryRegionB03()["P.value", 6]>0.01){
       "*"
@@ -1588,7 +1618,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 7])*input$parGHB04.01)
     # Figure_7
-    anno7 <- if(SummaryRegionB03()["P.value", 7]>0.05){
+    anno7 <- if(SummaryRegionB03()["P.value", 7]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 7]<0.9999 && SummaryRegionB03()["P.value", 7]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 7]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 7]<0.05 && SummaryRegionB03()["P.value", 7]>0.01){
       "*"
@@ -1609,7 +1641,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 8])*input$parGHB04.01)
     # Figure_8
-    anno8 <- if(SummaryRegionB03()["P.value", 8]>0.05){
+    anno8 <- if(SummaryRegionB03()["P.value", 8]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 8]<0.9999 && SummaryRegionB03()["P.value", 8]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 8]<0.05 && SummaryRegionB03()["P.value", 8]>0.01){
       "*"
@@ -1629,7 +1663,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 9])*input$parGHB04.01)
     # Figure_9
-    anno9 <- if(SummaryRegionB03()["P.value", 9]>0.05){
+    anno9 <- if(SummaryRegionB03()["P.value", 9]>=0.9999){
+      "P>0.999"
+    } else if(SummaryRegionB03()["P.value", 9]<0.9999 && SummaryRegionB03()["P.value", 9]>0.05){
       paste("P>", floor(SummaryRegionB03()["P.value", 9]*100)/100, sep = "") 
     } else if(SummaryRegionB03()["P.value", 9]<0.05 && SummaryRegionB03()["P.value", 9]>0.01){
       "*"
@@ -1689,7 +1725,9 @@ server<-function(input, output, session) {
     }
     g2whB04 <- as.numeric(g2whB04)
     # Figure_1 
-    anno1 <- if(SummaryMoranIndexB03()["P.value", 1]>0.05){
+    anno1 <- if(SummaryMoranIndexB03()["P.value", 1]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranIndexB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 1]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 1]<0.05 && SummaryMoranIndexB03()["P.value", 1]>0.01){
       "*"
@@ -1709,7 +1747,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[1]*input$parGHB04.02)
     # Figure_2 
-    anno2 <- if(SummaryMoranIndexB03()["P.value", 2]>0.05){
+    anno2 <- if(SummaryMoranIndexB03()["P.value", 2]>=0.9999){
+      "P>0.99"
+    } else if(SummaryMoranIndexB03()["P.value", 2]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 2]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 2]<0.05 && SummaryMoranIndexB03()["P.value", 2]>0.01){
       "*"
@@ -1729,7 +1769,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[2]*input$parGHB04.02)
     # Figure_3
-    anno3 <- if(SummaryMoranIndexB03()["P.value", 3]>0.05){
+    anno3 <- if(SummaryMoranIndexB03()["P.value", 3]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranIndexB03()["P.value", 3]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 3]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 3]<0.05 && SummaryMoranIndexB03()["P.value", 3]>0.01){
       "*"
@@ -1749,7 +1791,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[3]*input$parGHB04.02)
     # Figure_4
-    anno4 <- if(SummaryMoranIndexB03()["P.value", 4]>0.05){
+    anno4 <- if(SummaryMoranIndexB03()["P.value", 4]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranIndexB03()["P.value", 4]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 4]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 4]<0.05 && SummaryMoranIndexB03()["P.value", 4]>0.01){
       "*"
@@ -1770,7 +1814,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[4]*input$parGHB04.02)
     # Figure_5
-    anno5 <- if(SummaryMoranIndexB03()["P.value", 5]>0.05){
+    anno5 <- if(SummaryMoranIndexB03()["P.value", 5]>=0.9999){
+      "P>0.99"
+    } else if(SummaryMoranIndexB03()["P.value", 5]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 5]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 5]<0.05 && SummaryMoranIndexB03()["P.value", 5]>0.01){
       "*"
@@ -1791,7 +1837,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[5]*input$parGHB04.02)
     # Figure_6 
-    anno6 <- if(SummaryMoranIndexB03()["P.value", 6]>0.05){
+    anno6 <- if(SummaryMoranIndexB03()["P.value", 6]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranIndexB03()["P.value", 6]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 6]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 6]<0.05 && SummaryMoranIndexB03()["P.value", 6]>0.01){
       "*"
@@ -1812,7 +1860,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[6]*input$parGHB04.02)
     # Figure_7
-    anno7 <- if(SummaryMoranIndexB03()["P.value", 7]>0.05){
+    anno7 <- if(SummaryMoranIndexB03()["P.value", 7]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranIndexB03()["P.value", 7]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 7]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 7]<0.05 && SummaryMoranIndexB03()["P.value", 7]>0.01){
       "*"
@@ -1832,7 +1882,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[7]*input$parGHB04.02)
     # Figure_8
-    anno8 <- if(SummaryMoranIndexB03()["P.value", 8]>0.05){
+    anno8 <- if(SummaryMoranIndexB03()["P.value", 8]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranIndexB03()["P.value", 8]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 8]<0.05 && SummaryMoranIndexB03()["P.value", 8]>0.01){
       "*"
@@ -1852,7 +1904,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[8]*input$parGHB04.02)
     # Figure_9
-    anno9 <- if(SummaryMoranIndexB03()["P.value", 9]>0.05){
+    anno9 <- if(SummaryMoranIndexB03()["P.value", 9]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranIndexB03()["P.value", 9]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 9]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 9]<0.05 && SummaryMoranIndexB03()["P.value", 9]>0.01){
       "*"
@@ -1872,7 +1926,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[9]*input$parGHB04.02)
     # Figure_10
-    anno10 <- if(SummaryMoranIndexB03()["P.value", 10]>0.05){
+    anno10 <- if(SummaryMoranIndexB03()["P.value", 10]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranIndexB03()["P.value", 10]>0.05){
       paste("P>", floor(SummaryMoranIndexB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryMoranIndexB03()["P.value", 10]<0.05 && SummaryMoranIndexB03()["P.value", 10]>0.01){
       "*"
@@ -1896,7 +1952,9 @@ server<-function(input, output, session) {
   })
   plotBoxB04.03<-reactive({
     # Figure_1 
-    anno1 <- if(SummaryMoranPB03()["P.value", 1]>0.05){
+    anno1 <- if(SummaryMoranPB03()["P.value", 1]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 1]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 1]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 1]<0.05 && SummaryMoranPB03()["P.value", 1]>0.01){
       "*"
@@ -1916,7 +1974,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 2])*input$parGHB04.03)
     # Figure_2 
-    anno2 <- if(SummaryMoranPB03()["P.value", 2]>0.05){
+    anno2 <- if(SummaryMoranPB03()["P.value", 2]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 2]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 2]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 2]<0.05 && SummaryMoranPB03()["P.value", 2]>0.01){
       "*"
@@ -1936,7 +1996,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 3])*input$parGHB04.03)
     # Figure_3
-    anno3 <- if(SummaryMoranPB03()["P.value", 3]>0.05){
+    anno3 <- if(SummaryMoranPB03()["P.value", 3]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 3]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 3]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 3]<0.05 && SummaryMoranPB03()["P.value", 3]>0.01){
       "*"
@@ -1956,7 +2018,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 4])*input$parGHB04.03)
     # Figure_4
-    anno4 <- if(SummaryMoranPB03()["P.value", 4]>0.05){
+    anno4 <- if(SummaryMoranPB03()["P.value", 4]>=1){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 4]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 4]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 4]<0.05 && SummaryMoranPB03()["P.value", 4]>0.01){
       "*"
@@ -1977,7 +2041,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 5])*input$parGHB04.03)
     # Figure_5
-    anno5 <- if(SummaryMoranPB03()["P.value", 5]>0.05){
+    anno5 <- if(SummaryMoranPB03()["P.value", 5]>=0.999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 5]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 5]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 5]<0.05 && SummaryMoranPB03()["P.value", 5]>0.01){
       "*"
@@ -1998,7 +2064,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 6])*input$parGHB04.03)
     # Figure_6 
-    anno6 <- if(SummaryMoranPB03()["P.value", 6]>0.05){
+    anno6 <- if(SummaryMoranPB03()["P.value", 6]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 6]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 6]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 6]<0.05 && SummaryMoranPB03()["P.value", 6]>0.01){
       "*"
@@ -2019,7 +2087,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 7])*input$parGHB04.03)
     # Figure_7
-    anno7 <- if(SummaryMoranPB03()["P.value", 7]>0.05){
+    anno7 <- if(SummaryMoranPB03()["P.value", 7]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 7]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 7]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 7]<0.05 && SummaryMoranPB03()["P.value", 7]>0.01){
       "*"
@@ -2040,7 +2110,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 8])*input$parGHB04.03)
     # Figure_8
-    anno8 <- if(SummaryMoranPB03()["P.value", 8]>0.05){
+    anno8 <- if(SummaryMoranPB03()["P.value", 8]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 8]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 8]<0.05 && SummaryMoranPB03()["P.value", 8]>0.01){
       "*"
@@ -2060,7 +2132,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 9])*input$parGHB04.03)
     # Figure_9
-    anno9 <- if(SummaryMoranPB03()["P.value", 9]>0.05){
+    anno9 <- if(SummaryMoranPB03()["P.value", 9]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 9]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 9]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 9]<0.05 && SummaryMoranPB03()["P.value", 9]>0.01){
       "*"
@@ -2080,7 +2154,9 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 10])*input$parGHB04.03)
     # Figure_10
-    anno10 <- if(SummaryMoranPB03()["P.value", 10]>0.05){
+    anno10 <- if(SummaryMoranPB03()["P.value", 10]>=0.9999){
+      "P>0.999"
+    } else if(SummaryMoranPB03()["P.value", 10]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 10]<0.05 && SummaryMoranPB03()["P.value", 10]>0.01){
       "*"
@@ -2108,7 +2184,9 @@ server<-function(input, output, session) {
     # p.value ####
     geom<-c()
     for (i in 2:10) { 
-      anno1 <- if(df[53,i]>0.025){
+      anno1 <- if(df[53,i]>=0.9999){
+        "P>0.99"
+      } else if(df[53,i]>0.025){
         paste("P>", floor(df[53,i]*1000)/1000, sep = "") 
       } else if(df[53,i]<0.025 && df[53,i]>0.005){
         "*"
@@ -2121,7 +2199,9 @@ server<-function(input, output, session) {
                       y_position=max(x[, i])*1.17, xmin=0.75, xmax=1.23, textsize = 5, 
                       tip_length = c(0,0))
       
-      anno2 <-if(df[54,i]>0.025){
+      anno2 <- if(df[54,i]>=0.9999){
+        "P>0.999"
+      } else if(df[54,i]>0.025){
         paste("P>", floor(df[54,i]*1000)/1000, sep = "") 
       } else if(df[54,i]<0.025 && df[54,i]>0.005){
         "*"
@@ -2134,7 +2214,9 @@ server<-function(input, output, session) {
                       y_position=max(x[, i])*1.29, xmin=1.77, xmax=2.25, textsize = 5, 
                       tip_length = c(0,0))
       
-      anno3 <-if(df[55,i]>0.025){
+      anno3 <- if(df[55,i]>=0.9999){
+        "P>0.999"
+      } else if(df[55,i]>0.025){
         paste("P>", floor(df[55,i]*1000)/1000, sep = "") 
       } else if(df[55,i]<0.025 && df[55,i]>0.005){
         "*"
@@ -2147,7 +2229,9 @@ server<-function(input, output, session) {
                       y_position=max(x[, i])*1.17, xmin=1.27, xmax=2.25, textsize = 5, 
                       tip_length = c(0,0))
       
-      anno4 <-if(df[56,i]>0.025){
+      anno4 <-if(df[56,i]>=0.9999){
+        "P>0.999"
+      } else if(df[56,i]>0.025){
         paste("P>", floor(df[56,i]*1000)/1000, sep = "") 
       } else if(x[56,i]<0.025 && df[56,i]>0.005){
         "*"
@@ -2159,7 +2243,9 @@ server<-function(input, output, session) {
       g4<-  geom_signif(annotation=formatC(anno4, digits=2),
                         y_position=max(x[, i])*1.41, xmin=0.75, xmax=2.25, textsize = 5, 
                         tip_length = c(0,0))
-      anno5 <-if(df[57,i]>0.025){
+      anno5 <- if(df[57,i]>=0.9999){
+        "P>0.999"
+      } else if(df[57,i]>0.025){
         paste("P>", floor(df[57,i]*1000)/1000, sep = "") 
       } else if(df[57,i]<0.025 && df[57,i]>0.005){
         "*"
@@ -2171,7 +2257,9 @@ server<-function(input, output, session) {
       g5<-geom_signif(annotation=formatC(anno5, digits=2),
                       y_position=max(x[, i])*1.05, xmin=1.3, xmax=1.7, textsize = 5, 
                       tip_length = c(0,0))
-      anno6 <-if(df[58,i]>0.025){
+      anno6 <-if(df[58,i]>=0.9999){
+        "P>0.999"
+      } else if(df[58,i]>0.025){
         paste("P>", floor(df[58,i]*1000)/1000, sep = "") 
       } else if(df[58,i]<0.025 && df[58,i]>0.005){
         "*"
