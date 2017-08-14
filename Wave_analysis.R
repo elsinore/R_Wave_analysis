@@ -58,6 +58,7 @@ ui<-navbarPage("Wave Analysis",
                             'input.dataset === "Wave Features"',
                             h4("Wave Features"),
                             fluidRow(
+                              downloadButton('downloadAnaRes02', 'Download the wave feature result'),
                               column(6,radioButtons("xaxisGrp","Y-Axis:", c("NULL"="NULL"))),
                               column(6,radioButtons("yaxisGrp","X-axis:", c("NULL"="NULL")))
                             ),
@@ -336,8 +337,17 @@ ui<-navbarPage("Wave Analysis",
 )
 # +++02. Service Function --------------------------------------------------------
 server<-function(input, output, session) {
+  # Global Setting ####
+  volumes <- c('Root'="/")
+  shinyDirChoose(input, 'directory', roots=volumes, session = session)
+  shinyDirChoose(input, 'uploadAnaResB01', roots=volumes, session = session)
+  shinyDirChoose(input, 'ChooseDirB03', roots = volumes, session = session)
+  shinyDirChoose(input, 'Select02', roots = volumes, session = session)
   values<-reactiveValues()
-###=== Single Sample Explore ===###
+  values$colnames<-NULL
+  values$sampleSize <- NULL
+  values$Row_names <- NULL
+###=== Single Sample Explore ===####
   #### 00.data manipulation ####  
   dataframe<-eventReactive(input$analyze, {
     if (is.null(input$datafile))
@@ -539,6 +549,12 @@ server<-function(input, output, session) {
   output$plot02.01 <- renderPlot(plot02.01())
   output$plot02.02 <- renderPlot(plot02.02())
   output$plot02.03 <- renderPlot(plot02.03())
+  output$downloadAnaRes02 <- downloadHandler(
+    filename = "WaveFeature.csv",
+    content = function(file) {
+      write.csv(res(), file, sep = ",", row.names = FALSE)
+    }
+  )
   #=== input update part ===#
   observe({ # monitor and update the ui input
     obin02 <- res()
@@ -803,13 +819,6 @@ server<-function(input, output, session) {
   }) #col04
     ###=== 04.end ===###
 ####=== Batching Processing ===####
-  volumes <- c('Root'="/")
-  shinyDirChoose(input, 'directory', roots=volumes, session = session)
-  shinyDirChoose(input, 'uploadAnaResB01', roots=volumes, session = session)
-  shinyDirChoose(input, 'ChooseDirB03', roots = volumes, session = session)
-  values$colnames<-NULL
-  values$sampleSize <- NULL
-  values$Row_names <- NULL
   #### 01.data input ####
   #=== manipulation part ===#
   resB01<-eventReactive(input$anB01, {
@@ -2179,69 +2188,69 @@ server<-function(input, output, session) {
     }
     # Plot ####
     # figure 1
-    gp1<-ggplot(x, aes(x=x$Tag, y=x[, 2], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[1:6] +
-      labs(y = "Arbitrary Unit", title = "Integrated" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp1<-ggplot(x, aes(x=x$Tag, y=x[, 2])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[1:6] +
+      labs(y = "Arbitrary Unit", title = "Integrated", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 2])*1.43)
     # figure 2
-    gp2<-ggplot(x, aes(x=x$Tag, y=x[, 3], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[7:12] +
-      labs(y = "Gray Level", title = "Mean Absolute Value" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp2<-ggplot(x, aes(x=x$Tag, y=x[, 3])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[7:12] +
+      labs(y = "Gray Level", title = "Mean Absolute Value", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 3])*1.43)
     
     # figure 3
-    gp3<-ggplot(x, aes(x=x$Tag, y=x[, 4], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[13:18] +
-      labs(y = "Gray Level", title = "Variance" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp3<-ggplot(x, aes(x=x$Tag, y=x[, 4])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[13:18] +
+      labs(y = "Gray Level", title = "Variance", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 4])*1.43)
     
     # figure 4
-    gp4<-ggplot(x, aes(x=x$Tag, y=x[, 5], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[19:24] +
-      labs(y = "Gray Level", title = "Root Mean Square" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp4<-ggplot(x, aes(x=x$Tag, y=x[, 5])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[19:24] +
+      labs(y = "Gray Level", title = "Root Mean Square", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 5])*1.43)
     
     # figure 5
-    gp5<-ggplot(x, aes(x=x$Tag, y=x[, 6], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[25:30] +
-      labs(y = "Gray Level", title = "Waveform Length" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp5<-ggplot(x, aes(x=x$Tag, y=x[, 6])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[25:30] +
+      labs(y = "Gray Level", title = "Waveform Length", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 6])*1.43)
     # figure 6
-    gp6<-ggplot(x, aes(x=x$Tag, y=x[, 7], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[31:36] +
-      labs(y = "Time (s)", title = "Main Period" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp6<-ggplot(x, aes(x=x$Tag, y=x[, 7])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[31:36] +
+      labs(y = "Time (s)", title = "Main Period", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 7])*1.43)
     # figure 7
-    gp7<-ggplot(x, aes(x=x$Tag, y=x[, 8], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[37:42] +
-      labs(y = "Gray Level", title = "Maximal Amplitude" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp7<-ggplot(x, aes(x=x$Tag, y=x[, 8])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[37:42] +
+      labs(y = "Gray Level", title = "Maximal Amplitude", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 8])*1.43)
     # figure 8
-    gp8<-ggplot(x, aes(x=x$Tag, y=x[, 9], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[43:48] +
-      labs(y = "Hz", title = "Mean Power Frequency" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp8<-ggplot(x, aes(x=x$Tag, y=x[, 9])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[43:48] +
+      labs(y = "Hz", title = "Mean Power Frequency", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 9])*1.43)
     # figure 9
-    gp9<-ggplot(x, aes(x=x$Tag, y=x[, 10], fill = x$Group == 2)) +
-      geom_boxplot(position=position_dodge(1)) + geom[49:54] +
-      labs(y = "Arbitrary Unit", title = "Dissimilarity to Region" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.position = "null",
+    gp9<-ggplot(x, aes(x=x$Tag, y=x[, 10])) +
+      geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[49:54] +
+      labs(y = "Arbitrary Unit", title = "Dissimilarity to Region", colour = "Group by\n Wavelet Clust") +
+      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 10])*1.43)
     gpf<-multiplot.wzy(gp1, gp2, gp3, gp4, gp5, gp6, gp7, gp8, gp9, cols=3)
@@ -2307,7 +2316,7 @@ server<-function(input, output, session) {
       "Comparsion among Groups" = list(
         tags$h4("Comparsion among Groups"),
         tags$hr(),
-        plotOutput("plotBoxB04.04", width = "900px", height = "1300px")
+        plotOutput("plotBoxB04.04", width = "1200px", height = "1300px")
       )
     )
   })
