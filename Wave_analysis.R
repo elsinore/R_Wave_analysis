@@ -32,9 +32,16 @@ ui<-navbarPage("Wave Analysis",
                             h4("Data Overview"),
                             # file input 
                             fileInput('datafile', 'Choose CSV file', accept=c('csv', 'comma-separated-values','.csv')),
+                            column(6, 
+                                   checkboxInput("colname01", "Change column name", TRUE),
+                                   textInput("FirstCol01", "First column name", "Time"),
+                                   textInput("SecondCol01", "Second column name", "Region"),
+                                   textInput("ThirdCol01", "Rest column names", "Cell")
+                                   ),
                             checkboxInput('header', 'Header', TRUE),
                             radioButtons('sep', 'Separator', c(Comma=',', Semicolon=';', Tab='\t'), ','),
                             radioButtons('quote', 'Quote', c(None='', 'Double Quote'='"', 'Single Quote'="'"), ''),
+                            tags$hr(),
                             withBusyIndicatorUI(
                               actionButton(
                                 "analyze",
@@ -234,24 +241,25 @@ ui<-navbarPage("Wave Analysis",
                       conditionalPanel(
                         'input.dataset2 === "Data Input"',
                         h4("Data Input"),
-                        verticalLayout(
-                          textInput("postfix", "File format", ".csv"),
-                          shinyDirButton('directory', 'Folder select', 'Please select a folder'),
-                          textInput("pat01", "Prefix mark", "TIF"),
-                          textInput("pat01_01", "Image file number", "00"),
-                          textInput("pat02", "Location file number", "02.Location"),
-                          withBusyIndicatorUI(
-                            actionButton(
-                              "anB01",
-                              "Analyze",
-                              class = "btn-primary"
-                            )
-                          ),
-                          tags$hr(),
-                          verticalLayout(
-                              shinyDirButton('uploadAnaResB01', 'Upload a analysis result', 'Please select a folder'),
-                              downloadButton('downloadAnaResB01', 'Download the analysis result')
+                        textInput("postfix", "File format", ".csv"),
+                        shinyDirButton('directory', 'Folder select', 'Please select a folder'),
+                        textInput("pat01", "Prefix mark", "TIF"),
+                        textInput("pat01_01", "Image file number", "00"),
+                        textInput("pat02", "Location file number", "02.Location"),
+                        textInput("FirstColB01", "First column Name", "Time (s)"),
+                        textInput("SecondColB01", "Second column Name", "Region"),
+                        textInput("ThirdColB01", "Rest column Names", "Cell"),
+                        withBusyIndicatorUI(
+                          actionButton(
+                            "anB01",
+                            "Analyze",
+                            class = "btn-primary"
                           )
+                        ),
+                        tags$hr(),
+                        verticalLayout(
+                          shinyDirButton('uploadAnaResB01', 'Upload a analysis result', 'Please select a folder'),
+                          downloadButton('downloadAnaResB01', 'Download the analysis result')
                         )
                       ),
                       #### 02. Statistical Analysis ####
@@ -355,18 +363,20 @@ server<-function(input, output, session) {
     data<-read.csv(input$datafile$datapath, header=input$header, sep=input$sep, quote=input$quote)
     ncol<-NCOL(data)
     label<-c()
-    for(i in 1:ncol){
-      if(i == 1){
-        label[1] <- "Time"
-      } else if (i == 2){
-        label[i] <- "Region"
-        data[, i]<- data[, i]-mean(data[, i])
-      } else {
-        label[i] <- str_c("Cell"," ", i-2)
-        data[, i]<- data[, i]-mean(data[, i])
+    if(input$colname01 == TRUE){
+      for(i in 1:ncol){
+        if(i == 1){
+          label[1] <- input$FirstCol01
+        } else if (i == 2){
+          label[i] <- input$SecondCol01
+          data[, i]<- data[, i]-mean(data[, i])
+        } else {
+          label[i] <- str_c(input$ThirdCol01," ", i-2)
+          data[, i]<- data[, i]-mean(data[, i])
+        }
       }
+      colnames(data)<-label
     }
-    colnames(data)<-label
     data
   })
   waveClust<-eventReactive(input$analyze, {
@@ -392,7 +402,7 @@ server<-function(input, output, session) {
     fit <- hclust(resclust, method = "ward.D")
     groups <- cutree(fit, k = 2)
     ## Final combination
-    resin <- data.frame(resin, Dissimilarity = resclu, Group = groups)
+    resin <- cbind(resin, Dissimilarity = resclu, Group = groups)
     resin
   })
   dataSpa<-reactive({
@@ -552,7 +562,7 @@ server<-function(input, output, session) {
   output$downloadAnaRes02 <- downloadHandler(
     filename = "WaveFeature.csv",
     content = function(file) {
-      write.csv(res(), file, sep = ",", row.names = FALSE)
+      write.csv(res(), file, sep = ",")
     }
   )
   #=== input update part ===#
@@ -598,8 +608,9 @@ server<-function(input, output, session) {
   #### 03.graphic results ####
   #=== manipulation part ===#
   waveletTransform<- reactive({
-    df03.00<-dataframe()
-    wt03.00<-wt(cbind(df03.00[, 1], df03.00[, input$sel03]))
+    df03.00 <- dataframe()
+    df03.00 <- round(df03.00, digits = 5)
+    wt03.00 <- wt(cbind(df03.00[, 1], df03.00[, input$sel03]), do.sig = FALSE)
     wt03.00
   })
   waveletSpectrum <- reactive({
@@ -789,22 +800,8 @@ server<-function(input, output, session) {
   output$plot04.01<-renderPlot(plot04.01())
   output$plot04.02<-renderPlot(plot04.02())
   output$table04.01<-renderTable({
-    f04.01<-table04.01()
     if ((!is.null(input$dataSpa04)) && (!is.null(input$dataLoc04))){
-      f04.01 <- cbind(f04.01[, 1], 
-                      format(
-                        round(as.numeric(f04.01[, 2]), 
-                              digits = 4),
-                        nsmall = 4
-                      ),
-                      format(
-                        round(as.numeric(f04.01[, 3]), 
-                              digits = 4),
-                        nsmall = 4
-                      )
-      )
-      colnames(f04.01) <- c("Feature", "Moran index", "P value")
-      f04.01
+      table04.01()
     } else
       return(NULL)
   })
@@ -843,12 +840,12 @@ server<-function(input, output, session) {
       label<-c()
       for(i in 1:ncol){
         if(i == 1){
-          label[1] <- "Time (s)"
+          label[1] <- input$FirstColB01
         } else if (i == 2){
-          label[i] <- str_c("S", prefix[1], "Region") 
+          label[i] <- str_c("S", prefix[1], input$SecondColB01) 
           file01[, i]<- file01[, i]-mean(file01[, i])
         } else {
-          label[i] <- str_c("S", prefix[1], "Cell", " ", i-2)
+          label[i] <- str_c("S", prefix[1], input$ThirdColB01, " ", i-2)
           file01[, i]<- file01[, i]-mean(file01[, i])
         }
       }
