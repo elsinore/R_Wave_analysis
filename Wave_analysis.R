@@ -31,32 +31,38 @@ ui<-navbarPage("Wave Analysis",
                             'input.dataset === "Data View"',
                             h4("Data Overview"),
                             # file input 
-                            fileInput('datafile', 'Choose CSV file', accept=c('csv', 'comma-separated-values','.csv')),
-                            column(6, 
-                                   checkboxInput("colname01", "Change column name", TRUE),
-                                   textInput("FirstCol01", "First column name", "Time"),
-                                   textInput("SecondCol01", "Second column name", "Region"),
-                                   textInput("ThirdCol01", "Rest column names", "Cell")
-                                   ),
-                            checkboxInput('header', 'Header', TRUE),
-                            radioButtons('sep', 'Separator', c(Comma=',', Semicolon=';', Tab='\t'), ','),
-                            radioButtons('quote', 'Quote', c(None='', 'Double Quote'='"', 'Single Quote'="'"), ''),
-                            tags$hr(),
-                            withBusyIndicatorUI(
-                              actionButton(
-                                "analyze",
-                                "Analyze",
-                                class = "btn-primary"
-                              )
-                            ),
-                            #= end of file inpur
-                            # select column
-                            splitLayout(
-                              checkboxInput('selall01', 'Select All Cells', TRUE),
-                              radioButtons('checkGroup01', 'Select Group', c('All Groups' = 0, 'Group 1' = 1, 'Group 2' = 2))
-                            ),
-                            
-                            selectizeInput("check01", "Select Cells", NULL, multiple = TRUE)
+                            verticalLayout(
+                              fileInput('datafile', 'Choose CSV file', accept=c('csv', 'comma-separated-values','.csv')),
+                              splitLayout(
+                                column(12, 
+                                       checkboxInput("calibration01", "Calibrated by Mean", TRUE),
+                                       checkboxInput("colname01", "Change column name", TRUE),
+                                       textInput("FirstCol01", "First column name", "Time"),
+                                       textInput("SecondCol01", "Second column name", "Region"),
+                                       textInput("ThirdCol01", "Rest column names", "Cell")
+                                ),
+                                column(12,
+                                       checkboxInput('header', 'Header', TRUE),
+                                       radioButtons('sep', 'Separator', c(Comma=',', Semicolon=';', Tab='\t'), ','),
+                                       radioButtons('quote', 'Quote', c(None='', 'Double Quote'='"', 'Single Quote'="'"), '')
+                                )
+                              ),
+                              tags$hr(),
+                              withBusyIndicatorUI(
+                                actionButton(
+                                  "analyze",
+                                  "Analyze",
+                                  class = "btn-primary"
+                                )
+                              ),
+                              #= end of file inpur
+                              # select column
+                              splitLayout(
+                                checkboxInput('selall01', 'Select All Cells', TRUE),
+                                radioButtons('checkGroup01', 'Select Group', c('All Groups' = 0, 'Group 1' = 1, 'Group 2' = 2))
+                              ),
+                              selectizeInput("check01", "Select Cells", NULL, multiple = TRUE)
+                            )
                             #= end of select column
                           ),
                           #=== end.01 ===#
@@ -242,7 +248,10 @@ ui<-navbarPage("Wave Analysis",
                         'input.dataset2 === "Data Input"',
                         h4("Data Input"),
                         textInput("postfix", "File format", ".csv"),
-                        shinyDirButton('directory', 'Folder select', 'Please select a folder'),
+                        splitLayout(
+                          shinyDirButton('directory', 'Folder select', 'Please select a folder'),
+                          checkboxInput("calibrationB01", "Calibrated by Mean", TRUE)
+                        ),
                         textInput("pat01", "Prefix mark", "TIF"),
                         textInput("pat01_01", "Image file number", "00"),
                         textInput("pat02", "Location file number", "02.Location"),
@@ -363,6 +372,11 @@ server<-function(input, output, session) {
     data<-read.csv(input$datafile$datapath, header=input$header, sep=input$sep, quote=input$quote)
     ncol<-NCOL(data)
     label<-c()
+    if(input$calibration01 == TRUE){
+      for(l in 2:ncol){
+        data[, l] <- data[, l]-mean(data[, l])
+      }
+    }
     if(input$colname01 == TRUE){
       for(i in 1:ncol){
         if(i == 1){
@@ -848,7 +862,11 @@ server<-function(input, output, session) {
       colnames(file01)<-label
       file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
       rawBatchData<-file01
-      res00<-wzy.batch(wzy = file01, loc = file02)
+      if(input$calibrationB01 == TRUE){
+        res00<-wzy.batch2(wzy = file01, loc = file02)
+      } else if(input$calibrationB01 == FALSE){
+        res00<-wzy.batch(wzy = file01, loc = file02)
+      }
       label <- c(label, str_c("S", prefix[1], "Moran Index"), str_c("S", prefix[1], "P value"))
       rownames(res00) <- label[-1]
       isolate(values$Row_names <- c(values$Row_names, label[-1]))
@@ -874,7 +892,11 @@ server<-function(input, output, session) {
         colnames(file01)<-label
         file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
         rawBatchData<-cbind(rawBatchData, file01[,-1])
-        res00<-wzy.batch(wzy = file01, loc = file02)
+        if(input$calibrationB01 == TRUE){
+          res00<-wzy.batch2(wzy = file01, loc = file02)
+        } else if(input$calibrationB01 == FALSE){
+          res00<-wzy.batch(wzy = file01, loc = file02)
+        }
         label <- c(label, str_c("S", prefix[1], "Moran Index"), str_c("S", prefix[1], "P value"))
         rownames(res00) <- label[-1]
         isolate(values$Row_names <- c(values$Row_names, label[-1]))
@@ -1295,7 +1317,7 @@ server<-function(input, output, session) {
     # Figure_2 
     anno2 <- if(SummaryWaveB03()["P.value", 2]>=0.9999){
       "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 2]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
+    } else if(SummaryWaveB03()["P.value", 2]<0.9999 && SummaryWaveB03()["P.value", 2]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 2]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 2]<0.05 && SummaryWaveB03()["P.value", 2]>0.01){
       "*"
@@ -1317,7 +1339,7 @@ server<-function(input, output, session) {
     # Figure_3
     anno3 <- if(SummaryWaveB03()["P.value", 3]>=0.9999){
       "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 3]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
+    } else if(SummaryWaveB03()["P.value", 3]<0.9999 && SummaryWaveB03()["P.value", 3]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 3]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 3]<0.05 && SummaryWaveB03()["P.value", 3]>0.01){
       "*"
@@ -1339,7 +1361,7 @@ server<-function(input, output, session) {
     # Figure_4
     anno4 <- if(SummaryWaveB03()["P.value", 4]>=0.9999){
       "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 4]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
+    } else if(SummaryWaveB03()["P.value", 4]<0.9999 && SummaryWaveB03()["P.value", 4]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 4]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 4]<0.05 && SummaryWaveB03()["P.value", 4]>0.01){
       "*"
@@ -1362,7 +1384,7 @@ server<-function(input, output, session) {
     # Figure_5
     anno5 <- if(SummaryWaveB03()["P.value", 5]>=0.9999){
       "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 5]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
+    } else if(SummaryWaveB03()["P.value", 5]<0.9999 && SummaryWaveB03()["P.value", 5]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 5]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 5]<0.05 && SummaryWaveB03()["P.value", 5]>0.01){
       "*"
@@ -1385,7 +1407,7 @@ server<-function(input, output, session) {
     # Figure_6 
     anno6 <- if(SummaryWaveB03()["P.value", 6]>=0.9999){
       "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 6]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
+    } else if(SummaryWaveB03()["P.value", 6]<0.9999 && SummaryWaveB03()["P.value", 6]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 6]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 6]<0.05 && SummaryWaveB03()["P.value", 6]>0.01){
       "*"
@@ -1408,7 +1430,7 @@ server<-function(input, output, session) {
     # Figure_7
     anno7 <- if(SummaryWaveB03()["P.value", 7]>=0.9999){
       "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 7]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
+    } else if(SummaryWaveB03()["P.value", 7]<0.9999 && SummaryWaveB03()["P.value", 7]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 7]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 7]<0.05 && SummaryWaveB03()["P.value", 7]>0.01){
       "*"
@@ -1431,7 +1453,7 @@ server<-function(input, output, session) {
     # Figure_8
     anno8 <- if(SummaryWaveB03()["P.value", 8]>=0.9999){
       "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 8]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
+    } else if(SummaryWaveB03()["P.value", 8]<0.9999 && SummaryWaveB03()["P.value", 8]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 8]<0.05 && SummaryWaveB03()["P.value", 8]>0.01){
       "*"
@@ -1453,7 +1475,7 @@ server<-function(input, output, session) {
     # Figure_9 
     anno9 <- if(SummaryWaveB03()["P.value", 9]>=0.9999){
       "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 9]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
+    } else if(SummaryWaveB03()["P.value", 9]<0.9999 && SummaryWaveB03()["P.value", 9]>0.05){
       paste("P>", floor(SummaryWaveB03()["P.value", 9]*100)/100, sep = "") 
     } else if(SummaryWaveB03()["P.value", 9]<0.05 && SummaryWaveB03()["P.value", 9]>0.01){
       "*"
@@ -1969,7 +1991,7 @@ server<-function(input, output, session) {
     # Figure_2 
     anno2 <- if(SummaryMoranPB03()["P.value", 2]>=0.9999){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 2]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 2]<0.9999 && SummaryMoranPB03()["P.value", 2]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 2]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 2]<0.05 && SummaryMoranPB03()["P.value", 2]>0.01){
       "*"
@@ -1991,7 +2013,7 @@ server<-function(input, output, session) {
     # Figure_3
     anno3 <- if(SummaryMoranPB03()["P.value", 3]>=0.9999){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 3]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 3]<0.9999 && SummaryMoranPB03()["P.value", 3]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 3]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 3]<0.05 && SummaryMoranPB03()["P.value", 3]>0.01){
       "*"
@@ -2013,7 +2035,7 @@ server<-function(input, output, session) {
     # Figure_4
     anno4 <- if(SummaryMoranPB03()["P.value", 4]>=1){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 4]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 4]<0.9999 && SummaryMoranPB03()["P.value", 4]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 4]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 4]<0.05 && SummaryMoranPB03()["P.value", 4]>0.01){
       "*"
@@ -2036,7 +2058,7 @@ server<-function(input, output, session) {
     # Figure_5
     anno5 <- if(SummaryMoranPB03()["P.value", 5]>=0.999){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 5]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 5]<0.9999 && SummaryMoranPB03()["P.value", 5]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 5]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 5]<0.05 && SummaryMoranPB03()["P.value", 5]>0.01){
       "*"
@@ -2059,7 +2081,7 @@ server<-function(input, output, session) {
     # Figure_6 
     anno6 <- if(SummaryMoranPB03()["P.value", 6]>=0.9999){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 6]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 6]<0.9999 && SummaryMoranPB03()["P.value", 6]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 6]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 6]<0.05 && SummaryMoranPB03()["P.value", 6]>0.01){
       "*"
@@ -2082,7 +2104,7 @@ server<-function(input, output, session) {
     # Figure_7
     anno7 <- if(SummaryMoranPB03()["P.value", 7]>=0.9999){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 7]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 7]<0.9999 && SummaryMoranPB03()["P.value", 7]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 7]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 7]<0.05 && SummaryMoranPB03()["P.value", 7]>0.01){
       "*"
@@ -2105,7 +2127,7 @@ server<-function(input, output, session) {
     # Figure_8
     anno8 <- if(SummaryMoranPB03()["P.value", 8]>=0.9999){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 8]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 8]<0.9999 && SummaryMoranPB03()["P.value", 8]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 8]<0.05 && SummaryMoranPB03()["P.value", 8]>0.01){
       "*"
@@ -2127,7 +2149,7 @@ server<-function(input, output, session) {
     # Figure_9
     anno9 <- if(SummaryMoranPB03()["P.value", 9]>=0.9999){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 9]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 9]<0.9999 && SummaryMoranPB03()["P.value", 9]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 9]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 9]<0.05 && SummaryMoranPB03()["P.value", 9]>0.01){
       "*"
@@ -2149,7 +2171,7 @@ server<-function(input, output, session) {
     # Figure_10
     anno10 <- if(SummaryMoranPB03()["P.value", 10]>=0.9999){
       "P>0.999"
-    } else if(SummaryMoranPB03()["P.value", 10]<0.9999 && SummaryMoranPB03()["P.value", 1]>0.05){
+    } else if(SummaryMoranPB03()["P.value", 10]<0.9999 && SummaryMoranPB03()["P.value", 10]>0.05){
       paste("P>", floor(SummaryMoranPB03()["P.value", 8]*100)/100, sep = "") 
     } else if(SummaryMoranPB03()["P.value", 10]<0.05 && SummaryMoranPB03()["P.value", 10]>0.01){
       "*"

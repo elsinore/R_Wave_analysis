@@ -241,6 +241,51 @@ wzy.batch <- function (wzy, loc) {
   res<-cbind(res, Ratio = ratio)
   return(res)
 }
+wzy.batch2 <- function (wzy, loc) {
+  library("biwavelet")
+  require("biwavelet")
+  if (class(wzy) != "matrix") {
+    data <- as.matrix(wzy)
+  }
+  #### Global Variabels ####
+  ncol <- NCOL(wzy)
+  for(i in 2:ncol){
+    data[, i]<-data[, i]-mean(data[, i])
+  }
+  res<-WZY.EMG.F(data)
+  res<-res$results
+  #### calculate the dissimilarity ####
+  similarity<-WZY.Wavelet.clust2(data)
+  resclu<-as.matrix(similarity)
+  resclu<-resclu[,1]
+  fit <- hclust(similarity, method = "ward.D")
+  groups <- cutree(fit, k = 2)
+  ratio <- as.numeric(length(groups[groups == 1])/length(groups))*100
+  ##### result construction ####
+  res<-cbind(res,
+             Dissimilarity = resclu,
+             Group = groups
+  )
+  res.m<-res[-1, ] #remove the data from region
+  loc<-loc[-1, ] #remove the data from region
+  ncol04 <- ncol(res)
+  rownames04 <- colnames(res)
+  ozone.dists<- as.matrix(dist(cbind(loc[, 2], loc[, 3])))
+  ozone.dists.inv <- 1/ozone.dists
+  diag(ozone.dists.inv) <- 0
+  P.value <- c()
+  Moran.I <- c()
+  for(resin04 in 1:ncol04){
+    moran <- Moran.I(res.m[, resin04], ozone.dists.inv)
+    Moran.I <- c(Moran.I, moran$observed)
+    P.value <- c(P.value, moran$p.value)
+  }
+  Moran.I <- as.numeric(Moran.I)
+  P.value <- as.numeric(P.value)
+  res<-rbind(res, "Moran Index" = Moran.I, "P value" = P.value)
+  res<-cbind(res, Ratio = ratio)
+  return(res)
+}
 #=== UI Functions ####
 # All the code in this file needs to be copied to your Shiny app, and you need
 # to call `withBusyIndicatorUI()` and `withBusyIndicatorServer()` in your app.
