@@ -369,10 +369,8 @@ server<-function(input, output, session) {
           label[1] <- input$FirstCol01
         } else if (i == 2){
           label[i] <- input$SecondCol01
-          data[, i]<- data[, i]-mean(data[, i])
         } else {
           label[i] <- str_c(input$ThirdCol01," ", i-2)
-          data[, i]<- data[, i]-mean(data[, i])
         }
       }
       colnames(data)<-label
@@ -842,11 +840,9 @@ server<-function(input, output, session) {
         if(i == 1){
           label[1] <- input$FirstColB01
         } else if (i == 2){
-          label[i] <- str_c("S", prefix[1], input$SecondColB01) 
-          file01[, i]<- file01[, i]-mean(file01[, i])
+          label[i] <- str_c("S", prefix[1], input$SecondColB01)
         } else {
           label[i] <- str_c("S", prefix[1], input$ThirdColB01, " ", i-2)
-          file01[, i]<- file01[, i]-mean(file01[, i])
         }
       }
       colnames(file01)<-label
@@ -869,11 +865,11 @@ server<-function(input, output, session) {
         label<-c()
         for(i in 1:ncol){
           if(i == 1){
-            label[1] <- "Time (s)"
+            label[1] <- input$FirstColB01
           } else if (i == 2){
-            label[i] <- str_c("S", prefix[1], "Region") 
+            label[i] <- str_c("S", prefix[1], input$SecondColB01) 
           } else
-            label[i] <- str_c("S", prefix[1], "Cell", " ", i-2)
+            label[i] <- str_c("S", prefix[1], input$ThirdColB01, " ", i-2)
         }
         colnames(file01)<-label
         file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")

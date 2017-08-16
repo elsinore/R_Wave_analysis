@@ -193,107 +193,38 @@ wzy.batch <- function (wzy, loc) {
   library("biwavelet")
   require("biwavelet")
   if (class(wzy) != "matrix") {
-    wzy <- as.matrix(wzy)
+    data <- as.matrix(wzy)
   }
+  dataO<-data
   #### Global Variabels ####
-  wzyo<-wzy
-  wzy<-wzy[,-1]
-  ncol <- ncol(wzy)
-  nrow <- nrow(wzy)
-  ncolo <- ncol(wzyo)
-  nrowo <- nrow(wzyo)
-  #### Easy calculation features ####
-  iemg <- colSums(abs(wzy)) # Integrated EMG (IEMG)
-  mav <- iemg/nrow # Mean Absolute Value (MAV)
-  var <- colSums(wzy^2)/(nrow-1) # Variance of EMG (VAR)
-  rms <- sqrt(colSums(wzy^2)/nrow) # Root Mean Square (RMS)
-  # Finished easy part
-  ###
-  #### calculate the maximum amplitude (MA) ####
-  main<-0
-  ma<-c()
-  for (main in 1:ncol){
-    ma<-c(ma, max(wzy[, main])-min(wzy[, main]))
+  ncol <- NCOL(wzy)
+  for(i in 2:ncol){
+    data[, i]<-data[, i]-mean(data[, i])
   }
-  # finished calculation of Maximum Amplitude (MA)
-  ###
-  #### calculate the Waveform Length (WL) ####
-  wl <- c(0)
-  absDiff <-0
-  y<-0
-  for(j in 1:ncol) {
-    y <- 0
-    for(i in 1:(nrow-1)) {
-      absDiff <- abs(wzy[i+1,j]-wzy[i,j])
-      y <- y + absDiff
-    }
-    wl[j]<-y
-  }
-  # Finished calculation of Waveform Length (WL)
-  ###
-  #### calculate the Main Period (MP) ####
-  dw<-0
-  mp<-c()
-  for(dw in 2:ncolo){
-    x<-c()
-    y<-c()
-    s<-c()
-    max<-0
-    row<-0
-    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]), do.sig = FALSE)
-    y<-rowSums(abs(dwt$wave)^2)
-    x<-dwt$period
-    s<-cbind(x, y)
-    max<-max(y)
-    row<-which(s[, 2] == max)
-    out <- s[row, 1]
-    mp<-c(mp, out)
-  }
-  mp<-as.vector(mp)
-  # Finished calculation of Main Period (MP)
-  ###
-  #### calculate the Mean Power Frequency (MPF) ####
-  timeStep <- wzyo[3, 1]-wzyo[2, 1]
-  sampleSize <- nrow
-  Fs <- sampleSize/(sampleSize*timeStep)
-  N <- sampleSize
-  seq <- c(1:(N/2))
-  xv <-(seq/N)*Fs
-  mpfin <- 0
-  mpf<-c()
-  for (mpfin in 1:ncol){
-    X.k <- fft(wzy[, mpfin])
-    mod <- Mod(X.k)
-    mod<-mod[1:(N/2)]
-    mpf <- c(mpf, sum(mod*xv)/sum(mod))
-  }
-  #= finished calculation of Mean Power Frequency
-  ###
+  res<-WZY.EMG.F(data)
+  res<-res$results
+  resin<-WZY.EMG.F(dataO)
+  resin<-resin$results
   #### calculate the dissimilarity ####
-  similarity<-WZY.Wavelet.clust2(wzyo)
+  similarity<-WZY.Wavelet.clust2(dataO)
   resclu<-as.matrix(similarity)
   resclu<-resclu[,1]
   fit <- hclust(similarity, method = "ward.D")
   groups <- cutree(fit, k = 2)
   ratio <- as.numeric(length(groups[groups == 1])/length(groups))*100
   ##### result construction ####
-  res<-data.frame(
-    row.names = colnames(wzy),
-    Int = iemg,
-    MAV = mav,
-    VAR = var,
-    RMS = rms,
-    WL = wl,
-    MP = mp,
-    MA = ma,
-    MPF = mpf,
+  res<-cbind(res,
     Dissimilarity = resclu,
     Group = groups
   )
-  res.m<-res[-1, ] #remove the data from region
+  resin<-cbind(resin,
+    Dissimilarity = resclu,
+    Group = groups
+  )
+  res.m<-resin[-1, ] #remove the data from region
   loc<-loc[-1, ] #remove the data from region
-  ncol04 <- ncol(res)
-  rownames04 <- colnames(res)
+  ncol04 <- ncol(resin)
+  rownames04 <- colnames(resin)
   ozone.dists<- as.matrix(dist(cbind(loc[, 2], loc[, 3])))
   ozone.dists.inv <- 1/ozone.dists
   diag(ozone.dists.inv) <- 0
