@@ -354,7 +354,7 @@ ui<-navbarPage("Wave Analysis",
 )
 # +++02. Service Function --------------------------------------------------------
 server<-function(input, output, session) {
-  # Global Setting ####
+  # Global variables ####
   volumes <- c('Root'="/")
   shinyDirChoose(input, 'directory', roots=volumes, session = session)
   shinyDirChoose(input, 'uploadAnaResB01', roots=volumes, session = session)
@@ -364,6 +364,8 @@ server<-function(input, output, session) {
   values$colnames<-NULL
   values$sampleSize <- NULL
   values$Row_names <- NULL
+  values$rawCells <- NULL
+  values$rawRegion <- NULL
 ###=== Single Sample Explore ===####
   #### 00.data manipulation ####  
   dataframe<-eventReactive(input$analyze, {
@@ -828,7 +830,7 @@ server<-function(input, output, session) {
   }) #col04
     ###=== 04.end ===###
 ####=== Batching Processing ===####
-  #### 01.data input ####
+  #### 01. data input ####
   #=== manipulation part ===#
   resB01<-eventReactive(input$anB01, {
     if(is.null(input$directory)) {
@@ -862,6 +864,8 @@ server<-function(input, output, session) {
       colnames(file01)<-label
       file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
       rawBatchData<-file01
+      rawBatchData.cells<-file01[, -2]
+      rawBatchData.region<-file01[, 1:2]
       if(input$calibrationB01 == TRUE){
         res00<-wzy.batch2(wzy = file01, loc = file02)
       } else if(input$calibrationB01 == FALSE){
@@ -892,6 +896,8 @@ server<-function(input, output, session) {
         colnames(file01)<-label
         file02<-read.csv(paste(Dir, "/", InUseName02, sep=""), header = TRUE, sep = ",")
         rawBatchData<-cbind(rawBatchData, file01[,-1])
+        rawBatchData.cells<-cbind(rawBatchData.cells, file01[, -c(1:2)])
+        rawBatchData.region<-cbind(rawBatchData.region, file01[, 2])
         if(input$calibrationB01 == TRUE){
           res00<-wzy.batch2(wzy = file01, loc = file02)
         } else if(input$calibrationB01 == FALSE){
@@ -909,6 +915,8 @@ server<-function(input, output, session) {
     isolate(values$sampleSize <- as.numeric(length(ids)))
     Row_names<-values$Row_names
     rownames(res)<-NULL
+    isolate(values$cells <- rawBatchData.cells)
+    isolate(values$region <- rawBatchData.region)
     res<-cbind(Row_names, res)
     res<-list(res, ids, rawBatchData)
     isolate(values$colnames <- colnames(rawBatchData))
@@ -962,6 +970,8 @@ server<-function(input, output, session) {
       write.csv(values$tableB01.00, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_1.csv", sep = ""), row.names = FALSE)
       write.csv(values$tableB01.01, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_2.csv", sep = ""), row.names = FALSE)
       write.table(values$tableB01.02, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.csv", sep = ""), row.names = FALSE, col.names = values$colnames, sep = ",")
+      write.csv(values$cells, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.cells.csv", sep = ""), row.names = FALSE)
+      write.csv(values$region, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.region.csv", sep = ""), row.names = FALSE)
       write.csv(values$tableB01.03, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_4.csv", sep = ""), row.names = FALSE)
     }
   )
@@ -1012,7 +1022,7 @@ server<-function(input, output, session) {
     isolate(values$sampleSize <- length(values$tableB01.03[, 1]))
   }) #TableB01.03 | Table 4
     #=== 01.end ===#
-  #### 02.Statistical Analysis ####
+  #### 02. Statistical Analysis ####
   #=== manipulation part ===#
   values$wavefeatureB02 <- data.frame("NoData" = NA)
   values$distributionB02 <- data.frame("NoData" = NA)
