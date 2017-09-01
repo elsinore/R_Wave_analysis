@@ -220,7 +220,8 @@ ui<-navbarPage("Wave Analysis",
                                        splitLayout(
                                          plotOutput("plot03.03"),
                                          plotOutput("plot03.04")
-                                       )
+                                       ),
+                                       plotOutput("plot03.05")
                                      )
                             ),
                             #===end.03 ===#
@@ -407,7 +408,7 @@ server<-function(input, output, session) {
       return(NULL)
     resin<-dataframe()
     ## Basic feasture
-    resin<-WZY.EMG.F(resin)
+    resin<-WZY.EMG.F.MPDF(resin)
     resin <- resin$results
     ## Wavelet Cluster
     resclust<-waveClust()
@@ -673,11 +674,23 @@ server<-function(input, output, session) {
     }
     return(gp)
   })
+  PowerSpectralDensity <- reactive({
+    df03.03<-dataframe()
+    gp03.03<-NULL
+    if(!is.null(df03.03)){
+      fft03.03<-fft(df03.03[, input$sel03])
+      sampleSize<-length(fft03.03)
+      timeStep<-df03.03[3,1]-df03.03[2,1]
+      gp03.03<-wzy.plot.frequency.spectrum.density(fft03.03, sampleSize = sampleSize, timeStep = timeStep)
+    }
+    return(gp03.03)
+  })
   #=== output part ===#
   output$plot03.01<-renderPlot(waveletSpectrum())
   output$plot03.02<-renderPlot(timeSeriesGraph())
   output$plot03.03<-renderPlot(PowerSpectrum())
   output$plot03.04<-renderPlot(waveletVariance())
+  output$plot03.05<-renderPlot(PowerSpectralDensity())
   output$table03.01 <- renderTable({
     f <- res()
     f <- round(f, digits = 3)
@@ -1997,7 +2010,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Integrated" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 2])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 2])*input$parGHB04.03)
     # Figure_2 
     anno2 <- if(SummaryMoranPB03()["P.value", 2]>=0.9999){
       "P>0.999"
@@ -2019,7 +2032,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Mean Absolute Value" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 3])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 3])*input$parGHB04.03)
     # Figure_3
     anno3 <- if(SummaryMoranPB03()["P.value", 3]>=0.9999){
       "P>0.999"
@@ -2041,7 +2054,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Variance" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 4])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 4])*input$parGHB04.03)
     # Figure_4
     anno4 <- if(SummaryMoranPB03()["P.value", 4]>=1){
       "P>0.999"
@@ -2064,7 +2077,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Root Mean Square" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 5])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 5])*input$parGHB04.03)
     # Figure_5
     anno5 <- if(SummaryMoranPB03()["P.value", 5]>=0.999){
       "P>0.999"
@@ -2087,7 +2100,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Waveform Length" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 6])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 6])*input$parGHB04.03)
     # Figure_6 
     anno6 <- if(SummaryMoranPB03()["P.value", 6]>=0.9999){
       "P>0.999"
@@ -2110,7 +2123,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Main Period" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 7])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 7])*input$parGHB04.03)
     # Figure_7
     anno7 <- if(SummaryMoranPB03()["P.value", 7]>=0.9999){
       "P>0.999"
@@ -2133,7 +2146,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Maximal Amplitude" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 8])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 8])*input$parGHB04.03)
     # Figure_8
     anno8 <- if(SummaryMoranPB03()["P.value", 8]>=0.9999){
       "P>0.999"
@@ -2155,7 +2168,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Mean Power Frequency" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 9])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 9])*input$parGHB04.03)
     # Figure_9
     anno9 <- if(SummaryMoranPB03()["P.value", 9]>=0.9999){
       "P>0.999"
@@ -2177,7 +2190,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Dissimilarity to Region" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 10])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 10])*input$parGHB04.03)
     # Figure_10
     anno10 <- if(SummaryMoranPB03()["P.value", 10]>=0.9999){
       "P>0.999"
@@ -2199,7 +2212,7 @@ server<-function(input, output, session) {
       labs(y = "P value of Moran Index", title = "Group" ) + geom_hline( yintercept = 0.05, color = "Red") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$MoranPB02[, 11])*input$parGHB04.03)
+            axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 11])*input$parGHB04.03)
     
     multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
   })

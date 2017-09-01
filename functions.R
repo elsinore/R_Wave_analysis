@@ -102,12 +102,13 @@ WZY.EMG.F <- function(wzy) {
   N <- sampleSize
   seq <- c(1:(N/2))
   xv <-(seq/N)*Fs
+  xv <- c(0, xv)
   mpfin <- 0
   mpf<-c()
   for (mpfin in 1:ncol){
     X.k <- fft(wzy[, mpfin])
     mod <- Mod(X.k)
-    mod<-mod[1:(N/2)]
+    mod<-mod[1:((N/2)+1)]
     mpf <- c(mpf, sum(mod*xv)/sum(mod))
   }
   #= finished calculation of Mean Power Frequency
@@ -126,6 +127,109 @@ WZY.EMG.F <- function(wzy) {
   )
   return(list(data=wzyo, results=res))
 }
+WZY.EMG.F.MPDF <- function(wzy) {
+  library("biwavelet")
+  require("biwavelet")
+  #### Global Variabels ####
+  wzyo<-wzy
+  wzy<-wzy[,-1]
+  ncol <- ncol(wzy)
+  nrow <- nrow(wzy)
+  ncolo <- ncol(wzyo)
+  nrowo <- nrow(wzyo)
+  #### Easy calculation features ####
+  iemg <- colSums(abs(wzy)) # Integrated EMG (IEMG)
+  mav <- iemg/nrow # Mean Absolute Value (MAV)
+  var <- colSums(wzy^2)/(nrow-1) # Variance of EMG (VAR)
+  rms <- sqrt(colSums(wzy^2)/nrow) # Root Mean Square (RMS)
+  # Finished easy part
+  ###
+  #### calculate the maximum amplitude (MA) ####
+  main<-0
+  ma<-c()
+  for (main in 1:ncol){
+    ma<-c(ma, max(wzy[, main])-min(wzy[, main]))
+  }
+  # finished calculation of Maximum Amplitude (MA)
+  ###
+  #### calculate the Waveform Length (WL) ####
+  wl <- c(0)
+  absDiff <-0
+  y<-0
+  for(j in 1:ncol) {
+    y <- 0
+    for(i in 1:(nrow-1)) {
+      absDiff <- abs(wzy[i+1,j]-wzy[i,j])
+      y <- y + absDiff
+    }
+    wl[j]<-y
+  }
+  # Finished calculation of Waveform Length (WL)
+  ###
+  #### calculate the Main Period (MP) ####
+  dw<-0
+  mp<-c()
+  for(dw in 2:ncolo){
+    x<-c()
+    y<-c()
+    s<-c()
+    max<-0
+    row<-0
+    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]), do.sig = FALSE)
+    y<-rowSums(abs(dwt$wave)^2)
+    x<-dwt$period
+    s<-cbind(x, y)
+    max<-max(y)
+    row<-which(s[, 2] == max)
+    out <- s[row, 1]
+    mp<-c(mp, out)
+  }
+  mp<-as.vector(mp)
+  # Finished calculation of Main Period (MP)
+  ###
+  #### calculate the Mean Power Frequency (MPF) ####
+  timeStep <- wzyo[3, 1]-wzyo[2, 1]
+  sampleSize <- nrow
+  Fs <- sampleSize/(sampleSize*timeStep)
+  N <- sampleSize
+  seq <- c(1:(N/2))
+  xv <-(seq/N)*Fs
+  xv <- c(0, xv)
+  mpfin <- 1
+  mpf<-c()
+  for (mpfin in 1:ncol){
+    X.k <- fft(wzy[, mpfin])
+    mod <- Mod(X.k)
+    mod <-mod[1:((N/2)+1)]
+    mpf <- c(mpf, sum(mod*xv)/sum(mod))
+  }
+  #### calculate the Mean Power Density Frequency (MPDF) ####
+  mpdfin <- 1
+  mpdf<-c()
+  for (mpdfin in 1:ncol){
+    X.kd <- fft(wzy[, mpdfin])
+    modd <- Mod(X.kd)
+    modd <-modd[1:((N/2)+1)]
+    modd <- (modd^2)/N 
+    mpdf <- c(mpdf, sum(modd*xv)/sum(modd))
+  }
+  #= finished calculation of Mean Power Frequency
+  ###
+  ##### result construction ####
+  res<-data.frame(
+    row.names = colnames(wzy),
+    Int = iemg,
+    MAV = mav,
+    VAR = var,
+    RMS = rms,
+    WL = wl,
+    MP = mp,
+    MA = ma,
+    MPF = mpf,
+    MPDF = mpdf
+  )
+  return(list(data=wzyo, results=res))
+}
 #=== Wavelet Analysis ####
 WZY.Wavelet.clust <- function(input){ # wave clust in a same sample
   library("biwavelet")
@@ -139,7 +243,7 @@ WZY.Wavelet.clust <- function(input){ # wave clust in a same sample
     wt.t<-wt(cbind(input[ , 1], input[ , i]), do.sig = FALSE)
     w.arr[i-1, , ] <- wt.t$wave
   }
-  w.arr <- round(w.arr, digits = 5)
+  w.arr <- round(w.arr, digits = 4)
   w.arr.dis<-wclust(w.arr)
   w.arr.dis<-w.arr.dis$dist.mat
   w.arr.dis<-as.matrix(w.arr.dis)
@@ -162,7 +266,7 @@ WZY.Wavelet.clust2 <- function(input){ # wave clust in a same sample
     wt.t<-wt(cbind(input[ , 1], input[ , i]), do.sig = FALSE)
     w.arr[i-1, , ] <- wt.t$wave
   }
-  w.arr <- round(w.arr, digits = 5)
+  w.arr <- round(w.arr, digits = 4)
   w.arr.dis <- wclust(w.arr)
   w.arr.dis <- w.arr.dis$dist.mat
   w.arr.dis <- as.matrix(w.arr.dis)
@@ -187,6 +291,21 @@ wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep) {
   plot(plot.data, t="h", lwd=2, main="", 
        xlab="Frequency (Hz)", ylab="Strength",
        ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectrum")
+}
+wzy.plot.frequency.spectrum.density <- function(X.k, sampleSize, timeStep) {
+  X.k[1]<-0
+  Fs <- sampleSize/(sampleSize*timeStep)
+  N <- sampleSize
+  seq <- c(1:(N/2))
+  xv=(seq/N)*Fs
+  mod <- Mod(X.k)
+  mod <- mod[1:(N/2)]
+  mod <- (mod^2)/N 
+  plot.data  <- cbind(c(0, xv[1:((N/2)-1)]), mod)
+  plot.data[xv[2:(N/2)],2] <- 2*plot.data[xv[2:(N/2)],2] 
+  plot(plot.data, t="h", lwd=2, main="", 
+       xlab="Frequency (Hz)", ylab="Strength",
+       ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectral Density")
 }
 #=== Function for Batching Processing ===####
 wzy.batch <- function (wzy, loc) {
