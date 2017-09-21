@@ -306,7 +306,7 @@ ui<-navbarPage("Wave Analysis",
                         'input.dataset2 == "Plot Output"',
                         h4("Plot Output"),
                         selectInput("levelB04", "Select the view level", 
-                          c("Cell Level", "Region Level", "Moran Index", "Significance of Moran Index", "Comparsion among Groups")
+                          c("Cell Level", "Region Level", "Moran Index", "Significance of Moran Index", "Comparsion among Groups", "Histogram")
                         ),
                         uiOutput("uiB04.side")
                       )
@@ -686,11 +686,11 @@ server<-function(input, output, session) {
     return(gp03.03)
   })
   #=== output part ===#
-  output$plot03.01<-renderPlot(waveletSpectrum())
-  output$plot03.02<-renderPlot(timeSeriesGraph())
-  output$plot03.03<-renderPlot(PowerSpectrum())
-  output$plot03.04<-renderPlot(waveletVariance())
-  output$plot03.05<-renderPlot(PowerSpectralDensity())
+  output$plot03.01 <- renderPlot(waveletSpectrum())
+  output$plot03.02 <- renderPlot(timeSeriesGraph())
+  output$plot03.03 <- renderPlot(PowerSpectrum())
+  output$plot03.04 <- renderPlot(waveletVariance())
+  output$plot03.05 <- renderPlot(PowerSpectralDensity())
   output$table03.01 <- renderTable({
     f <- res()
     f <- round(f, digits = 3)
@@ -1518,7 +1518,7 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 10])*input$parGHB04.00)
     multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, cols=3)
-  })
+  }) 
   plotBoxB04.01<-reactive({
     # Figure_1 
     anno1 <- if(SummaryRegionB03()["P.value", 1]>=0.9999){
@@ -1724,7 +1724,7 @@ server<-function(input, output, session) {
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 12])*input$parGHB04.01)
     
     multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, cols=3)
-  })
+  }) 
   plotBoxB04.02<-reactive({
     # Graph Height calculation
     rangeB04 <- c()
@@ -1987,7 +1987,7 @@ server<-function(input, output, session) {
             axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[10]*input$parGHB04.02)
     
     multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
-  })
+  }) 
   plotBoxB04.03<-reactive({
     # Figure_1 
     anno1 <- if(SummaryMoranPB03()["P.value", 1]>=0.9999){
@@ -2215,7 +2215,7 @@ server<-function(input, output, session) {
             axis.title=element_text(size=14,face="bold")) + ylim(0, max(values$MoranPB02[, 11])*input$parGHB04.03)
     
     multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
-  })
+  }) 
   plotBoxB04.04<-reactive({
     x<-values$wavefeatureB02
     df<-SummaryGroupComparB03()
@@ -2381,13 +2381,26 @@ server<-function(input, output, session) {
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 10])*1.43)
     gpf<-multiplot.wzy(gp1, gp2, gp3, gp4, gp5, gp6, gp7, gp8, gp9, cols=3)
     return(gpf)
+  }) 
+  plotBoxB04.05<-reactive({
+    data <- values$wavefeatureB02
+    g1<-ggplot(data, aes_string(x = "Int"))+geom_histogram()+facet_grid(~Tag)+theme_bw()
+    g2<-ggplot(data, aes_string(x = "MAV"))+geom_histogram()+facet_grid(~Tag)+theme_bw()
+    g3<-ggplot(data, aes_string(x = "VAR"))+geom_histogram()+facet_grid(~Tag)+theme_bw()
+    g4<-ggplot(data, aes_string(x = "RMS"))+geom_histogram()+facet_grid(~Tag)+theme_bw()
+    g5<-ggplot(data, aes_string(x = "WL"))+geom_histogram()+facet_grid(~Tag)+theme_bw()
+    g6<-ggplot(data, aes_string(x = "MP"))+geom_histogram()+facet_grid(~Tag)+theme_bw()
+    g7<-ggplot(data, aes_string(x = "MA"))+geom_histogram()+facet_grid(~Tag)+theme_bw()
+    g8<-ggplot(data, aes_string(x = "MPF"))+geom_histogram()+facet_grid(~Tag)+theme_bw()
+    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, cols=2)
   })
     #=== output part ===#
-  output$plotBoxB04.00<-renderPlot(plotBoxB04.00())
-  output$plotBoxB04.01<-renderPlot(plotBoxB04.01())
-  output$plotBoxB04.02<-renderPlot(plotBoxB04.02())
-  output$plotBoxB04.03<-renderPlot(plotBoxB04.03())
-  output$plotBoxB04.04<-renderPlot(plotBoxB04.04())
+  output$plotBoxB04.00<-renderPlot(plotBoxB04.00()) #Cell level
+  output$plotBoxB04.01<-renderPlot(plotBoxB04.01()) #Region level
+  output$plotBoxB04.02<-renderPlot(plotBoxB04.02()) #Moran index for each wave feature
+  output$plotBoxB04.03<-renderPlot(plotBoxB04.03()) #P value of Moran index for each wave
+  output$plotBoxB04.04<-renderPlot(plotBoxB04.04()) #Comparsion among groups
+  output$plotBoxB04.05<-renderPlot(plotBoxB04.05()) #Histogram
   output$uiB04.side <- renderUI({
     switch(input$levelB04,
            "Cell Level" = list(
@@ -2414,7 +2427,8 @@ server<-function(input, output, session) {
              sliderInput("parTLB04.03", "Tip Length", min = 1, max = 2, value = 1.12, step = 0.01),
              sliderInput("parGHB04.03", "Graph Heigth", min = 1, max = 2, value = 1.23, step = 0.01)
            ),
-           "Comparsion among Groups" = NULL
+           "Comparsion among Groups" = NULL,
+           "Histogram" = NULL
     )
   })
   output$uiB04 <- renderUI({
@@ -2443,6 +2457,11 @@ server<-function(input, output, session) {
         tags$h4("Comparsion among Groups"),
         tags$hr(),
         plotOutput("plotBoxB04.04", width = "1200px", height = "1300px")
+      ),
+      "Histogram" = list(
+        tags$h4("Histogram"),
+        tags$hr(),
+        plotOutput("plotBoxB04.05", width = "1200px", height = "1300px")
       )
     )
   })
