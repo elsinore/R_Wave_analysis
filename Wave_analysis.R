@@ -1723,7 +1723,7 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 12])*input$parGHB04.01)
     
-    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9 cols=3)
+    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, cols=3)
   }) 
   plotBoxB04.02<-reactive({
     # Graph Height calculation
