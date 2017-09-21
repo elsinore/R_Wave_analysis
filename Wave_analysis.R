@@ -1712,7 +1712,7 @@ server<-function(input, output, session) {
     }else if(SummaryRegionB03()["P.value", 9]<0.001 && SummaryRegionB03()["P.value", 9]>0.0001){
       "***"
     } else {"****"}
-    g8 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 12])) +
+    g9 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 12])) +
       geom_boxplot(position="dodge") +
       geom_signif(annotation=formatC(anno9, digits=2),
                   y_position=max(values$regionB02[, 12])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
@@ -1723,7 +1723,7 @@ server<-function(input, output, session) {
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 12])*input$parGHB04.01)
     
-    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, cols=3)
+    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9 cols=3)
   }) 
   plotBoxB04.02<-reactive({
     # Graph Height calculation
