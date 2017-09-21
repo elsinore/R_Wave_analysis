@@ -304,7 +304,7 @@ wzy.plot.frequency.spectrum.density <- function(X.k, sampleSize, timeStep) {
   plot.data  <- cbind(c(0, xv[1:((N/2)-1)]), mod)
   plot.data[xv[2:(N/2)],2] <- 2*plot.data[xv[2:(N/2)],2] 
   plot(plot.data, t="h", lwd=2, main="", 
-       xlab="Frequency (Hz)", ylab="Strength",
+       xlab="Frequency (Hz)", ylab="Power Spectral Density",
        ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectral Density")
 }
 #=== Function for Batching Processing ===####
