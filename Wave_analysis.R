@@ -1139,7 +1139,7 @@ server<-function(input, output, session) {
     P.value <- c()
     Statistic <- c()
     for(i in 2:11){
-      test <- wilcox.test(values$wavefeatureB02[, i] ~ values$wavefeatureB02$Label)
+      test <- wilcox.test(values$wavefeatureB02[, i] ~ values$wavefeatureB02$Label) #independent 2-gtoup Mann-Whitney U test see here: https://www.statmethods.net/stats/nonparametric.html
       P.value <-c(P.value, test$p.value) 
       Statistic <- c(Statistic, test$statistic)
     }
