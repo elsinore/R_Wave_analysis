@@ -1238,7 +1238,7 @@ server<-function(input, output, session) {
     summary <- describeBy(df[, 2:10], df$Row_names)
     p.adjusted<-data.frame()
     for (i in 2:10) {
-      test<-dunn.test(df[,i], df[,1], kw = FALSE, method = "by")
+      test<-dunn.test(df[,i], df[,1], kw = FALSE, method = "by") #Dunn's test of multiple comparisons
       if (i == 2) {
         p.adjusted<-data.frame(test$comparisons, test$P.adjusted)
       } else {
@@ -1253,7 +1253,7 @@ server<-function(input, output, session) {
     colnames(p.adjusted) <- colnames(df)
     out<-rbind(out, p.adjusted)
     return(out)
-  })
+  }) #multiple comparison
     #=== output part ===#
   output$downloadStaResB03 <- downloadHandler(
     filename = "Result_1.csv",
