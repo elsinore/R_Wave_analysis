@@ -423,22 +423,6 @@ withBusyIndicatorUI <- function(button) {
         img(src = "ajax-loader-bar.gif", class = "btn-loading-indicator"),
         icon("check", class = "btn-done-indicator")
       )
-    )
-  )
-}
-# Call this function from the server with the button id that is clicked and the
-# expression to run when the button is clicked
-withBusyIndicatorUI <- function(button) {
-  id <- button[['attribs']][['id']]
-  div(
-    `data-for-btn` = id,
-    button,
-    span(
-      class = "btn-loading-container",
-      hidden(
-        img(src = "ajax-loader-bar.gif", class = "btn-loading-indicator"),
-        icon("check", class = "btn-done-indicator")
-      )
     ),
     hidden(
       div(class = "btn-err",

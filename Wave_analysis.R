@@ -1178,7 +1178,7 @@ server<-function(input, output, session) {
       Statistic <- c(Statistic, test$statistic)
     }
     group.n <- as.numeric(max(values$tableB02$Group))+1
-    summary <- describeBy(values$distributionB02[, 2:11], values$distributionB02$Tag)
+    summary <- describeBy(values$distributionB02[, 2:11], values$distributionB02$Tag) #General Statistical Describe
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
