@@ -2226,11 +2226,11 @@ server<-function(input, output, session) {
         "P>0.99"
       } else if(df[53,i]>0.025){
         paste("P>", floor(df[53,i]*1000)/1000, sep = "") 
-      } else if(df[53,i]<0.025 && df[53,i]>0.005){
+      } else if(df[53,i]<0.025 && df[53,i]>0.001){
         "*"
-      } else if(df[53,i]<0.005 && df[53,i]>0.0025){
+      } else if(df[53,i]<0.001 && df[53,i]>0.0001){
         "**"
-      }else if(df[53,i]<0.0025 && df[53,i]>0.00005){
+      }else if(df[53,i]<0.0001 && df[53,i]>0.00001){
         "***"
       } else {"****"}
       g1<-geom_signif(annotation=formatC(anno1, digits=2),
@@ -2241,11 +2241,11 @@ server<-function(input, output, session) {
         "P>0.999"
       } else if(df[54,i]>0.025){
         paste("P>", floor(df[54,i]*1000)/1000, sep = "") 
-      } else if(df[54,i]<0.025 && df[54,i]>0.005){
+      } else if(df[54,i]<0.025 && df[54,i]>0.001){
         "*"
-      } else if(df[54,i]<0.005 && df[54,i]>0.0025){
+      } else if(df[54,i]<0.001 && df[54,i]>0.0001){
         "**"
-      }else if(df[54,i]<0.0025 && df[54,i]>0.00005){
+      }else if(df[54,i]<0.0001 && df[54,i]>0.00001){
         "***"
       } else {"****"}
       g2<-geom_signif(annotation=formatC(anno2, digits=2),
@@ -2256,11 +2256,11 @@ server<-function(input, output, session) {
         "P>0.999"
       } else if(df[55,i]>0.025){
         paste("P>", floor(df[55,i]*1000)/1000, sep = "") 
-      } else if(df[55,i]<0.025 && df[55,i]>0.005){
+      } else if(df[55,i]<0.025 && df[55,i]>0.001){
         "*"
-      } else if(df[55,i]<0.005 && df[55,i]>0.0025){
+      } else if(df[55,i]<0.001 && df[55,i]>0.0001){
         "**"
-      }else if(df[55,i]<0.0025 && df[55,i]>0.00005){
+      }else if(df[55,i]<0.0001 && df[55,i]>0.00001){
         "***"
       } else {"****"}
       g3<-geom_signif(annotation=formatC(anno3, digits=2),
@@ -2271,11 +2271,11 @@ server<-function(input, output, session) {
         "P>0.999"
       } else if(df[56,i]>0.025){
         paste("P>", floor(df[56,i]*1000)/1000, sep = "") 
-      } else if(x[56,i]<0.025 && df[56,i]>0.005){
+      } else if(x[56,i]<0.025 && df[56,i]>0.001){
         "*"
-      } else if(x[56,i]<0.005 && df[56,i]>0.0025){
+      } else if(x[56,i]<0.001 && df[56,i]>0.0001){
         "**"
-      }else if(x[56,i]<0.0025 && df[56,i]>0.00005){
+      }else if(x[56,i]<0.0001 && df[56,i]>0.00001){
         "***"
       } else {"****"}
       g4<-  geom_signif(annotation=formatC(anno4, digits=2),
@@ -2285,11 +2285,11 @@ server<-function(input, output, session) {
         "P>0.999"
       } else if(df[57,i]>0.025){
         paste("P>", floor(df[57,i]*1000)/1000, sep = "") 
-      } else if(df[57,i]<0.025 && df[57,i]>0.005){
+      } else if(df[57,i]<0.025 && df[57,i]>0.001){
         "*"
-      } else if(df[57,i]<0.005 && df[57,i]>0.0025){
+      } else if(df[57,i]<0.001 && df[57,i]>0.0001){
         "**"
-      }else if(df[57,i]<0.0025 && df[57,i]>0.00005){
+      }else if(df[57,i]<0.0001 && df[57,i]>0.00001){
         "***"
       } else {"****"}
       g5<-geom_signif(annotation=formatC(anno5, digits=2),
@@ -2299,11 +2299,11 @@ server<-function(input, output, session) {
         "P>0.999"
       } else if(df[58,i]>0.025){
         paste("P>", floor(df[58,i]*1000)/1000, sep = "") 
-      } else if(df[58,i]<0.025 && df[58,i]>0.005){
+      } else if(df[58,i]<0.025 && df[58,i]>0.001){
         "*"
-      } else if(df[58,i]<0.005 && df[58,i]>0.0025){
+      } else if(df[58,i]<0.001 && df[58,i]>0.0001){
         "**"
-      }else if(df[58,i]<0.0025 && df[58,i]>0.00005){
+      }else if(df[58,i]<0.0001 && df[58,i]>0.00001){
         "***"
       } else {"****"}
       g6<- geom_signif(annotation=formatC(anno6, digits=2),
