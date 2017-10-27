@@ -1328,7 +1328,7 @@ server<-function(input, output, session) {
     }else if(SummaryWaveB03()["P.value", 1]<0.001 && SummaryWaveB03()["P.value", 1]>0.0001){
       "***"
     } else {"****"}
-
+    #convert the original data for customize the boxplot
     o<-values$wavefeatureB02
     dfx<-c()
     for(i in 1: length(o$Tag)) {
@@ -1361,6 +1361,7 @@ server<-function(input, output, session) {
       y75=y75,
       y100=y100
     )
+    #convert the original data for customize the boxplot
     g1 <- ggplot(df1, aes(x=x, y=y100)) +
       geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100),
                    stat = "identity", position="dodge") +
