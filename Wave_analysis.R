@@ -269,7 +269,8 @@ ui<-navbarPage("Wave Analysis",
                         tags$hr(),
                         verticalLayout(
                           shinyDirButton('uploadAnaResB01', 'Upload a analysis result', 'Please select a folder'),
-                          downloadButton('downloadAnaResB01', 'Download the analysis result')
+                          downloadButton('downloadAnaResB01', 'Download the analysis result'),
+                          helpText(HTML('<p align="justify">Please download those files <b>immediately</b> after hitting the "<b>Analyze</b>" botton</p>'))
                         )
                       ),
                       #### 02. Statistical Analysis ####
@@ -298,7 +299,6 @@ ui<-navbarPage("Wave Analysis",
                       conditionalPanel(
                         'input.dataset2 == "Results"',
                         h4("Statistical Results"),
-                        shinyDirButton('ChooseDirB03', 'Select a folder to save the results', 'Please select a folder'),
                         downloadButton('downloadStaResB03', 'Download the statistic result')
                       ),
                       #### 04. Plot Output ####
@@ -449,7 +449,7 @@ server<-function(input, output, session) {
           mdf <- melt(df,id.vars=xv,measure.vars=yv)
           gp <- ggplot(data=mdf) + 
             geom_line(aes_string(x=xv,y="value",color="variable")) +
-            labs(x = "Time (s)", y = "Fouresence Intensity (Gray Value)") +
+            labs(x = input$FirstColB01, y = "Fouresence Intensity (Gray Value)") +
             theme(axis.text=element_text(size=14), axis.title=element_text(size=14,face="bold"))
         }
       }
@@ -647,7 +647,7 @@ server<-function(input, output, session) {
     if(!is.null(df03.02)){
       gp03.02<-ggplot(df03.02)+
         geom_line(aes(x = x, y = y))+
-        labs(x = "Time (s)", y = "Fouresence Intensity (Gray Value)", title = input$sel03) +
+        labs(x = input$FirstColB01, y = "Fouresence Intensity (Gray Value)", title = input$sel03) +
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), axis.text=element_text(size=14), axis.title=element_text(size=14,face="bold"))
     }
     return(gp03.02)
@@ -1054,10 +1054,11 @@ server<-function(input, output, session) {
       for(i in 1:dim(values$tableB02)[1]) {
         tag<-c(tag, as.vector(rep(values$tableB02$Label[i], length(values$tableB01.01$id[values$tableB01.01$id == values$tableB02$ID[i]]))))
         isolate(values$tableB01.01$id[values$tableB01.01$id == values$tableB02$ID[i]] <- as.character(values$tableB02$Group[i]))
-        isolate(colnames(values$tableB01.02) <- str_replace_all(colnames(values$tableB01.02), pattern = str_c("S", as.character(values$tableB02$ID[i]), sep = ""), str_c("G", as.character(values$tableB02$Group[i]), "_",                                                                                                                                                                    as.character(values$tableB02$ID[i]), sep = "")))
-      }
+        isolate(colnames(values$tableB01.02) <- str_replace_all(colnames(values$tableB01.02), pattern = str_c("S", as.character(values$tableB02$ID[i]), sep = ""), 
+                                                                str_c("G", as.character(values$tableB02$Group[i]), "_",as.character(values$tableB02$ID[i]), sep = "")))
+      } #Get tag from group setting
       if(is.null(colnames(values$tableB01.02))) {
-        stop("Please download the analysis result just after analysis.")
+        stop("Please download the analysis result after analysis.")
       }
       isolate(colnames(values$tableB01.01)[colnames(values$tableB01.01) == "id"] <- "Label")
       isolate(values$tableB01.01 <- cbind(values$tableB01.01, Tag = tag))
@@ -1068,10 +1069,10 @@ server<-function(input, output, session) {
       isolate(values$MoranPB02 <- values$tableB01.01[grep("P value", values$tableB01.01$Row_names, value = TRUE), ])
       isolate(values$MoranPB02 <- values$MoranPB02[order(values$MoranPB02$Label),])
       isolate(values$tableB01.01 <- values$tableB01.01[! rownames(values$tableB01.01) %in% grep("P value", rownames(values$tableB01.01), value = TRUE), ])
-      isolate(values$wavefeatureB02 <- values$tableB01.01[grep("Cell", values$tableB01.01$Row_names, value = TRUE), ])
+      isolate(values$wavefeatureB02 <- values$tableB01.01[grep(input$ThirdColB01, values$tableB01.01$Row_names, value = TRUE), ])
       isolate(values$wavefeatureB02 <- values$wavefeatureB02[order(values$wavefeatureB02$Label),])
       isolate(values$wavefeatureB02 <- values$wavefeatureB02 <- values$wavefeatureB02[, -12])
-      isolate(values$regionB02 <- values$tableB01.01[grep("Region", values$tableB01.01$Row_names, value = TRUE), ])
+      isolate(values$regionB02 <- values$tableB01.01[grep(input$SecondColB01, values$tableB01.01$Row_names, value = TRUE), ])
       isolate(values$regionB02 <- values$regionB02[order(values$regionB02$Label),])
       isolate(values$regionB02$Ratio[values$regionB02$Label == 0]<- 100 - values$regionB02$Ratio[values$regionB02$Label == 0])
     })
@@ -1258,16 +1259,16 @@ server<-function(input, output, session) {
   output$downloadStaResB03 <- downloadHandler(
     filename = "Result_1.csv",
     content = function(file) {
-      dir.create(paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/", sep = ""), showWarnings = FALSE)
-      write.csv(values$wavefeatureB02, file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/SplitData_1.csv", sep = ""), row.names = FALSE)
-      write.csv(values$regionB02, file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/SplitData_2.csv", sep = ""), row.names = FALSE)
-      write.csv(values$distributionB02, file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/SplitData_3.csv", sep = ""), row.names = FALSE)
-      write.csv(values$MoranPB02, file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/SplitData_4.csv", sep = ""), row.names = FALSE)
-      write.csv(SummaryWaveB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_1.csv", sep = ""), row.names = TRUE)
-      write.csv(SummaryRegionB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_2.csv", sep = ""), row.names = TRUE)
-      write.csv(SummaryMoranIndexB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_3.csv", sep = ""), row.names = TRUE)
-      write.csv(SummaryMoranPB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_4.csv", sep = ""), row.names = TRUE)
-      write.csv(SummaryGroupComparB03(), file = paste(parseDirPath(volumes, input$ChooseDirB03), "/Statistic_Results/Result_5.csv", sep = ""), row.names = TRUE)
+      dir.create(paste(parseDirPath(volumes, input$directory), "/Statistic_Results/", sep = ""), showWarnings = FALSE)
+      write.csv(values$wavefeatureB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_1.csv", sep = ""), row.names = FALSE)
+      write.csv(values$regionB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_2.csv", sep = ""), row.names = FALSE)
+      write.csv(values$distributionB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_3.csv", sep = ""), row.names = FALSE)
+      write.csv(values$MoranPB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_4.csv", sep = ""), row.names = FALSE)
+      write.csv(SummaryWaveB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_1.csv", sep = ""), row.names = TRUE)
+      write.csv(SummaryRegionB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_2.csv", sep = ""), row.names = TRUE)
+      write.csv(SummaryMoranIndexB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_3.csv", sep = ""), row.names = TRUE)
+      write.csv(SummaryMoranPB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_4.csv", sep = ""), row.names = TRUE)
+      write.csv(SummaryGroupComparB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_5.csv", sep = ""), row.names = TRUE)
     }
   )
   output$plotClustB03<-renderPlot(plotClustB03())
@@ -1327,8 +1328,42 @@ server<-function(input, output, session) {
     }else if(SummaryWaveB03()["P.value", 1]<0.001 && SummaryWaveB03()["P.value", 1]>0.0001){
       "***"
     } else {"****"}
-    g1 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 2])) +
-      geom_boxplot(position="dodge") +
+
+    o<-values$wavefeatureB02
+    dfx<-c()
+    for(i in 1: length(o$Tag)) {
+      if(i == 1) {
+        j<-1
+        dfx<-c(dfx, as.character(o[order(o$Label), ]$Tag[i]))
+      } else if(is.na(c(match(as.character(o[order(o$Label), ]$Tag[i]), dfx)))) {
+        j<-j+1
+        dfx[j] <-as.character(o[order(o$Label), ]$Tag[i])
+      }
+    }
+    y0<-c()
+    y25<-c()
+    y50<-c()
+    y75<-c()
+    y100<-c()
+    for(i in 1:length(dfx)) {
+      temp<-o[o$Tag == dfx[i], 2]
+      y0<-c(y0, min(temp))
+      y25<-c(y25, quantile(temp, 0.25))
+      y50<-c(y50, mean(temp))
+      y75<-c(y75, quantile(temp, 0.75))
+      y100<-c(y100, max(temp))
+    }
+    df1<-data.frame(
+      x=dfx,
+      y0=y0,
+      y25=y25,
+      y50=y50,
+      y75=y75,
+      y100=y100
+    )
+    g1 <- ggplot(df1, aes(x=x, y=y100)) +
+      geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100),
+                   stat = "identity", position="dodge") +
       geom_signif(annotation=formatC(anno1, digits=2),
                   y_position=max(values$wavefeatureB02[, 2])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7, 
                   tip_length = c(1-(max(values$wavefeatureB02[, 2][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 2])*input$parTLB04.00)), 
@@ -1446,7 +1481,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$wavefeatureB02[, 7][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 7])*input$parTLB04.00)), 
                                  1-(max(values$wavefeatureB02[, 7][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 7])*input$parTLB04.00))))+
-      labs(y = "Time (s)", title = "Main Period" ) +
+      labs(y = input$FirstColB01, title = "Main Period" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 7])*input$parGHB04.00)
@@ -1651,7 +1686,7 @@ server<-function(input, output, session) {
                   map_signif_level = TRUE, textsize = 7,
                   tip_length = c(1-(max(values$regionB02[, 7][values$regionB02$Label == 0])/(max(values$regionB02[, 7])*input$parTLB04.01)), 
                                  1-(max(values$regionB02[, 7][values$regionB02$Label == 1])/(max(values$regionB02[, 7])*input$parTLB04.01))))+
-      labs(y = "Time (s)", title = "Main Period" ) +
+      labs(y = input$FirstColB01, title = "Main Period" ) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 7])*input$parGHB04.01)
@@ -2354,7 +2389,7 @@ server<-function(input, output, session) {
     # figure 6
     gp6<-ggplot(x, aes(x=x$Tag, y=x[, 7])) +
       geom_boxplot(position=position_dodge(1), aes(colour = factor(x$Group))) + geom[31:36] +
-      labs(y = "Time (s)", title = "Main Period", colour = "Group by\n Wavelet Clust") +
+      labs(y = input$FirstColB01, title = "Main Period", colour = "Group by\n Wavelet Clust") +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
             axis.title.x=element_blank(), axis.text=element_text(size=14), 
             axis.title=element_text(size=14,face="bold")) + ylim(NA, max(x[, 7])*1.43)
