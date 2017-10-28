@@ -1368,13 +1368,13 @@ server<-function(input, output, session) {
         temp<-as.numeric(o[o[, GroupTag] == dfx[j], q[i]])
         y0<-c(y0, min(temp))
         y25<-c(y25, quantile(temp, 0.25))
-        y50<-c(y50, mean(temp))
+        y50<-c(y50, median(temp))
         y75<-c(y75, quantile(temp, 0.75))
         y100<-c(y100, max(temp))
       }
       df<-data.frame(x=dfx, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
       signif<-geom_signif(annotation=c(anno),
-                  y_position=max(df$y100) * 1.02, xmin=1, xmax=2, textsize = 7, 
+                  y_position=max(df$y100) * 1.05, xmin=1, xmax=2, textsize = 7, 
                   tip_length = c(0,0))
       gp <- ggplot(df, aes(x=x, y=y100)) +
         geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100),
@@ -1382,216 +1382,82 @@ server<-function(input, output, session) {
         labs(y = YaxisNames[i], title = TitleNames[i] ) +
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
               axis.title.x=element_blank(), axis.text=element_text(size=14), 
-              axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.20)
+              axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.1)
       print(gp, vp = viewport(layout.pos.row = matchidx$row,
                                       layout.pos.col = matchidx$col))
     }
   }) 
   plotBoxB04.01<-reactive({
-    # Figure_1 
-    anno1 <- if(SummaryRegionB03()["P.value", 1]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 1]<0.9999 && SummaryRegionB03()["P.value", 1]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 1]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 1]<0.05 && SummaryRegionB03()["P.value", 1]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 1]<0.01 && SummaryRegionB03()["P.value", 1]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 1]<0.001 && SummaryRegionB03()["P.value", 1]>0.0001){
-      "***"
-    } else {"****"}
-    g1 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 2])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno1, digits=2),
-                  y_position=max(values$regionB02[, 2])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7, 
-                  tip_length = c(1-(max(values$regionB02[, 2][values$regionB02$Label == 0])/(max(values$regionB02[, 2])*input$parTLB04.01)), 
-                                 1-(max(values$regionB02[, 2][values$regionB02$Label == 1])/(max(values$regionB02[, 2])*input$parTLB04.01))))+
-      labs(y = "Arbitrary Unit", title = "Integrated" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 2])*input$parGHB04.01)
-    # Figure_2 
-    anno2 <- if(SummaryRegionB03()["P.value", 2]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 2]<0.9999 && SummaryRegionB03()["P.value", 2]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 2]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 2]<0.05 && SummaryRegionB03()["P.value", 2]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 2]<0.01 && SummaryRegionB03()["P.value", 2]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 2]<0.001 && SummaryRegionB03()["P.value", 2]>0.0001){
-      "***"
-    } else {"****"}
-    g2 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 3])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno2, digits=2),
-                  y_position=max(values$regionB02[, 3])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(max(values$regionB02[, 3][values$regionB02$Label == 0])/(max(values$regionB02[, 3])*input$parTLB04.01)), 
-                                 1-(max(values$regionB02[, 3][values$regionB02$Label == 1])/(max(values$regionB02[, 3])*input$parTLB04.01))))+
-      labs(y = "Gray Level", title = "Mean Absolute Value" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 3])*input$parGHB04.01)
-    # Figure_3
-    anno3 <- if(SummaryRegionB03()["P.value", 3]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 3]<0.9999 && SummaryRegionB03()["P.value", 3]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 3]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 3]<0.05 && SummaryRegionB03()["P.value", 3]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 3]<0.01 && SummaryRegionB03()["P.value", 3]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 3]<0.001 && SummaryRegionB03()["P.value", 3]>0.0001){
-      "***"
-    } else {"****"}
-    g3 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 4])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno3, digits=2),
-                  y_position=max(values$regionB02[, 4])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(max(values$regionB02[, 4][values$regionB02$Label == 0])/(max(values$regionB02[, 4])*input$parTLB04.01)), 
-                                 1-(max(values$regionB02[, 4][values$regionB02$Label == 1])/(max(values$regionB02[, 4])*input$parTLB04.01))))+
-      labs(y = "Gray Level", title = "Variance" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 4])*input$parGHB04.01)
-    # Figure_4
-    anno4 <- if(SummaryRegionB03()["P.value", 4]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 4]<0.9999 && SummaryRegionB03()["P.value", 4]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 4]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 4]<0.05 && SummaryRegionB03()["P.value", 4]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 4]<0.01 && SummaryRegionB03()["P.value", 4]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 4]<0.001 && SummaryRegionB03()["P.value", 4]>0.0001){
-      "***"
-    } else {"****"}
-    g4 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 5])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno4, digits=2),
-                  y_position=max(values$regionB02[, 5])*input$parTPB04.01, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(max(values$regionB02[, 5][values$regionB02$Label == 0])/(max(values$regionB02[, 5])*input$parTLB04.01)), 
-                                 1-(max(values$regionB02[, 5][values$regionB02$Label == 1])/(max(values$regionB02[, 5])*input$parTLB04.01))))+
-      labs(y = "Gray Level", title = "Root Mean Square" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 5])*input$parGHB04.01)
-    # Figure_5
-    anno5 <- if(SummaryRegionB03()["P.value", 5]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 5]<0.9999 && SummaryRegionB03()["P.value", 5]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 5]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 5]<0.05 && SummaryRegionB03()["P.value", 5]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 5]<0.01 && SummaryRegionB03()["P.value", 5]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 5]<0.001 && SummaryRegionB03()["P.value", 5]>0.0001){
-      "***"
-    } else {"****"}
-    g5 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 6])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno5, digits=2),
-                  y_position=max(values$regionB02[, 6])*input$parTPB04.01, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(max(values$regionB02[, 6][values$regionB02$Label == 0])/(max(values$regionB02[, 6])*input$parTLB04.01)), 
-                                 1-(max(values$regionB02[, 6][values$regionB02$Label == 1])/(max(values$regionB02[, 6])*input$parTLB04.01))))+
-      labs(y = "Gray Level", title = "Waveform Length" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 6])*input$parGHB04.01)
-    # Figure_6 
-    anno6 <- if(SummaryRegionB03()["P.value", 6]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 6]<0.9999 && SummaryRegionB03()["P.value", 6]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 6]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 6]<0.05 && SummaryRegionB03()["P.value", 6]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 6]<0.01 && SummaryRegionB03()["P.value", 6]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 6]<0.001 && SummaryRegionB03()["P.value", 6]>0.0001){
-      "***"
-    } else {"****"}
-    g6 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 7])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno6, digits=2),
-                  y_position=max(values$regionB02[, 7])*input$parTPB04.01, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(max(values$regionB02[, 7][values$regionB02$Label == 0])/(max(values$regionB02[, 7])*input$parTLB04.01)), 
-                                 1-(max(values$regionB02[, 7][values$regionB02$Label == 1])/(max(values$regionB02[, 7])*input$parTLB04.01))))+
-      labs(y = input$FirstColB01, title = "Main Period" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 7])*input$parGHB04.01)
-    # Figure_7
-    anno7 <- if(SummaryRegionB03()["P.value", 7]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 7]<0.9999 && SummaryRegionB03()["P.value", 7]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 7]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 7]<0.05 && SummaryRegionB03()["P.value", 7]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 7]<0.01 && SummaryRegionB03()["P.value", 7]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 7]<0.001 && SummaryRegionB03()["P.value", 7]>0.0001){
-      "***"
-    } else {"****"}
-    g7 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 8])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno7, digits=2),
-                  y_position=max(values$regionB02[, 8])*input$parTPB04.01, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(max(values$regionB02[, 8][values$regionB02$Label == 0])/(max(values$regionB02[, 8])*input$parTLB04.01)), 
-                                 1-(max(values$regionB02[, 8][values$regionB02$Label == 1])/(max(values$regionB02[, 8])*input$parTLB04.01))))+
-      labs(y = "Gray Level", title = "Maximal Amplitude" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 8])*input$parGHB04.01)
-    # Figure_8
-    anno8 <- if(SummaryRegionB03()["P.value", 8]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 8]<0.9999 && SummaryRegionB03()["P.value", 8]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 8]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 8]<0.05 && SummaryRegionB03()["P.value", 8]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 8]<0.01 && SummaryRegionB03()["P.value", 8]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 8]<0.001 && SummaryRegionB03()["P.value", 8]>0.0001){
-      "***"
-    } else {"****"}
-    g8 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 9])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno8, digits=2),
-                  y_position=max(values$regionB02[, 9])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
-                  map_signif_level = TRUE, tip_length = c(1-(max(values$regionB02[, 9][values$regionB02$Label == 0])/(max(values$regionB02[, 9])*input$parTLB04.01)), 
-                                                          1-(max(values$regionB02[, 9][values$regionB02$Label == 1])/(max(values$regionB02[, 9])*input$parTLB04.01))))+
-      labs(y = "Hz", title = "Mean Power Frequency" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 9])*input$parGHB04.01)
-    # Figure_9
-    anno9 <- if(SummaryRegionB03()["P.value", 9]>=0.9999){
-      "P>0.999"
-    } else if(SummaryRegionB03()["P.value", 9]<0.9999 && SummaryRegionB03()["P.value", 9]>0.05){
-      paste("P>", floor(SummaryRegionB03()["P.value", 9]*100)/100, sep = "") 
-    } else if(SummaryRegionB03()["P.value", 9]<0.05 && SummaryRegionB03()["P.value", 9]>0.01){
-      "*"
-    } else if(SummaryRegionB03()["P.value", 9]<0.01 && SummaryRegionB03()["P.value", 9]>0.001){
-      "**"
-    }else if(SummaryRegionB03()["P.value", 9]<0.001 && SummaryRegionB03()["P.value", 9]>0.0001){
-      "***"
-    } else {"****"}
-    g9 <- ggplot(values$regionB02, aes(x=values$regionB02$Tag, y=values$regionB02[, 12])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno9, digits=2),
-                  y_position=max(values$regionB02[, 12])*input$parTPB04.01, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(max(values$regionB02[, 12][values$regionB02$Label == 0])/(max(values$regionB02[, 12])*input$parTLB04.01)), 
-                                 1-(max(values$regionB02[, 12][values$regionB02$Label == 1])/(max(values$regionB02[, 12])*input$parTLB04.01))))+
-      labs(y = "Percentage of Group 1", title = "Group" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$regionB02[, 12])*input$parGHB04.01)
-    
-    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, cols=3)
+    o<-values$regionB02 #input data
+    start<-2
+    end<-9
+    GroupLabel<-"Label" #to sort
+    GroupTag<-"Tag" #to identify
+    Pvalue<-round(as.numeric(SummaryRegionB03()["P.value", ]), 10)
+    cols <- 3
+    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Percentage (%)")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Percentage of Group 1")
+    dfx<-c()
+    for(i in 1: length(o[, GroupTag])) {
+      if(i == 1) {
+        j<-1
+        dfx<-c(dfx, as.character(o[order(o[, GroupLabel]), ][, GroupTag][i]))
+      } else if(is.na(c(match(as.character(o[order(o[, GroupLabel]), ][, GroupTag][i]), dfx)))) {
+        j<-j+1
+        dfx[j] <-as.character(o[order(o[, GroupLabel]), ][, GroupTag][i])
+      }
+    }
+    q<-c(start:end)
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    numPlots <- end - start + 1 #Plots numbers
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+    #Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow = nrow(layout), ncol = ncol(layout))))
+    for(i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx<-as.data.frame(which(layout == i, arr.ind = TRUE))
+      anno <- if(Pvalue[i]>=0.9999){
+        "P>0.99"
+      } else if(Pvalue[i]<0.9999 && Pvalue[i]>0.05){
+        paste("P>", as.numeric(floor(Pvalue[i]*1000)/1000, sep = ""))
+      } else if(Pvalue[i]<0.05 && Pvalue[i]>0.01){
+        "*"
+      } else if(Pvalue[i]<0.01 && Pvalue[i]>0.001){
+        "**"
+      } else if(Pvalue[i]<0.001 && Pvalue[i]>0.0001){
+        "***"
+      } else if(Pvalue[i]<0.0001) {"****"}
+      y0<-c()
+      y25<-c()
+      y50<-c()
+      y75<-c()
+      y100<-c()
+      for(j in 1:length(dfx)) {
+        temp<-as.numeric(o[o[, GroupTag] == dfx[j], q[i]])
+        y0<-c(y0, min(temp))
+        y25<-c(y25, quantile(temp, 0.25))
+        y50<-c(y50, median(temp))
+        y75<-c(y75, quantile(temp, 0.75))
+        y100<-c(y100, max(temp))
+      }
+      df<-data.frame(x=dfx, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
+      signif<-geom_signif(annotation=c(anno),
+                          y_position=max(df$y100) * 1.05, xmin=1, xmax=2, textsize = 7, 
+                          tip_length = c(0,0))
+      gp <- ggplot(df, aes(x=x, y=y100)) +
+        geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100),
+                     stat = "identity", position="dodge") +signif+
+        labs(y = YaxisNames[i], title = TitleNames[i] ) +
+        theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+              axis.title.x=element_blank(), axis.text=element_text(size=14), 
+              axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.1)
+      print(gp, vp = viewport(layout.pos.row = matchidx$row,
+                              layout.pos.col = matchidx$col))
+    }
   }) 
   plotBoxB04.02<-reactive({
     # Graph Height calculation
@@ -1630,231 +1496,76 @@ server<-function(input, output, session) {
       }
     }
     g2whB04 <- as.numeric(g2whB04)
-    # Figure_1 
-    anno1 <- if(SummaryMoranIndexB03()["P.value", 1]>=0.9999){
-      "P>0.999"
-    } else if(SummaryMoranIndexB03()["P.value", 1]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 1]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 1]<0.05 && SummaryMoranIndexB03()["P.value", 1]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 1]<0.01 && SummaryMoranIndexB03()["P.value", 1]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 1]<0.001 && SummaryMoranIndexB03()["P.value", 1]>0.0001){
-      "***"
-    } else {"****"}
-    g1 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 2])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno1, digits=2),
-                  y_position=rangeB04[1]*input$parTPB04.02, xmin=1, xmax=2, textsize = 7, 
-                  tip_length = c(1-(g1whB04[1]/(rangeB04[1]*input$parTLB04.02)), 
-                                 1-(g2whB04[1]/(rangeB04[1]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Integrated" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[1]*input$parGHB04.02)
-    # Figure_2 
-    anno2 <- if(SummaryMoranIndexB03()["P.value", 2]>=0.9999){
-      "P>0.99"
-    } else if(SummaryMoranIndexB03()["P.value", 2]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 2]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 2]<0.05 && SummaryMoranIndexB03()["P.value", 2]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 2]<0.01 && SummaryMoranIndexB03()["P.value", 2]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 2]<0.001 && SummaryMoranIndexB03()["P.value", 2]>0.0001){
-      "***"
-    } else {"****"}
-    g2 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 3])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno2, digits=2),
-                  y_position=rangeB04[2]*input$parTPB04.02, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(g1whB04[2]/(rangeB04[2]*input$parTLB04.02)), 
-                                 1-(g2whB04[2]/(rangeB04[2]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Mean Absolute Value" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[2]*input$parGHB04.02)
-    # Figure_3
-    anno3 <- if(SummaryMoranIndexB03()["P.value", 3]>=0.9999){
-      "P>0.999"
-    } else if(SummaryMoranIndexB03()["P.value", 3]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 3]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 3]<0.05 && SummaryMoranIndexB03()["P.value", 3]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 3]<0.01 && SummaryMoranIndexB03()["P.value", 3]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 3]<0.001 && SummaryMoranIndexB03()["P.value", 3]>0.0001){
-      "***"
-    } else {"****"}
-    g3 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 4])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno3, digits=2),
-                  y_position=rangeB04[3]*input$parTPB04.02, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(g1whB04[3]/(rangeB04[3]*input$parTLB04.02)), 
-                                 1-(g2whB04[3]/(rangeB04[3]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Variance" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[3]*input$parGHB04.02)
-    # Figure_4
-    anno4 <- if(SummaryMoranIndexB03()["P.value", 4]>=0.9999){
-      "P>0.999"
-    } else if(SummaryMoranIndexB03()["P.value", 4]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 4]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 4]<0.05 && SummaryMoranIndexB03()["P.value", 4]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 4]<0.01 && SummaryMoranIndexB03()["P.value", 4]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 4]<0.001 && SummaryMoranIndexB03()["P.value", 4]>0.0001){
-      "***"
-    } else {"****"}
-    g4 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 5])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno4, digits=2),
-                  y_position=rangeB04[4]*input$parTPB04.02, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(g1whB04[4]/(rangeB04[4]*input$parTLB04.02)), 
-                                 1-(g2whB04[4]/(rangeB04[4]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Root Mean Square" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[4]*input$parGHB04.02)
-    # Figure_5
-    anno5 <- if(SummaryMoranIndexB03()["P.value", 5]>=0.9999){
-      "P>0.99"
-    } else if(SummaryMoranIndexB03()["P.value", 5]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 5]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 5]<0.05 && SummaryMoranIndexB03()["P.value", 5]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 5]<0.01 && SummaryMoranIndexB03()["P.value", 5]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 5]<0.001 && SummaryMoranIndexB03()["P.value", 5]>0.0001){
-      "***"
-    } else {"****"}
-    g5 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 6])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno5, digits=2),
-                  y_position=rangeB04[5]*input$parTPB04.02, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(g1whB04[5]/(rangeB04[5]*input$parTLB04.02)), 
-                                 1-(g2whB04[5]/(rangeB04[5]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Waveform Length" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[5]*input$parGHB04.02)
-    # Figure_6 
-    anno6 <- if(SummaryMoranIndexB03()["P.value", 6]>=0.9999){
-      "P>0.999"
-    } else if(SummaryMoranIndexB03()["P.value", 6]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 6]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 6]<0.05 && SummaryMoranIndexB03()["P.value", 6]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 6]<0.01 && SummaryMoranIndexB03()["P.value", 6]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 6]<0.001 && SummaryMoranIndexB03()["P.value", 6]>0.0001){
-      "***"
-    } else {"****"}
-    g6 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 7])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno6, digits=2),
-                  y_position=rangeB04[6]*input$parTPB04.02, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(g1whB04[6]/(rangeB04[6]*input$parTLB04.02)), 
-                                 1-(g2whB04[6]/(rangeB04[6]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Main Period" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[6]*input$parGHB04.02)
-    # Figure_7
-    anno7 <- if(SummaryMoranIndexB03()["P.value", 7]>=0.9999){
-      "P>0.999"
-    } else if(SummaryMoranIndexB03()["P.value", 7]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 7]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 7]<0.05 && SummaryMoranIndexB03()["P.value", 7]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 7]<0.01 && SummaryMoranIndexB03()["P.value", 7]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 7]<0.001 && SummaryMoranIndexB03()["P.value", 7]>0.0001){
-      "***"
-    } else {"****"}
-    g7 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 8])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno7, digits=2),
-                  y_position=rangeB04[7]*input$parTPB04.02, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(g1whB04[7]/(rangeB04[7]*input$parTLB04.02)), 
-                                 1-(g2whB04[7]/(rangeB04[7]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Maximal Amplitude" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[7]*input$parGHB04.02)
-    # Figure_8
-    anno8 <- if(SummaryMoranIndexB03()["P.value", 8]>=0.9999){
-      "P>0.999"
-    } else if(SummaryMoranIndexB03()["P.value", 8]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 8]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 8]<0.05 && SummaryMoranIndexB03()["P.value", 8]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 8]<0.01 && SummaryMoranIndexB03()["P.value", 8]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 8]<0.001 && SummaryMoranIndexB03()["P.value", 8]>0.0001){
-      "***"
-    } else {"****"}
-    g8 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 9])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno8, digits=2),
-                  y_position=rangeB04[8]*input$parTPB04.02, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(g1whB04[8]/(rangeB04[8]*input$parTLB04.02)), 
-                                 1-(g2whB04[8]/(rangeB04[8]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Mean Power Frequency" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[8]*input$parGHB04.02)
-    # Figure_9
-    anno9 <- if(SummaryMoranIndexB03()["P.value", 9]>=0.9999){
-      "P>0.999"
-    } else if(SummaryMoranIndexB03()["P.value", 9]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 9]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 9]<0.05 && SummaryMoranIndexB03()["P.value", 9]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 9]<0.01 && SummaryMoranIndexB03()["P.value", 9]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 9]<0.001 && SummaryMoranIndexB03()["P.value", 9]>0.0001){
-      "***"
-    } else {"****"}
-    g9 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 10])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno9, digits=2),
-                  y_position=rangeB04[9]*input$parTPB04.02, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(g1whB04[9]/(rangeB04[9]*input$parTLB04.02)), 
-                                 1-(g2whB04[9]/(rangeB04[9]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Dissimilarity to Region" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[9]*input$parGHB04.02)
-    # Figure_10
-    anno10 <- if(SummaryMoranIndexB03()["P.value", 10]>=0.9999){
-      "P>0.999"
-    } else if(SummaryMoranIndexB03()["P.value", 10]>0.05){
-      paste("P>", floor(SummaryMoranIndexB03()["P.value", 8]*100)/100, sep = "") 
-    } else if(SummaryMoranIndexB03()["P.value", 10]<0.05 && SummaryMoranIndexB03()["P.value", 10]>0.01){
-      "*"
-    } else if(SummaryMoranIndexB03()["P.value", 10]<0.01 && SummaryMoranIndexB03()["P.value", 10]>0.001){
-      "**"
-    }else if(SummaryMoranIndexB03()["P.value", 10]<0.001 && SummaryMoranIndexB03()["P.value", 10]>0.0001){
-      "***"
-    } else {"****"}
-    g10 <- ggplot(values$distributionB02, aes(x=values$distributionB02$Tag, y=values$distributionB02[, 11])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno10, digits=2),
-                  y_position=rangeB04[10]*input$parTPB04.02, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(g1whB04[10]/(rangeB04[10]*input$parTLB04.02)), 
-                                 1-(g2whB04[10]/(rangeB04[10]*input$parTLB04.02))))+
-      labs(y = "Moran Index", title = "Group" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, rangeB04[10]*input$parGHB04.02)
-    
-    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, cols=3)
+    o<-values$distributionB02 #input data
+    start<-2
+    end<-9
+    GroupLabel<-"Label" #to sort
+    GroupTag<-"Tag" #to identify
+    Pvalue<-round(as.numeric(SummaryMoranIndexB03()["P.value", ]), 10)
+    cols <- 3
+    YaxisNames <- c("Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Dissimilarity to Region", "Group")
+    dfx<-c()
+    for(i in 1: length(o[, GroupTag])) {
+      if(i == 1) {
+        j<-1
+        dfx<-c(dfx, as.character(o[order(o[, GroupLabel]), ][, GroupTag][i]))
+      } else if(is.na(c(match(as.character(o[order(o[, GroupLabel]), ][, GroupTag][i]), dfx)))) {
+        j<-j+1
+        dfx[j] <-as.character(o[order(o[, GroupLabel]), ][, GroupTag][i])
+      }
+    }
+    q<-c(start:end)
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    numPlots <- end - start + 1 #Plots numbers
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+    #Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow = nrow(layout), ncol = ncol(layout))))
+    for(i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx<-as.data.frame(which(layout == i, arr.ind = TRUE))
+      anno <- if(Pvalue[i]>=0.9999){
+        "P>0.99"
+      } else if(Pvalue[i]<0.9999 && Pvalue[i]>0.05){
+        paste("P>", as.numeric(floor(Pvalue[i]*1000)/1000, sep = ""))
+      } else if(Pvalue[i]<0.05 && Pvalue[i]>0.01){
+        "*"
+      } else if(Pvalue[i]<0.01 && Pvalue[i]>0.001){
+        "**"
+      } else if(Pvalue[i]<0.001 && Pvalue[i]>0.0001){
+        "***"
+      } else if(Pvalue[i]<0.0001) {"****"}
+      y0<-c()
+      y25<-c()
+      y50<-c()
+      y75<-c()
+      y100<-c()
+      for(j in 1:length(dfx)) {
+        temp<-as.numeric(o[o[, GroupTag] == dfx[j], q[i]])
+        y0<-c(y0, min(temp))
+        y25<-c(y25, quantile(temp, 0.25))
+        y50<-c(y50, median(temp))
+        y75<-c(y75, quantile(temp, 0.75))
+        y100<-c(y100, max(temp))
+      }
+      df<-data.frame(x=dfx, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
+      signif<-geom_signif(annotation=c(anno),
+                          y_position=max(df$y100) * 1.05, xmin=1, xmax=2, textsize = 7, 
+                          tip_length = c(0,0))
+      gp <- ggplot(df, aes(x=x, y=y100)) +
+        geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100),
+                     stat = "identity", position="dodge") +signif+
+        labs(y = YaxisNames[i], title = TitleNames[i] ) +
+        theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+              axis.title.x=element_blank(), axis.text=element_text(size=14), 
+              axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.10)
+      print(gp, vp = viewport(layout.pos.row = matchidx$row,
+                              layout.pos.col = matchidx$col))
+    }
   }) 
   plotBoxB04.03<-reactive({
     # Figure_1 
