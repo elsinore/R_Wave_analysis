@@ -1316,244 +1316,76 @@ server<-function(input, output, session) {
   #### 04. Plot Output ####
     #=== manipulation part ===#
   plotBoxB04.00<-reactive({
-    # Figure_1 
-    anno1 <- if(SummaryWaveB03()["P.value", 1]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 1]<0.9999 && SummaryWaveB03()["P.value", 1]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 1]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 1]<0.05 && SummaryWaveB03()["P.value", 1]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 1]<0.01 && SummaryWaveB03()["P.value", 1]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 1]<0.001 && SummaryWaveB03()["P.value", 1]>0.0001){
-      "***"
-    } else {"****"}
-    #convert the original data for customize the boxplot
-    o<-values$wavefeatureB02
+    o<-values$wavefeatureB02 #input data
+    start<-2
+    end<-10
+    GroupLabel<-"Label" #to sort
+    GroupTag<-"Tag" #to identify
+    Pvalue<-round(as.numeric(SummaryWaveB03()["P.value", ]), 10)
+    cols <- 3
+    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Dissimilarity to Region")
     dfx<-c()
-    for(i in 1: length(o$Tag)) {
+    for(i in 1: length(o[, GroupTag])) {
       if(i == 1) {
         j<-1
-        dfx<-c(dfx, as.character(o[order(o$Label), ]$Tag[i]))
-      } else if(is.na(c(match(as.character(o[order(o$Label), ]$Tag[i]), dfx)))) {
+        dfx<-c(dfx, as.character(o[order(o[, GroupLabel]), ][, GroupTag][i]))
+      } else if(is.na(c(match(as.character(o[order(o[, GroupLabel]), ][, GroupTag][i]), dfx)))) {
         j<-j+1
-        dfx[j] <-as.character(o[order(o$Label), ]$Tag[i])
+        dfx[j] <-as.character(o[order(o[, GroupLabel]), ][, GroupTag][i])
       }
     }
-    y0<-c()
-    y25<-c()
-    y50<-c()
-    y75<-c()
-    y100<-c()
-    for(i in 1:length(dfx)) {
-      temp<-o[o$Tag == dfx[i], 2]
-      y0<-c(y0, min(temp))
-      y25<-c(y25, quantile(temp, 0.25))
-      y50<-c(y50, mean(temp))
-      y75<-c(y75, quantile(temp, 0.75))
-      y100<-c(y100, max(temp))
+    q<-c(start:end)
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    numPlots <- end - start + 1 #Plots numbers
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+    #Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow = nrow(layout), ncol = ncol(layout))))
+    for(i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx<-as.data.frame(which(layout == i, arr.ind = TRUE))
+      anno <- if(Pvalue[i]>=0.9999){
+        "P>0.99"
+      } else if(Pvalue[i]<0.9999 && Pvalue[i]>0.05){
+        paste("P>", as.numeric(floor(Pvalue[i]*1000)/1000, sep = ""))
+      } else if(Pvalue[i]<0.05 && Pvalue[i]>0.01){
+        "*"
+      } else if(Pvalue[i]<0.01 && Pvalue[i]>0.001){
+        "**"
+      } else if(Pvalue[i]<0.001 && Pvalue[i]>0.0001){
+        "***"
+      } else if(Pvalue[i]<0.0001) {"****"}
+      y0<-c()
+      y25<-c()
+      y50<-c()
+      y75<-c()
+      y100<-c()
+      for(j in 1:length(dfx)) {
+        temp<-as.numeric(o[o[, GroupTag] == dfx[j], q[i]])
+        y0<-c(y0, min(temp))
+        y25<-c(y25, quantile(temp, 0.25))
+        y50<-c(y50, mean(temp))
+        y75<-c(y75, quantile(temp, 0.75))
+        y100<-c(y100, max(temp))
+      }
+      df<-data.frame(x=dfx, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
+      signif<-geom_signif(annotation=c(anno),
+                  y_position=max(df$y100) * 1.02, xmin=1, xmax=2, textsize = 7, 
+                  tip_length = c(0,0))
+      gp <- ggplot(df, aes(x=x, y=y100)) +
+        geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100),
+                     stat = "identity", position="dodge") +signif+
+        labs(y = YaxisNames[i], title = TitleNames[i] ) +
+        theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+              axis.title.x=element_blank(), axis.text=element_text(size=14), 
+              axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.20)
+      print(gp, vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
     }
-    df1<-data.frame(
-      x=dfx,
-      y0=y0,
-      y25=y25,
-      y50=y50,
-      y75=y75,
-      y100=y100
-    )
-    #convert the original data for customize the boxplot
-    g1 <- ggplot(df1, aes(x=x, y=y100)) +
-      geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100),
-                   stat = "identity", position="dodge") +
-      geom_signif(annotation=formatC(anno1, digits=2),
-                  y_position=max(values$wavefeatureB02[, 2])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7, 
-                  tip_length = c(1-(max(values$wavefeatureB02[, 2][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 2])*input$parTLB04.00)), 
-                                 1-(max(values$wavefeatureB02[, 2][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 2])*input$parTLB04.00))))+
-      labs(y = "Gray Level", title = "Integrated" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 2])*input$parGHB04.00)
-    # Figure_2 
-    anno2 <- if(SummaryWaveB03()["P.value", 2]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 2]<0.9999 && SummaryWaveB03()["P.value", 2]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 2]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 2]<0.05 && SummaryWaveB03()["P.value", 2]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 2]<0.01 && SummaryWaveB03()["P.value", 2]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 2]<0.001 && SummaryWaveB03()["P.value", 2]>0.0001){
-      "***"
-    } else {"****"}
-    g2 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 3])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno2, digits=2),
-                  y_position=max(values$wavefeatureB02[, 3])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(max(values$wavefeatureB02[, 3][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 3])*input$parTLB04.00)), 
-                                 1-(max(values$wavefeatureB02[, 3][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 3])*input$parTLB04.00))))+
-      labs(y = "Gray Level", title = "Mean Absolute Value" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 3])*input$parGHB04.00)
-    # Figure_3
-    anno3 <- if(SummaryWaveB03()["P.value", 3]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 3]<0.9999 && SummaryWaveB03()["P.value", 3]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 3]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 3]<0.05 && SummaryWaveB03()["P.value", 3]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 3]<0.01 && SummaryWaveB03()["P.value", 3]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 3]<0.001 && SummaryWaveB03()["P.value", 3]>0.0001){
-      "***"
-    } else {"****"}
-    g3 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 4])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno3, digits=2),
-                  y_position=max(values$wavefeatureB02[, 4])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7,
-                  tip_length = c(1-(max(values$wavefeatureB02[, 4][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 4])*input$parTLB04.00)), 
-                                 1-(max(values$wavefeatureB02[, 4][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 4])*input$parTLB04.00))))+
-      labs(y = "Gray Level", title = "Variance" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 4])*input$parGHB04.00)
-    # Figure_4
-    anno4 <- if(SummaryWaveB03()["P.value", 4]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 4]<0.9999 && SummaryWaveB03()["P.value", 4]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 4]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 4]<0.05 && SummaryWaveB03()["P.value", 4]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 4]<0.01 && SummaryWaveB03()["P.value", 4]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 4]<0.001 && SummaryWaveB03()["P.value", 4]>0.0001){
-      "***"
-    } else {"****"}
-    g4 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 5])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno4, digits=2),
-                  y_position=max(values$wavefeatureB02[, 5])*input$parTPB04.00, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(max(values$wavefeatureB02[, 5][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 5])*input$parTLB04.00)), 
-                                 1-(max(values$wavefeatureB02[, 5][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 5])*input$parTLB04.00))))+
-      labs(y = "Gray Level", title = "Root Mean Square" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 5])*input$parGHB04.00)
-    # Figure_5
-    anno5 <- if(SummaryWaveB03()["P.value", 5]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 5]<0.9999 && SummaryWaveB03()["P.value", 5]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 5]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 5]<0.05 && SummaryWaveB03()["P.value", 5]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 5]<0.01 && SummaryWaveB03()["P.value", 5]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 5]<0.001 && SummaryWaveB03()["P.value", 5]>0.0001){
-      "***"
-    } else {"****"}
-    g5 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 6])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno5, digits=2),
-                  y_position=max(values$wavefeatureB02[, 6])*input$parTPB04.00, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(max(values$wavefeatureB02[, 6][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 6])*input$parTLB04.00)), 
-                                 1-(max(values$wavefeatureB02[, 6][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 6])*input$parTLB04.00))))+
-      labs(y = "Gray Level", title = "Waveform Length" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 6])*input$parGHB04.00)
-    # Figure_6 
-    anno6 <- if(SummaryWaveB03()["P.value", 6]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 6]<0.9999 && SummaryWaveB03()["P.value", 6]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 6]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 6]<0.05 && SummaryWaveB03()["P.value", 6]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 6]<0.01 && SummaryWaveB03()["P.value", 6]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 6]<0.001 && SummaryWaveB03()["P.value", 6]>0.0001){
-      "***"
-    } else {"****"}
-    g6 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 7])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno6, digits=2),
-                  y_position=max(values$wavefeatureB02[, 7])*input$parTPB04.00, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(max(values$wavefeatureB02[, 7][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 7])*input$parTLB04.00)), 
-                                 1-(max(values$wavefeatureB02[, 7][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 7])*input$parTLB04.00))))+
-      labs(y = input$FirstColB01, title = "Main Period" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 7])*input$parGHB04.00)
-    # Figure_7
-    anno7 <- if(SummaryWaveB03()["P.value", 7]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 7]<0.9999 && SummaryWaveB03()["P.value", 7]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 7]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 7]<0.05 && SummaryWaveB03()["P.value", 7]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 7]<0.01 && SummaryWaveB03()["P.value", 7]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 7]<0.001 && SummaryWaveB03()["P.value", 7]>0.0001){
-      "***"
-    } else {"****"}
-    g7 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 8])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno7, digits=2),
-                  y_position=max(values$wavefeatureB02[, 8])*input$parTPB04.00, xmin=1, xmax=2, 
-                  map_signif_level = TRUE, textsize = 7,
-                  tip_length = c(1-(max(values$wavefeatureB02[, 8][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 8])*input$parTLB04.00)), 
-                                 1-(max(values$wavefeatureB02[, 8][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 8])*input$parTLB04.00))))+
-      labs(y = "Gray Level", title = "Maximal Amplitude" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 8])*input$parGHB04.00)
-    # Figure_8
-    anno8 <- if(SummaryWaveB03()["P.value", 8]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 8]<0.9999 && SummaryWaveB03()["P.value", 8]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 8]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 8]<0.05 && SummaryWaveB03()["P.value", 8]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 8]<0.01 && SummaryWaveB03()["P.value", 8]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 8]<0.001 && SummaryWaveB03()["P.value", 8]>0.0001){
-      "***"
-    } else {"****"}
-    g8 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 9])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=formatC(anno8, digits=2),
-                  y_position=max(values$wavefeatureB02[, 9])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7,
-                  map_signif_level = TRUE, tip_length = c(1-(max(values$wavefeatureB02[, 9][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 9])*input$parTLB04.00)), 
-                                                          1-(max(values$wavefeatureB02[, 9][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 9])*input$parTLB04.00))))+
-      labs(y = "Hz", title = "Mean Power Frequency" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 9])*input$parGHB04.00)
-    # Figure_9 
-    anno9 <- if(SummaryWaveB03()["P.value", 9]>=0.9999){
-      "P>0.999"
-    } else if(SummaryWaveB03()["P.value", 9]<0.9999 && SummaryWaveB03()["P.value", 9]>0.05){
-      paste("P>", floor(SummaryWaveB03()["P.value", 9]*100)/100, sep = "") 
-    } else if(SummaryWaveB03()["P.value", 9]<0.05 && SummaryWaveB03()["P.value", 9]>0.01){
-      "*"
-    } else if(SummaryWaveB03()["P.value", 9]<0.01 && SummaryWaveB03()["P.value", 9]>0.001){
-      "**"
-    }else if(SummaryWaveB03()["P.value", 9]<0.001 && SummaryWaveB03()["P.value", 9]>0.0001){
-      "***"
-    } else {"****"}
-    g9 <- ggplot(values$wavefeatureB02, aes(x=values$wavefeatureB02$Tag, y=values$wavefeatureB02[, 10])) +
-      geom_boxplot(position="dodge") +
-      geom_signif(annotation=anno9,
-                  y_position=max(values$wavefeatureB02[, 10])*input$parTPB04.00, xmin=1, xmax=2, textsize = 7,
-                  tip_length =  c(1-(max(values$wavefeatureB02[, 10][values$wavefeatureB02$Label == 0])/(max(values$wavefeatureB02[, 10])*input$parTLB04.00)), 
-                                  1-(max(values$wavefeatureB02[, 10][values$wavefeatureB02$Label == 1])/(max(values$wavefeatureB02[, 10])*input$parTLB04.00))))+
-      labs(y = "Arbitrary Unit", title = "Dissimilarity to Region" ) +
-      theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-            axis.title.x=element_blank(), axis.text=element_text(size=14), 
-            axis.title=element_text(size=14,face="bold")) + ylim(NA, max(values$wavefeatureB02[, 10])*input$parGHB04.00)
-    multiplot.wzy(g1, g2, g3, g4, g5, g6, g7, g8, g9, cols=3)
   }) 
   plotBoxB04.01<-reactive({
     # Figure_1 
@@ -2439,12 +2271,7 @@ server<-function(input, output, session) {
   output$plotBoxB04.05<-renderPlot(plotBoxB04.05()) #Histogram
   output$uiB04.side <- renderUI({
     switch(input$levelB04,
-           "Cell Level" = list(
-             tags$hr(),
-             sliderInput("parTPB04.00", "Tip Position", min = 1, max = 2, value = 1.16, step = 0.01),
-             sliderInput("parTLB04.00", "Tip Length", min = 1, max = 2, value = 1.12, step = 0.01),
-             sliderInput("parGHB04.00", "Graph Heigth", min = 1, max = 2, value = 1.23, step = 0.01)
-           ),
+           "Cell Level" = NULL,
            "Region Level" = list(
              tags$hr(),
              sliderInput("parTPB04.01", "Tip Position", min = 1, max = 2, value = 1.16, step = 0.01),
