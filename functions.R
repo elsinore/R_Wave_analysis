@@ -517,3 +517,36 @@ multiplot.wzy <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     }
   }
 }
+decimalplaces <- function(x) {
+  if ((x %% 1) != 0) {
+    nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]])
+  } else {
+    return(0)
+  }
+}
+decimallength <- function(x) {
+  res <- paste("0.", str_dup("0", x-1), "1", sep = "")
+  return(res)
+}
+xmax<-function(x){
+  row<-c(1:(x-1))
+  col<-c(2:x)
+  cout<-rep(col, row)
+  return(cout)
+}
+xmin<-function(x){
+  cout<-c(1)
+  for(i in 3:x) {
+    cout <- c(cout, c(1:(i-1)))
+  }
+  return(cout)
+}
+position <- function(x) {
+  if(x == 3) {
+    cout <- c(1.05, 1.17, 1.05)
+    return(cout)
+  } else {
+    OE <- x %% 2 #Odd or Even
+    RowNo<-sum(rep(c(2:((x+1) %/% 2)), each = 2)[1:(x-3)])+2
+  }
+}
