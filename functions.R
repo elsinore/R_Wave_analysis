@@ -545,6 +545,9 @@ position <- function(x) {
   if(x == 3) {
     cout <- c(1.05, 1.17, 1.05)
     return(cout)
+  } else if(x == 4) {
+    cout <- c(1.17, 1.29, 1.17, 1.41, 1.05, 1.29)
+    return(cout)
   } else {
     OE <- x %% 2 #Odd or Even
     RowNo<-sum(rep(c(2:((x+1) %/% 2)), each = 2)[1:(x-3)])+2

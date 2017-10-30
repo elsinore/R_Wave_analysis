@@ -305,6 +305,7 @@ ui<-navbarPage("Wave Analysis",
                       conditionalPanel(
                         'input.dataset2 == "Plot Output"',
                         h4("Plot Output"),
+                        checkboxInput("ViolinB04", "Create histogram and mean value", TRUE),
                         selectInput("levelB04", "Select the view level", 
                           c("Cell Level", "Region Level", "Moran Index", "Significance of Moran Index", "Comparsion among Groups", "Histogram")
                         ),
@@ -1038,8 +1039,8 @@ server<-function(input, output, session) {
   #### 02. Statistical Analysis ####
   #=== manipulation part ===#
   values$wavefeatureB02 <- data.frame("NoData" = NA)
-  values$distributionB02 <- data.frame("NoData" = NA)
-  values$MoranPB02 <- data.frame("NoData" = NA)
+  values$distributionB02 <- data.frame("NoData" = NA)#MoranI
+  values$MoranPB02 <- data.frame("NoData" = NA)#MoranI P-value
   values$regionB02 <- data.frame("NoData" =NA)
   values$GlobalClustB02 <- NULL
   observeEvent(input$staB02, {
@@ -1364,6 +1365,7 @@ server<-function(input, output, session) {
       y50<-c()
       y75<-c()
       y100<-c()
+      ymean<-c()
       for(j in 1:length(dfx)) {
         temp<-as.numeric(o[o[, GroupTag] == dfx[j], q[i]])
         y0<-c(y0, min(temp))
@@ -1371,6 +1373,7 @@ server<-function(input, output, session) {
         y50<-c(y50, median(temp))
         y75<-c(y75, quantile(temp, 0.75))
         y100<-c(y100, max(temp))
+        ymean<-c(ymean, mean(temp))
       }
       df<-data.frame(x=dfx, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
       signif<-geom_signif(annotation=c(anno),
@@ -1382,9 +1385,12 @@ server<-function(input, output, session) {
         labs(y = YaxisNames[i], title = TitleNames[i] ) +
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
               axis.title.x=element_blank(), axis.text=element_text(size=14), 
-              axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.1)
-      print(gp, vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
+              axis.title=element_text(size=14,face="bold"), legend.position="none")+ylim(NA, max(df$y100)*1.1)
+      if(input$ViolinB04 == TRUE) {
+        gp<-gp+geom_violin(data = o, aes(x=o[, GroupTag], y= o[, q[i]], alpha = 0.3))+
+          geom_point(colour = "red", aes(y=ymean))+scale_alpha(guide = "none")
+      }
+      print(gp, vp = viewport(layout.pos.row = matchidx$row,layout.pos.col = matchidx$col))
     }
   }) 
   plotBoxB04.01<-reactive({
@@ -1436,6 +1442,7 @@ server<-function(input, output, session) {
       y50<-c()
       y75<-c()
       y100<-c()
+      ymean<-c()
       for(j in 1:length(dfx)) {
         temp<-as.numeric(o[o[, GroupTag] == dfx[j], q[i]])
         y0<-c(y0, min(temp))
@@ -1443,6 +1450,7 @@ server<-function(input, output, session) {
         y50<-c(y50, median(temp))
         y75<-c(y75, quantile(temp, 0.75))
         y100<-c(y100, max(temp))
+        ymean<-c(ymean, mean(temp))
       }
       df<-data.frame(x=dfx, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
       signif<-geom_signif(annotation=c(anno),
@@ -1455,6 +1463,10 @@ server<-function(input, output, session) {
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
               axis.title.x=element_blank(), axis.text=element_text(size=14), 
               axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.1)
+      if(input$ViolinB04 == TRUE) {
+        gp<-gp+geom_violin(data = o, aes(x=o[, GroupTag], y= o[, q[i]], alpha = 0.3))+
+          geom_point(colour = "red", aes(y=ymean))+scale_alpha(guide = "none")
+      }
       print(gp, vp = viewport(layout.pos.row = matchidx$row,
                               layout.pos.col = matchidx$col))
     }
@@ -1508,6 +1520,7 @@ server<-function(input, output, session) {
       y50<-c()
       y75<-c()
       y100<-c()
+      ymean<-c()
       for(j in 1:length(dfx)) {
         temp<-as.numeric(o[o[, GroupTag] == dfx[j], q[i]])
         y0<-c(y0, min(temp))
@@ -1515,6 +1528,7 @@ server<-function(input, output, session) {
         y50<-c(y50, median(temp))
         y75<-c(y75, quantile(temp, 0.75))
         y100<-c(y100, max(temp))
+        ymean<-c(ymean, mean(temp))
       }
       df<-data.frame(x=dfx, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
       signif<-geom_signif(annotation=c(anno),
@@ -1527,12 +1541,16 @@ server<-function(input, output, session) {
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
               axis.title.x=element_blank(), axis.text=element_text(size=14), 
               axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.10)
+      if(input$ViolinB04 == TRUE) {
+        gp<-gp+geom_violin(data = o, aes(x=o[, GroupTag], y= o[, q[i]], alpha = 0.3))+
+          geom_point(colour = "red", aes(y=ymean))+scale_alpha(guide = "none")
+      }
       print(gp, vp = viewport(layout.pos.row = matchidx$row,
                               layout.pos.col = matchidx$col))
     }
   }) 
   plotBoxB04.03<-reactive({
-    o<-values$distributionB02 #input data
+    o<-values$MoranPB02 #input data
     start<-2
     end<-9
     GroupLabel<-"Label" #to sort
@@ -1580,6 +1598,7 @@ server<-function(input, output, session) {
       y50<-c()
       y75<-c()
       y100<-c()
+      ymean<-c()
       for(j in 1:length(dfx)) {
         temp<-as.numeric(o[o[, GroupTag] == dfx[j], q[i]])
         y0<-c(y0, min(temp))
@@ -1587,6 +1606,7 @@ server<-function(input, output, session) {
         y50<-c(y50, median(temp))
         y75<-c(y75, quantile(temp, 0.75))
         y100<-c(y100, max(temp))
+        ymean<-c(ymean, mean(temp))
       }
       df<-data.frame(x=dfx, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
       signif<-geom_signif(annotation=c(anno),
@@ -1599,6 +1619,10 @@ server<-function(input, output, session) {
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
               axis.title.x=element_blank(), axis.text=element_text(size=14), 
               axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.10)
+      if(input$ViolinB04 == TRUE) {
+        gp<-gp+geom_violin(data = o, aes(x=o[, GroupTag], y= o[, q[i]], alpha = 0.3))+
+          geom_point(colour = "red", aes(y=ymean))+scale_alpha(guide = "none")
+      }
       print(gp, vp = viewport(layout.pos.row = matchidx$row,
                               layout.pos.col = matchidx$col))
     }
@@ -1668,11 +1692,13 @@ server<-function(input, output, session) {
                              tip_length = c(0,0))
         signif<-c(signif, anno)
       }
+      x3<-c(0.75, 1.25, 1.75, 2.25)
       y0<-c()
       y25<-c()
       y50<-c()
       y75<-c()
       y100<-c()
+      ymean<-c()
       for(j in 1:length(dfxL1)) {
         for(h in 1:length(dfxL2)) {
           temp<-as.numeric(o[o[GroupTagL1] == dfxL1[j], ][o[o[GroupTagL1] == dfxL1[j], ][GroupTagL2] == dfxL2[h], q[i]])
@@ -1681,9 +1707,10 @@ server<-function(input, output, session) {
           y50<-c(y50, median(temp))
           y75<-c(y75, quantile(temp, 0.75))
           y100<-c(y100, max(temp))
+          ymean<-c(ymean, mean(temp))
         }
       }
-      df<-data.frame(x=rep(dfxL1, each=2), x2=rep(dfxL2, 2), y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
+      df<-data.frame(x=rep(dfxL1, each=2), x2=rep(dfxL2, 2), x3=x3, y0=y0, y25=y25, y50=y50, y75=y75, y100=y100)
       gp <- ggplot(df, aes(x=x, y=y100)) +
         geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100, colour = factor(df$x2)),
                      stat = "identity", position=position_dodge(width = 1.01), varwidth = TRUE) +signif[1:6]+
@@ -1691,6 +1718,11 @@ server<-function(input, output, session) {
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
               axis.title.x=element_blank(), axis.text=element_text(size=14), 
               axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.43)
+      if(input$ViolinB04 == TRUE) {
+        gp<-gp+geom_violin(data = o, position=position_dodge(width = 1.01),
+                           aes(x=o[, GroupTagL1], y= o[, q[i]], alpha = 0.3, colour = factor(o[, GroupTagL2])))+
+          geom_point(aes(x=x3, y=ymean, colour = factor(x2)))+scale_alpha(guide = "none")
+      }
       print(gp, vp = viewport(layout.pos.row = matchidx$row,
                               layout.pos.col = matchidx$col))
     }
