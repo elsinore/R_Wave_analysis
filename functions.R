@@ -553,3 +553,19 @@ position <- function(x) {
     RowNo<-sum(rep(c(2:((x+1) %/% 2)), each = 2)[1:(x-3)])+2
   }
 }
+
+wzy.plot.frequency.spectrum.density.line <- function(X.k, sampleSize, timeStep) {
+  X.k[1]<-0
+  Fs <- sampleSize/(sampleSize*timeStep)
+  N <- sampleSize
+  seq <- c(1:(N/2))
+  xv=(seq/N)*Fs
+  mod <- Mod(X.k)
+  mod <- mod[1:(N/2)]
+  mod <- (mod^2)/N 
+  plot.data  <- cbind(c(0, xv[1:((N/2)-1)]), mod)
+  plot.data[xv[2:(N/2)],2] <- 2*plot.data[xv[2:(N/2)],2] 
+  plot(plot.data, t="l", lwd=2, main="", 
+       xlab="Frequency (Hz)", ylab="Power Spectral Density",
+       ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectral Density")
+}
