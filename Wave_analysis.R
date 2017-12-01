@@ -357,7 +357,7 @@ ui<-navbarPage("Wave Analysis",
 # +++02. Service Function --------------------------------------------------------
 server<-function(input, output, session) {
   # Global variables ####
-  volumes <- c('Root'="/")
+  volumes <- c('Root'=path.expand('~'))
   shinyDirChoose(input, 'directory', roots=volumes, session = session)
   shinyDirChoose(input, 'uploadAnaResB01', roots=volumes, session = session)
   shinyDirChoose(input, 'ChooseDirB03', roots = volumes, session = session)
