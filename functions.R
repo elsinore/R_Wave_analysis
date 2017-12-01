@@ -374,15 +374,33 @@ wzy.batch2 <- function (wzy, loc) {
   res<-WZY.EMG.F(data)
   res<-res$results
   #### calculate the dissimilarity ####
-  similarity<-WZY.Wavelet.clust2(data)
-  resclu<-as.matrix(similarity)
-  resclu<-resclu[,1]
-  fit <- hclust(similarity, method = "ward.D")
+  
+  J_index<-c()
+  for(j in 2:ncol){
+    wt.t1<-wt(cbind(data[,1], data[, j]), do.sig = FALSE)
+    sampling<-length(data[,1])
+    fft.t1<-fft(data[,No])
+    W<-wt.t1$wave
+    a<-wt.t1$scale
+    v<-5/(2*pi*a)
+    E<-rowSums(abs(W)^2)
+    indexj<-c()
+    for(i in 1:sampling) {
+      temp<-sum(findpeaks(abs(W[,i]))[,1]*v[findpeaks(abs(W[,i]))[,2]])/2
+      indexj<-c(indexj, temp)
+    }
+    temp<-mean(indexj)
+    J_index<-c(J_index, temp)
+  }
+  cluster<-dist(J_index)
+  
+  
+  fit <- hclust(cluster, method = "ward.D")
   groups <- cutree(fit, k = 2)
   ratio <- as.numeric(length(groups[groups == 1])/length(groups))*100
   ##### result construction ####
   res<-cbind(res,
-             Dissimilarity = resclu,
+             J_index = J_index,
              Group = groups
   )
   res.m<-res[-1, ] #remove the data from region
@@ -553,7 +571,6 @@ position <- function(x) {
     RowNo<-sum(rep(c(2:((x+1) %/% 2)), each = 2)[1:(x-3)])+2
   }
 }
-
 wzy.plot.frequency.spectrum.density.line <- function(X.k, sampleSize, timeStep) {
   X.k[1]<-0
   Fs <- sampleSize/(sampleSize*timeStep)

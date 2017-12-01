@@ -357,7 +357,7 @@ ui<-navbarPage("Wave Analysis",
 # +++02. Service Function --------------------------------------------------------
 server<-function(input, output, session) {
   # Global variables ####
-  volumes <- c('Root'=path.expand('~'))
+  volumes <- c('root'=path.expand('~'))
   shinyDirChoose(input, 'directory', roots=volumes, session = session)
   shinyDirChoose(input, 'uploadAnaResB01', roots=volumes, session = session)
   shinyDirChoose(input, 'ChooseDirB03', roots = volumes, session = session)
@@ -880,11 +880,15 @@ server<-function(input, output, session) {
       rawBatchData<-file01
       rawBatchData.cells<-file01[, -2]
       rawBatchData.region<-file01[, 1:2]
+      
+      
       if(input$calibrationB01 == TRUE){
         res00<-wzy.batch2(wzy = file01, loc = file02)
       } else if(input$calibrationB01 == FALSE){
         res00<-wzy.batch(wzy = file01, loc = file02)
       }
+      
+      
       label <- c(label, str_c("S", prefix[1], "Moran Index"), str_c("S", prefix[1], "P value"))
       rownames(res00) <- label[-1]
       isolate(values$Row_names <- c(values$Row_names, label[-1]))
