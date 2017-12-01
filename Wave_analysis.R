@@ -1,5 +1,5 @@
 # +++00. Required Packages and Functions -----------------------------------------
-list.of.packages <- c("shiny", "ggplot2", "biwavelet", "data.table", "stringr", "ape", "DT", "shinyFiles", "shinyjs", "psych", "ggsignif", "grid", "dunn.test")
+list.of.packages <- c("shiny", "pracma","ggplot2", "biwavelet", "data.table", "stringr", "ape", "DT", "shinyFiles", "shinyjs", "psych", "ggsignif", "grid", "dunn.test")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 library(shiny)
@@ -15,6 +15,7 @@ library(psych)
 library(ggsignif)
 library(grid)
 library(dunn.test)
+library(pracma)
 source("functions.R")
   ###=== end of packages and functions loading ===###
 # +++01. UI Function -------------------------------------------------------------
@@ -357,7 +358,8 @@ ui<-navbarPage("Wave Analysis",
 # +++02. Service Function --------------------------------------------------------
 server<-function(input, output, session) {
   # Global variables ####
-  volumes <- c('root'=path.expand('~'))
+  setwd("~")
+  volumes <- c(root=getwd())
   shinyDirChoose(input, 'directory', roots=volumes, session = session)
   shinyDirChoose(input, 'uploadAnaResB01', roots=volumes, session = session)
   shinyDirChoose(input, 'ChooseDirB03', roots = volumes, session = session)

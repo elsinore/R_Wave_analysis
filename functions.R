@@ -379,7 +379,7 @@ wzy.batch2 <- function (wzy, loc) {
   for(j in 2:ncol){
     wt.t1<-wt(cbind(data[,1], data[, j]), do.sig = FALSE)
     sampling<-length(data[,1])
-    fft.t1<-fft(data[,No])
+    fft.t1<-fft(data[,ncol])
     W<-wt.t1$wave
     a<-wt.t1$scale
     v<-5/(2*pi*a)
