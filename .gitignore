@@ -10,7 +10,8 @@
 
 # Output files from R CMD build
 /*.tar.gz
-/01.Workshop/
+/Data/01.Workshop/**
+/Data/01.Workshop
 # Output files from R CMD check
 /*.Rcheck/
 
