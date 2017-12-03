@@ -308,7 +308,7 @@ wzy.plot.frequency.spectrum.density <- function(X.k, sampleSize, timeStep) {
        ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectral Density")
 }
 #=== Function for Batching Processing ===####
-wzy.batch <- function (wzy, loc) {
+wzy.batch <- function (wzy, loc, Label1) {
   library("biwavelet")
   require("biwavelet")
   if (class(wzy) != "matrix") {
@@ -325,12 +325,30 @@ wzy.batch <- function (wzy, loc) {
   resin<-WZY.EMG.F(dataO)
   resin<-resin$results
   #### calculate the dissimilarity ####
-  similarity<-WZY.Wavelet.clust2(dataO)
-  resclu<-as.matrix(similarity)
-  resclu<-resclu[,1]
-  fit <- hclust(similarity, method = "ward.D")
-  groups <- cutree(fit, k = 2)
-  ratio <- as.numeric(length(groups[groups == 1])/length(groups))*100
+  J_index<-c()
+  for(j in 2:ncol){
+    wt.t1<-wt(cbind(dataO[,1], dataO[, j]), do.sig = FALSE)
+    sampling<-length(dataO[,1])
+    fft.t1<-fft(dataO[,ncol])
+    W<-wt.t1$wave
+    a<-wt.t1$scale
+    v<-5/(2*pi*a)
+    E<-rowSums(abs(W)^2)
+    indexj<-c()
+    for(i in 1:sampling) {
+      temp<-sum(findpeaks(abs(W[,i]))[,1]*v[findpeaks(abs(W[,i]))[,2]])/2
+      indexj<-c(indexj, temp)
+    }
+    temp<-mean(indexj)
+    J_index<-c(J_index, temp)
+  }
+  groups<-c(rep(0, length(rownames(res))))
+  index1<-grep(Label1, rownames(res), value = FALSE)
+  tempindexj<-J_index[c(index1)]
+  cluster<-dist(tempindexj)
+  fit <- hclust(cluster, method = "ward.D")
+  groups[c(index1)] <- cutree(fit, k = 2)
+  ratio <- as.numeric(length(groups[groups == 2])/(length(groups[groups == 1])+length(groups[groups == 2])))*100
   ##### result construction ####
   res<-cbind(res,
     Dissimilarity = resclu,
@@ -360,7 +378,7 @@ wzy.batch <- function (wzy, loc) {
   res<-cbind(res, Ratio = ratio)
   return(res)
 }
-wzy.batch2 <- function (wzy, loc) {
+wzy.batch2 <- function (wzy, loc, Label1) {
   library("biwavelet")
   require("biwavelet")
   if (class(wzy) != "matrix") {
@@ -392,12 +410,13 @@ wzy.batch2 <- function (wzy, loc) {
     temp<-mean(indexj)
     J_index<-c(J_index, temp)
   }
-  cluster<-dist(J_index)
-  
-  
+  groups<-c(rep(0, length(rownames(res))))
+  index1<-grep(Label1, rownames(res), value = FALSE)
+  tempindexj<-J_index[c(index1)]
+  cluster<-dist(tempindexj)
   fit <- hclust(cluster, method = "ward.D")
-  groups <- cutree(fit, k = 2)
-  ratio <- as.numeric(length(groups[groups == 1])/length(groups))*100
+  groups[c(index1)] <- cutree(fit, k = 2)
+  ratio <- as.numeric(length(groups[groups == 2])/(length(groups[groups == 1])+length(groups[groups == 2])))*100
   ##### result construction ####
   res<-cbind(res,
              J_index = J_index,

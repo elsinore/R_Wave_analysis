@@ -844,7 +844,7 @@ server<-function(input, output, session) {
                        selected = options04[1])
   }) #col04
     ###=== 04.end ===###
-####=== Batching Processing ===####
+####=== +++Batching Processing ===####
   #### 01. data input ####
   #=== manipulation part ===#
   resB01<-eventReactive(input$anB01, {
@@ -884,9 +884,9 @@ server<-function(input, output, session) {
       
       
       if(input$calibrationB01 == TRUE){
-        res00<-wzy.batch2(wzy = file01, loc = file02)
+        res00<-wzy.batch2(wzy = file01, loc = file02, Label1 = input$ThirdColB01)
       } else if(input$calibrationB01 == FALSE){
-        res00<-wzy.batch(wzy = file01, loc = file02)
+        res00<-wzy.batch(wzy = file01, loc = file02, Label1 = input$ThirdColB01)
       }
       
       
@@ -917,11 +917,13 @@ server<-function(input, output, session) {
         rawBatchData<-cbind(rawBatchData, file01[,-1])
         rawBatchData.cells<-cbind(rawBatchData.cells, file01[, -c(1:2)])
         rawBatchData.region<-cbind(rawBatchData.region, file01[, 2])
+        
         if(input$calibrationB01 == TRUE){
-          res00<-wzy.batch2(wzy = file01, loc = file02)
+          res00<-wzy.batch2(wzy = file01, loc = file02, Label1 = input$ThirdColB01)
         } else if(input$calibrationB01 == FALSE){
-          res00<-wzy.batch(wzy = file01, loc = file02)
+          res00<-wzy.batch(wzy = file01, loc = file02, Label1 = input$ThirdColB01)
         }
+        
         label <- c(label, str_c("S", prefix[1], "Moran Index"), str_c("S", prefix[1], "P value"))
         rownames(res00) <- label[-1]
         isolate(values$Row_names <- c(values$Row_names, label[-1]))
@@ -1145,13 +1147,13 @@ server<-function(input, output, session) {
   SummaryWaveB03 <- eventReactive(input$staB02, {
     P.value <- c()
     Statistic <- c()
-    for(i in 2:11){
+    for(i in 2:10){
       test <- wilcox.test(values$wavefeatureB02[, i] ~ values$wavefeatureB02$Label) #independent 2-gtoup Mann-Whitney U test see here: https://www.statmethods.net/stats/nonparametric.html
       P.value <-c(P.value, test$p.value) 
       Statistic <- c(Statistic, test$statistic)
     }
     group.n <- as.numeric(max(values$tableB02$Group))+1
-    summary <- describeBy(values$wavefeatureB02[, 2:11], values$wavefeatureB02$Tag)
+    summary <- describeBy(values$wavefeatureB02[, 2:10], values$wavefeatureB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
@@ -1162,13 +1164,13 @@ server<-function(input, output, session) {
   SummaryRegionB03 <- eventReactive(input$staB02, {
     P.value <- c()
     Statistic <- c()
-    for(i in c(2:9, 12)){
+    for(i in c(2:10, 12)){
       test <- wilcox.test(values$regionB02[, i] ~ values$regionB02$Label)
       P.value <-c(P.value, test$p.value) 
       Statistic <- c(Statistic, test$statistic)
     }
     group.n <- as.numeric(max(values$tableB02$Group))+1
-    summary <- describeBy(values$regionB02[, c(2:9, 12)], values$regionB02$Tag)
+    summary <- describeBy(values$regionB02[, c(2:10, 12)], values$regionB02$Tag)
     out <- data.frame()
     for(i in 1:group.n) {
       out <- rbind(out, as.data.frame(t(as.data.frame(summary[i]))))
@@ -1330,7 +1332,7 @@ server<-function(input, output, session) {
     Pvalue<-round(as.numeric(SummaryWaveB03()["P.value", ]), 10)
     cols <- 3
     YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit")
-    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Dissimilarity to Region")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J")
     dfx<-c()
     for(i in 1: length(o[, GroupTag])) {
       if(i == 1) {
@@ -1400,15 +1402,16 @@ server<-function(input, output, session) {
   }) 
   plotBoxB04.01<-reactive({
     o<-values$regionB02 #input data
+    o<-o[,-11] #remove the "Group" column
     start<-2
-    end<-9
+    end<-11
     GroupLabel<-"Label" #to sort
     GroupTag<-"Tag" #to identify
     Pvalue<-round(as.numeric(SummaryRegionB03()["P.value", ]), 10)
-    cols <- 3
-    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Percentage (%)")
-    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Percentage of Group 1")
-    dfx<-c()
+    cols <- 4
+    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit","Percentage (%)")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J","Percentage of Group 2")
+    dfx<-c() #count how many groups
     for(i in 1: length(o[, GroupTag])) {
       if(i == 1) {
         j<-1
@@ -1479,13 +1482,13 @@ server<-function(input, output, session) {
   plotBoxB04.02<-reactive({
     o<-values$distributionB02 #input data
     start<-2
-    end<-9
+    end<-10
     GroupLabel<-"Label" #to sort
     GroupTag<-"Tag" #to identify
     Pvalue<-round(as.numeric(SummaryMoranIndexB03()["P.value", ]), 10)
     cols <- 3
     YaxisNames <- c("Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index", "Moran Index")
-    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Dissimilarity to Region", "Group")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J", "Group")
     dfx<-c()
     for(i in 1: length(o[, GroupTag])) {
       if(i == 1) {
@@ -1557,13 +1560,13 @@ server<-function(input, output, session) {
   plotBoxB04.03<-reactive({
     o<-values$MoranPB02 #input data
     start<-2
-    end<-9
+    end<-10
     GroupLabel<-"Label" #to sort
     GroupTag<-"Tag" #to identify
     Pvalue<-round(as.numeric(SummaryMoranPB03()["P.value", ]), 10)
     cols <- 3
     YaxisNames <- c("P value of Moran Index", "P value of Moran Index", "P value of Moran Index", "P value of Moran Index", "P value of Moran Index", "P value of Moran Index", "P value of Moran Index", "P value of Moran Index", "P value of Moran Index", "P value of Moran Index")
-    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Dissimilarity to Region", "Group")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J", "Group")
     dfx<-c()
     for(i in 1: length(o[, GroupTag])) {
       if(i == 1) {
@@ -1719,7 +1722,7 @@ server<-function(input, output, session) {
       gp <- ggplot(df, aes(x=x, y=y100)) +
         geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100, colour = factor(df$x2)),
                      stat = "identity", position=position_dodge(width = 1.01), varwidth = TRUE) +signif[1:6]+
-        labs(y = YaxisNames[i], title = TitleNames[i] , colour = "Group by\n Wavelet Clust") +
+        labs(y = YaxisNames[i], title = TitleNames[i] , colour = "Group by\n Index J cluster") +
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
               axis.title.x=element_blank(), axis.text=element_text(size=14), 
               axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.43)
@@ -1735,11 +1738,11 @@ server<-function(input, output, session) {
   plotBoxB04.05<-reactive({
     o <- values$wavefeatureB02
     start<-2
-    end<-9
+    end<-10
     cols<-2
     q<-c(start:end)
     YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit")
-    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Dissimilarity to Region")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J")
     numPlots <- end - start + 1 #Plots numbers
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                      ncol = cols, nrow = ceiling(numPlots/cols))
