@@ -222,7 +222,10 @@ ui<-navbarPage("Wave Analysis",
                                          plotOutput("plot03.03"),
                                          plotOutput("plot03.04")
                                        ),
-                                       plotOutput("plot03.05")
+                                       splitLayout(
+                                         plotOutput("plot03.05"),
+                                         plotOutput("plot03.005")
+                                       )
                                      )
                             ),
                             #===end.03 ===#
@@ -1788,7 +1791,7 @@ server<-function(input, output, session) {
       "Region Level" = list(
         tags$h4("Wave feature for Region"),
         tags$hr(),
-        plotOutput("plotBoxB04.01", width = "800px", height = "800px")
+        plotOutput("plotBoxB04.01", width = "1067px", height = "800 px")
       ),
       "Moran Index" = list(
         tags$h4("Moran index for each wave feature"),
