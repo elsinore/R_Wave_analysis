@@ -320,9 +320,9 @@ wzy.batch <- function (wzy, loc, Label1) {
   for(i in 2:ncol){
     data[, i]<-data[, i]-mean(data[, i])
   }
-  res<-WZY.EMG.F(data)
+  res<-WZY.EMG.F(data) # for Frequency domin
   res<-res$results
-  resin<-WZY.EMG.F(dataO)
+  resin<-WZY.EMG.F(dataO) # for Moran Index
   resin<-resin$results
   #### calculate the dissimilarity ####
   J_index<-c()
@@ -351,11 +351,11 @@ wzy.batch <- function (wzy, loc, Label1) {
   ratio <- as.numeric(length(groups[groups == 2])/(length(groups[groups == 1])+length(groups[groups == 2])))*100
   ##### result construction ####
   res<-cbind(res,
-    Dissimilarity = resclu,
+    Index_J = J_index,
     Group = groups
   )
   resin<-cbind(resin,
-    Dissimilarity = resclu,
+    Index_J = J_index,
     Group = groups
   )
   res.m<-resin[-1, ] #remove the data from region
@@ -416,13 +416,29 @@ wzy.batch2 <- function (wzy, loc, Label1) {
   cluster<-dist(tempindexj)
   fit <- hclust(cluster, method = "ward.D")
   groups[c(index1)] <- cutree(fit, k = 2)
-  ratio <- as.numeric(length(groups[groups == 2])/(length(groups[groups == 1])+length(groups[groups == 2])))*100
+
   ##### result construction ####
   res<-cbind(res,
              J_index = J_index,
              Group = groups
   )
+  res$active<-res$Group
+  res$active[which(res$J_index > mean(res$J_index[which(res$Group == 1)]))]<-2
+  res$active[which(res$J_index <= mean(res$J_index[which(res$Group == 1)]))]<-1
+  res$Group<-res$active
+  res$active<-NULL
+  
   res.m<-res[-1, ] #remove the data from region
+  
+  res.m$active<-res.m$Group
+  res.m$active[which(res.m$J_index > mean(res.m$J_index[which(res.m$Group == 1)]))]<-2
+  res.m$active[which(res.m$J_index <= mean(res.m$J_index[which(res.m$Group == 1)]))]<-1
+  
+  ratio <- as.numeric(length(res.m$active[res.m$active == 2])/(length(res.m$active)))*100
+  res.m$Group<-res.m$active
+  res.m$active<-NULL
+  res$Group[-1]<-res.m$Group
+  
   loc<-loc[-1, ] #remove the data from region
   ncol04 <- ncol(res)
   rownames04 <- colnames(res)

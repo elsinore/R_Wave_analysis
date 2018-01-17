@@ -303,7 +303,41 @@ ui<-navbarPage("Wave Analysis",
                       conditionalPanel(
                         'input.dataset2 == "Results"',
                         h4("Statistical Results"),
-                        downloadButton('downloadStaResB03', 'Download the statistic result')
+                        downloadButton('downloadStaResB03', 'Download the statistic result'),
+                        withMathJax.local(
+                          helpText("Details of each feature:"),
+                          helpText("Here \\(N\\) denotes the length of the signal and \\(x_n\\) represents the wave in a segment"),
+                          helpText("01. Integrated (Int): $$Int = \\sum_{n=1}^N |x_n|$$"),
+                          tags$hr(),
+                          helpText("02. Mean Absolute Value (MAV): $$MAV = \\frac{1}{N} \\sum_{n=1}^N |x_n|$$"),
+                          tags$hr(),
+                          helpText("03. Variance (VAR): $$VAR = \\frac{1}{N-1} \\sum_{n=1}^N x_n^2 $$"),
+                          tags$hr(),
+                          helpText("04. Root Mean Square (RMS): $$RMS = \\sqrt{\\frac{1}{N}\\sum_{n=1}^N x_n^2}$$"),
+                          tags$hr(),
+                          helpText("05. Waveform Length (WL): $$WL = sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
+                          tags$hr(),
+                          helpText(HTML("06. Main Period (MP):  the period obtained by the <b>Maximal Wavelet Variance </b>")),
+                          tags$hr(),
+                          helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
+                          tags$hr(),
+                          helpText("08. Mean Power Frequency (MPF): 
+                                       $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)"),
+                          tags$hr(),
+                          helpText(HTML("<p align='justify'> See more details of term 01 to term 08 in Ref.1.")),
+                          tags$hr(),
+                          helpText(HTML("09. Index J: 
+                                       $$J(t) = \\frac{1}{2\\epsilon} \\int_{t-\\epsilon}^{1+\\epsilon} \\sum_{i=1}^{n(\\tau)} |W(\\tau,v_i)|^2 v_i(\\tau)d\\tau $$
+                                   <p align='justify'> where \\({v_i(\\tau)}\\) is exactly the set of directional local maxima of \\(W\\) along the \\(v\\) axis, at time \\(\\epsilon\\). Since the number
+                                   of these maxima changes in time, the parameter \\(n\\) is expressed as a function of \\(\\epsilon\\). Integration simply serves to regularize the 
+                                   index, by avoiding abrupt variations due to discontinuities of frequency paths. See more details in Ref.2.")),
+                          tags$hr(),
+                          helpText(HTML("<b>References</b><br />
+                                        <p align='justify'> 1.Chowdhury RH, Reaz MB, Ali MA, Bakar AA, Chellappan K, Chang TG. 
+                                        Surface electromyography signal processing and classification techniques. Sensors. 2013 Sep 17;13(9):12431-66.</p>
+                                        <p align='justify'> 2.Ruffinatti FA, Lovisolo D, Distasi C, Ariano P, Erriquez J, Ferraro M. Calcium signals: 
+                                        analysis in time and frequency domains. Journal of neuroscience methods. 2011 Aug 15;199(2):310-20.</p>"))
+                        )
                       ),
                       #### 04. Plot Output ####
                       conditionalPanel(
@@ -1413,7 +1447,7 @@ server<-function(input, output, session) {
     Pvalue<-round(as.numeric(SummaryRegionB03()["P.value", ]), 10)
     cols <- 4
     YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit","Percentage (%)")
-    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J","Percentage of Group 2")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J","Percentage of Response Cells")
     dfx<-c() #count how many groups
     for(i in 1: length(o[, GroupTag])) {
       if(i == 1) {
@@ -1640,9 +1674,9 @@ server<-function(input, output, session) {
   }) 
   plotBoxB04.04<-reactive({
     RES<-SummaryGroupComparB03()
-    position<-c(1.17, 1.29, 1.17, 1.41, 1.05, 1.29)
-    xmin<-c(0.75, 1.77, 1.27, 0.75, 1.3, 0.75)
-    xmax<-c(1.23, 2.25, 2.25, 2.25, 1.7, 1.73)
+    position<-c(1.17, 1.29, 1.05, 1.41, 1.17, 1.29)
+      xmin <- c(0.75, 0.75, 1.30, 0.75, 1.27, 1.77)
+      xmax <- c(1.23, 1.73, 1.70, 2.25, 2.25, 2.25)
     o<-values$wavefeatureB02 #input data
     start<-2
     end<-10
@@ -1651,7 +1685,7 @@ server<-function(input, output, session) {
     GroupTagL2<-"Group" #to identify at level 2
     cols <- 3
     YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit")
-    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Dissimilarity to Region")
+    TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J")
     dfxL1<-c()
     for(i in 1: length(o[, GroupTagL1])) {
       if(i == 1) {
@@ -1791,7 +1825,7 @@ server<-function(input, output, session) {
       "Region Level" = list(
         tags$h4("Wave feature for Region"),
         tags$hr(),
-        plotOutput("plotBoxB04.01", width = "1067px", height = "800 px")
+        plotOutput("plotBoxB04.01", width = "1067px", height = "800px")
       ),
       "Moran Index" = list(
         tags$h4("Moran index for each wave feature"),
