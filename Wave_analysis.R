@@ -1001,12 +1001,12 @@ server<-function(input, output, session) {
       )
   )
   output$tableB01.01<-DT::renderDataTable(
-    values$tableB01.01,
+    format(values$tableB01.01, digits = 0, scientific = FALSE),
     caption = 'Table 2: Wave Feature',
     rownames = FALSE
   )
   output$tableB01.02<-DT::renderDataTable(
-    tableB01.02 <- wzy.force.format.colname(x = values$tableB01.02, colname = values$colnames),
+    tableB01.02 <- wzy.force.format.colname(x = round(values$tableB01.02, 4), colname = values$colnames),
     caption = 'Table 3: Raw Data',
     rownames = FALSE,
     options = list(
@@ -1045,7 +1045,7 @@ server<-function(input, output, session) {
       tableB01.00<-cbind(No., data = tableB01.00)
     } else if(! is.null(input$uploadAnaResB01)){
       tableB01.00<-read.csv(paste(parseDirPath(volumes, input$uploadAnaResB01), "/Table_1.csv", sep = ""), header=TRUE, sep=",")
-    } else {tableB01.00 <- data.frame("Table 1"=NA)}
+    } else {tableB01.00 <- data.frame("Table 1"=NULL)}
     isolate(values$tableB01.00<-tableB01.00)
   }) #TableB01.00 | Table 1
   observe({
@@ -1054,7 +1054,7 @@ server<-function(input, output, session) {
       tableB01.01<-as.data.frame((res[1]))
     } else if(! is.null(input$uploadAnaResB01)){
       tableB01.01<-read.csv(paste(parseDirPath(volumes, input$uploadAnaResB01), "/Table_2.csv", sep = ""), header=TRUE, sep=",")
-    } else {tableB01.01 <- data.frame("Table 2"=NA)}
+    } else {tableB01.01 <- data.frame("Table 2"= NULL)}
     isolate(values$tableB01.01<-tableB01.01)
   }) #TableB01.01 | Table 2
   observe({
@@ -1065,7 +1065,7 @@ server<-function(input, output, session) {
       tableB01.02<-read.csv(paste(parseDirPath(volumes, input$uploadAnaResB01), "/Table_3.csv", sep = ""), header=FALSE, sep=",")
       isolate(values$colnames <- as.vector(unlist(tableB01.02[1,])))
       tableB01.02<-read.csv(paste(parseDirPath(volumes, input$uploadAnaResB01), "/Table_3.csv", sep = ""), header=TRUE, sep=",")
-    } else {tableB01.02 <- data.frame("Table 3"=NA)}
+    } else {tableB01.02 <- data.frame("Table 3"=NULL)}
     isolate(values$tableB01.02<-tableB01.02)
   }) #TableB01.02 | Table 3
   observe({
@@ -1075,7 +1075,7 @@ server<-function(input, output, session) {
       tableB01.03<-data.frame(ID = tableB01.03, Group = NA, Label = NA)
     } else if(! is.null(input$uploadAnaResB01)){
       tableB01.03<-read.csv(paste(parseDirPath(volumes, input$uploadAnaResB01), "/Table_4.csv", sep = ""), header=TRUE, sep=",")
-    } else {tableB01.03 <- data.frame("Table 4"=NA)}
+    } else {tableB01.03 <- NULL}
     isolate(values$tableB01.03<-tableB01.03)
     isolate(values$sampleSize <- length(values$tableB01.03[, 1]))
   }) #TableB01.03 | Table 4
@@ -1117,9 +1117,23 @@ server<-function(input, output, session) {
       isolate(values$wavefeatureB02 <- values$tableB01.01[grep(input$ThirdColB01, values$tableB01.01$Row_names, value = TRUE), ])
       isolate(values$wavefeatureB02 <- values$wavefeatureB02[order(values$wavefeatureB02$Label),])
       isolate(values$wavefeatureB02 <- values$wavefeatureB02 <- values$wavefeatureB02[, -12])
+      #define a threshold for response cells.
+      tempindexj<-values$wavefeatureB02$J_index
+      cluster<-dist(tempindexj)
+      fit <- hclust(cluster, method = "ward.D")#define it by cluster analysis
+      groups <- cutree(fit, k = 2)
+      isolate(values$wavefeatureB02$Group<-groups)
+      threshold<-max(values$wavefeatureB02$J_index[which(values$wavefeatureB02$Group == 1)])
+      #defination end.
       isolate(values$regionB02 <- values$tableB01.01[grep(input$SecondColB01, values$tableB01.01$Row_names, value = TRUE), ])
       isolate(values$regionB02 <- values$regionB02[order(values$regionB02$Label),])
-      isolate(values$regionB02$Ratio[values$regionB02$Label == 0]<- 100 - values$regionB02$Ratio[values$regionB02$Label == 0])
+      ratio<-c()
+      for (i in 1:length(values$regionB02$Row_names)) {
+        names<-grep(gsub("Region", "", values$regionB02$Row_names[i]), values$wavefeatureB02$Row_names, value = FALSE)
+        rationin<-(length(values$wavefeatureB02$Group[as.numeric(names)][values$wavefeatureB02$Group[as.numeric(names)]==2])/length(names))*100
+        ratio<-c(ratio, rationin)
+      }
+      isolate(values$regionB02$Ratio<-ratio)
     })
   })
   #=== output part ===#
@@ -1140,22 +1154,22 @@ server<-function(input, output, session) {
     }
   )
   output$tableRegionB02<-DT::renderDataTable(
-    values$regionB02,
+    format(values$regionB02, digits = 0, scientific = FALSE),
     caption = 'Raw Results of each entire sample check',
     rownames = FALSE
   )
   output$tableWavefeatureB02<-DT::renderDataTable(
-    values$wavefeatureB02,
+    format(values$wavefeatureB02, digits = 0, scientific = FALSE),
     caption = 'Raw Results of Wave feature check',
     rownames = FALSE
   )
   output$tableDistributionB02<-DT::renderDataTable(
-    values$distributionB02,
+    format(values$distributionB02, digits = 2, scientific = FALSE),
     caption = 'Raw Results of distribution check',
     rownames = FALSE
   )
   output$tableMoranPB02<-DT::renderDataTable(
-    values$MoranPB02,
+    format(values$MoranPB02, digits = 2, scientific = FALSE),
     caption = 'Raw Results of P value check',
     rownames = FALSE
   )
@@ -1318,7 +1332,7 @@ server<-function(input, output, session) {
   )
   output$plotClustB03<-renderPlot(plotClustB03())
   output$tableWaveB03<-DT::renderDataTable(
-    format(SummaryWaveB03(), digits = 2, scientific = FALSE),
+    round(SummaryWaveB03(), 4),
     caption = 'Results 1: wave feature for each cell',
     options = list(
       pageLength = length(SummaryWaveB03()[,1]),
@@ -1326,7 +1340,7 @@ server<-function(input, output, session) {
     )
   )
   output$tableRegionB03<-DT::renderDataTable(
-    format(SummaryRegionB03(), digits = 2, na.encode = TRUE, scientific = FALSE),
+    round(SummaryRegionB03(), 4),
     caption = 'Results 2: wave feature for region',
     options = list(
       pageLength = length(SummaryRegionB03()[,1]),
@@ -1334,7 +1348,7 @@ server<-function(input, output, session) {
     )
   )
   output$tableMoranIndexB03<-DT::renderDataTable(
-    format(SummaryMoranIndexB03(), digits = 2, scientific = FALSE),
+    round(SummaryMoranIndexB03(), 4),
     caption = 'Results 3: Moran index for each wave feature',
     options = list(
       pageLength = length(SummaryMoranIndexB03()[,1]),
@@ -1342,7 +1356,7 @@ server<-function(input, output, session) {
     )
   )
   output$tableMoranPB03<-DT::renderDataTable(
-    format(SummaryMoranPB03(), digits = 2, scientific = FALSE),
+    round(SummaryMoranPB03(), 4),
     caption = 'Results 4: P value of Moran index for each wave feature',
     options = list(
       pageLength = length(SummaryMoranPB03()[,1]),
@@ -1350,7 +1364,7 @@ server<-function(input, output, session) {
     )
   )
   output$tableGroupComparB03<-DT::renderDataTable(
-    format(SummaryGroupComparB03(), digits = 2, scientific = FALSE),
+    format(SummaryGroupComparB03(), digits = 4),
     caption = 'Results 5: Wave Feature among Groups',
     options = list(
       pageLength = length(SummaryGroupComparB03()[,1]),
