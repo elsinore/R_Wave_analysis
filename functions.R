@@ -35,7 +35,7 @@ WZY.convertDist <- function(inDist) {
 # 9  CFMG DMNR 0.09332092
 # 10 CFMG DILG 0.02060062
 #=== Mathematical Representation of Widely used Wave Feature Extraction ####
-WZY.EMG.F <- function(wzy) {
+WZY.EMG.F <- function(wzy, Unit = 1) {
   library("biwavelet")
   require("biwavelet")
   #### Global Variabels ####
@@ -123,11 +123,11 @@ WZY.EMG.F <- function(wzy) {
     WL = wl,
     MP = mp,
     MA = ma,
-    MPF = mpf
+    MPF = mpf * Unit
   )
   return(list(data=wzyo, results=res))
 }
-WZY.EMG.F.MPDF <- function(wzy) {
+WZY.EMG.F.MPDF <- function(wzy, Unit = 1) {
   library("biwavelet")
   require("biwavelet")
   #### Global Variabels ####
@@ -225,8 +225,8 @@ WZY.EMG.F.MPDF <- function(wzy) {
     WL = wl,
     MP = mp,
     MA = ma,
-    MPF = mpf,
-    MPDF = mpdf
+    MPF = mpf * Unit,
+    MPDF = mpdf * Unit
   )
   return(list(data=wzyo, results=res))
 }
@@ -278,7 +278,7 @@ WZY.Wavelet.clust2 <- function(input){ # wave clust in a same sample
 }
 #=== Frequency Spectrum ===####
 # From: (http://www.di.fc.ul.pt/~jpn/r/fourier/fourier.html)
-wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep) {
+wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep, Unit, UnitLabel) {
   X.k[1]<-0
   Fs<-sampleSize/(sampleSize*timeStep)
   N<-sampleSize
@@ -286,29 +286,30 @@ wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep) {
   xv=(seq/N)*Fs
   mod<-Mod(X.k)
   mod<-mod[1:(N/2)]
-  plot.data  <- cbind(c(0, xv[1:((N/2)-1)]), mod)
+  plot.data  <- cbind(c(0, xv[1:((N/2)-1)])*Unit, mod)
   plot.data[xv[2:(N/2)],2] <- 2*plot.data[xv[2:(N/2)],2] 
   plot(plot.data, t="h", lwd=2, main="", 
-       xlab="Frequency (Hz)", ylab="Strength",
+       xlab=paste("Frequency (", UnitLabel, ")", sep = ""), ylab="Power Spectrum",
        ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectrum")
 }
-wzy.plot.frequency.spectrum.density <- function(X.k, sampleSize, timeStep) {
+wzy.plot.frequency.spectrum.density <- function(X.k, sampleSize, timeStep, Unit, UnitLabel) {
   X.k[1]<-0
-  Fs <- sampleSize/(sampleSize*timeStep)
+  Fs <- sampleSize/(sampleSize*timeStep) 
   N <- sampleSize
   seq <- c(1:(N/2))
   xv=(seq/N)*Fs
   mod <- Mod(X.k)
   mod <- mod[1:(N/2)]
   mod <- (mod^2)/N 
-  plot.data  <- cbind(c(0, xv[1:((N/2)-1)]), mod)
+  plot.data  <- cbind(c(0, xv[1:((N/2)-1)])*Unit, mod)
   plot.data[xv[2:(N/2)],2] <- 2*plot.data[xv[2:(N/2)],2] 
   plot(plot.data, t="h", lwd=2, main="", 
-       xlab="Frequency (Hz)", ylab="Power Spectral Density",
+       xlab=paste("Frequency (", UnitLabel, ")", sep = ""), ylab="Power Spectral Density",
        ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectral Density")
 }
+mav <- function(x,n=5){filter(x,rep(1/n,n), sides=1)}
 #=== Function for Batching Processing ===####
-wzy.batch <- function (wzy, loc, Label1) {
+wzy.batch <- function (wzy, loc, Label1, Unit) {
   library("biwavelet")
   require("biwavelet")
   if (class(wzy) != "matrix") {
@@ -320,23 +321,33 @@ wzy.batch <- function (wzy, loc, Label1) {
   for(i in 2:ncol){
     data[, i]<-data[, i]-mean(data[, i])
   }
-  res<-WZY.EMG.F(data) # for Frequency domin
+  res<-WZY.EMG.F(data, Unit) # for Frequency domin
   res<-res$results
-  resin<-WZY.EMG.F(dataO) # for Moran Index
+  resin<-WZY.EMG.F(dataO, Unit) # for Moran Index
   resin<-resin$results
+  res$Int<-resin$Int
+  res$MAV<-resin$MAV
+  res$VAR<-resin$VAR
+  res$RMS<-resin$RMS
+  res$WL<-resin$WL
+  res$MA<-resin$MA
   #### calculate the dissimilarity ####
   J_index<-c()
   for(j in 2:ncol){
-    wt.t1<-wt(cbind(dataO[,1], dataO[, j]), do.sig = FALSE)
-    sampling<-length(dataO[,1])
-    fft.t1<-fft(dataO[,ncol])
+    wt.t1<-wt(cbind(data[,1], data[, j]), do.sig = FALSE)
+    sampling<-length(data[,1])
+    fft.t1<-fft(data[,ncol])
     W<-wt.t1$wave
     a<-wt.t1$scale
     v<-5/(2*pi*a)
+    v<-v*Unit #unit factor for frequency
     E<-rowSums(abs(W)^2)
     indexj<-c()
     for(i in 1:sampling) {
-      temp<-sum(findpeaks(abs(W[,i]))[,1]*v[findpeaks(abs(W[,i]))[,2]])/2
+      Wpeaks<-findpeaks(abs(W[,i]))[,1]
+      Wpeaks<-Wpeaks^2
+      vposition<-v[findpeaks(abs(W[,i]))[,2]]
+      temp<-sum(Wpeaks*vposition)/2
       indexj<-c(indexj, temp)
     }
     temp<-mean(indexj)
@@ -378,7 +389,7 @@ wzy.batch <- function (wzy, loc, Label1) {
   res<-cbind(res, Ratio = ratio)
   return(res)
 }
-wzy.batch2 <- function (wzy, loc, Label1) {
+wzy.batch2 <- function (wzy, loc, Label1, Unit) {
   library("biwavelet")
   require("biwavelet")
   if (class(wzy) != "matrix") {
@@ -389,22 +400,25 @@ wzy.batch2 <- function (wzy, loc, Label1) {
   for(i in 2:ncol){
     data[, i]<-data[, i]-mean(data[, i])
   }
-  res<-WZY.EMG.F(data)
+  res<-WZY.EMG.F(data, Unit)
   res<-res$results
-  #### calculate the dissimilarity ####
-  
+  #### calculate the index J ####
   J_index<-c()
   for(j in 2:ncol){
-    wt.t1<-wt(cbind(data[,1], data[, j]), do.sig = FALSE)
+    wt.t1<-wt(cbind(data[,1], data[, j]), mother = "morlet", do.sig = FALSE)
     sampling<-length(data[,1])
     fft.t1<-fft(data[,ncol])
     W<-wt.t1$wave
     a<-wt.t1$scale
     v<-5/(2*pi*a)
+    v<-v*Unit #unit factor Hz mHz or MHz
     E<-rowSums(abs(W)^2)
     indexj<-c()
     for(i in 1:sampling) {
-      temp<-sum(findpeaks(abs(W[,i]))[,1]*v[findpeaks(abs(W[,i]))[,2]])/2
+      Wpeaks<-findpeaks(abs(W[,i]))[,1]
+      Wpeaks<-Wpeaks^2
+      vposition<-v[findpeaks(abs(W[,i]))[,2]]
+      temp<-sum(Wpeaks*vposition)/2
       indexj<-c(indexj, temp)
     }
     temp<-mean(indexj)
@@ -416,29 +430,13 @@ wzy.batch2 <- function (wzy, loc, Label1) {
   cluster<-dist(tempindexj)
   fit <- hclust(cluster, method = "ward.D")
   groups[c(index1)] <- cutree(fit, k = 2)
-
+  ratio <- as.numeric(length(groups[groups == 2])/(length(groups[groups == 1])+length(groups[groups == 2])))*100
   ##### result construction ####
   res<-cbind(res,
              J_index = J_index,
              Group = groups
   )
-  res$active<-res$Group
-  res$active[which(res$J_index > mean(res$J_index[which(res$Group == 1)]))]<-2
-  res$active[which(res$J_index <= mean(res$J_index[which(res$Group == 1)]))]<-1
-  res$Group<-res$active
-  res$active<-NULL
-  
   res.m<-res[-1, ] #remove the data from region
-  
-  res.m$active<-res.m$Group
-  res.m$active[which(res.m$J_index > mean(res.m$J_index[which(res.m$Group == 1)]))]<-2
-  res.m$active[which(res.m$J_index <= mean(res.m$J_index[which(res.m$Group == 1)]))]<-1
-  
-  ratio <- as.numeric(length(res.m$active[res.m$active == 2])/(length(res.m$active)))*100
-  res.m$Group<-res.m$active
-  res.m$active<-NULL
-  res$Group[-1]<-res.m$Group
-  
   loc<-loc[-1, ] #remove the data from region
   ncol04 <- ncol(res)
   rownames04 <- colnames(res)
@@ -521,6 +519,7 @@ errorFunc <- function(err, buttonId) {
   shinyjs::html(html = errMessage, selector = errElMsg)
   shinyjs::show(selector = errEl, anim = TRUE, animType = "fade")
 }
+# use withMathJax locally 
 withMathJax.local <- function(...) {
   path <- "MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
   tagList(
@@ -531,6 +530,7 @@ withMathJax.local <- function(...) {
     tags$script(HTML('if (window.MathJax) MathJax.Hub.Queue(["Typeset", MathJax.Hub]);'))
   )
 }
+# other useful but unused this time
 wzy.force.format.colname <- function(x, colname) {
   colnames(x)<-colname
   return(x)

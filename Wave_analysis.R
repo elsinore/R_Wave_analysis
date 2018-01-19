@@ -49,6 +49,7 @@ ui<-navbarPage("Wave Analysis",
                                 )
                               ),
                               tags$hr(),
+                              selectInput("Sunit01", label = "Select the frequency unit", choices = c("kHz", "Hz", "mHz"), multiple = FALSE), # Single sample explorer unit 01
                               withBusyIndicatorUI(
                                 actionButton(
                                   "analyze",
@@ -90,14 +91,28 @@ ui<-navbarPage("Wave Analysis",
                               tags$hr(),
                               helpText("04. Root Mean Square (RMS): $$RMS = \\sqrt{\\frac{1}{N}\\sum_{n=1}^N x_n^2}$$"),
                               tags$hr(),
-                              helpText("05. Waveform Length (WL): $$WL = sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
+                              helpText("05. Waveform Length (WL): $$WL = \\sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
                               tags$hr(),
                               helpText(HTML("06. Main Period (MP):  the period obtained by the <b>Maximal Wavelet Variance </b>")),
                               tags$hr(),
                               helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
                               tags$hr(),
                               helpText("08. Mean Power Frequency (MPF): 
-                                       $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)")
+                                       $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)"),
+                              tags$hr(),
+                              helpText(HTML("<p align='justify'> See more details of term 01 to term 08 in Ref.1.")),
+                              tags$hr(),
+                              helpText(HTML("09. Index J: 
+                                       $$J(t) = \\frac{1}{2\\epsilon} \\int_{t-\\epsilon}^{1+\\epsilon} \\sum_{i=1}^{n(\\tau)} |W(\\tau,v_i)|^2 v_i(\\tau)d\\tau $$
+                                   <p align='justify'> where \\({v_i(\\tau)}\\) is exactly the set of directional local maxima of \\(W\\) along the \\(v\\) axis, at time \\(\\epsilon\\). Since the number
+                                   of these maxima changes in time, the parameter \\(n\\) is expressed as a function of \\(\\epsilon\\). Integration simply serves to regularize the 
+                                   index, by avoiding abrupt variations due to discontinuities of frequency paths. See more details in Ref.2.")),
+                              tags$hr(),
+                              helpText(HTML("<b>References</b><br />
+                                        <p align='justify'> 1.Chowdhury RH, Reaz MB, Ali MA, Bakar AA, Chellappan K, Chang TG. 
+                                        Surface electromyography signal processing and classification techniques. Sensors. 2013 Sep 17;13(9):12431-66.</p>
+                                        <p align='justify'> 2.Ruffinatti FA, Lovisolo D, Distasi C, Ariano P, Erriquez J, Ferraro M. Calcium signals: 
+                                        analysis in time and frequency domains. Journal of neuroscience methods. 2011 Aug 15;199(2):310-20.</p>"))
                               )
                             ),
                           #=== end.02 ===#
@@ -118,14 +133,28 @@ ui<-navbarPage("Wave Analysis",
                               tags$hr(),
                               helpText("04. Root Mean Square (RMS): $$RMS = \\sqrt{\\frac{1}{N}\\sum_{n=1}^N x_n^2}$$"),
                               tags$hr(),
-                              helpText("05. Waveform Length (WL): $$WL = sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
+                              helpText("05. Waveform Length (WL): $$WL = \\sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
                               tags$hr(),
                               helpText(HTML("06. Main Period (MP):  the period obtained by the <b>Maximal Wavelet Variance </b>")),
                               tags$hr(),
                               helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
                               tags$hr(),
                               helpText("08. Mean Power Frequency (MPF): 
-                                       $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)")
+                                       $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)"),
+                              tags$hr(),
+                              helpText(HTML("<p align='justify'> See more details of term 01 to term 08 in Ref.1.")),
+                              tags$hr(),
+                              helpText(HTML("09. Index J: 
+                                       $$J(t) = \\frac{1}{2\\epsilon} \\int_{t-\\epsilon}^{1+\\epsilon} \\sum_{i=1}^{n(\\tau)} |W(\\tau,v_i)|^2 v_i(\\tau)d\\tau $$
+                                   <p align='justify'> where \\({v_i(\\tau)}\\) is exactly the set of directional local maxima of \\(W\\) along the \\(v\\) axis, at time \\(\\epsilon\\). Since the number
+                                   of these maxima changes in time, the parameter \\(n\\) is expressed as a function of \\(\\epsilon\\). Integration simply serves to regularize the 
+                                   index, by avoiding abrupt variations due to discontinuities of frequency paths. See more details in Ref.2.")),
+                              tags$hr(),
+                              helpText(HTML("<b>References</b><br />
+                                        <p align='justify'> 1.Chowdhury RH, Reaz MB, Ali MA, Bakar AA, Chellappan K, Chang TG. 
+                                        Surface electromyography signal processing and classification techniques. Sensors. 2013 Sep 17;13(9):12431-66.</p>
+                                        <p align='justify'> 2.Ruffinatti FA, Lovisolo D, Distasi C, Ariano P, Erriquez J, Ferraro M. Calcium signals: 
+                                        analysis in time and frequency domains. Journal of neuroscience methods. 2011 Aug 15;199(2):310-20.</p>"))
                             )
                           ),
                           #=== end.03 ===#
@@ -225,7 +254,8 @@ ui<-navbarPage("Wave Analysis",
                                        splitLayout(
                                          plotOutput("plot03.05"),
                                          plotOutput("plot03.005")
-                                       )
+                                       ),
+                                       plotOutput("plot03.06")
                                      )
                             ),
                             #===end.03 ===#
@@ -263,6 +293,7 @@ ui<-navbarPage("Wave Analysis",
                         textInput("FirstColB01", "First column Name", "Time (s)"),
                         textInput("SecondColB01", "Second column Name", "Region"),
                         textInput("ThirdColB01", "Rest column Names", "Cell"),
+                        selectInput("unit01", label = "Select the frequency unit", choices = c("kHz", "Hz", "mHz"), multiple = FALSE),
                         withBusyIndicatorUI(
                           actionButton(
                             "anB01",
@@ -315,7 +346,7 @@ ui<-navbarPage("Wave Analysis",
                           tags$hr(),
                           helpText("04. Root Mean Square (RMS): $$RMS = \\sqrt{\\frac{1}{N}\\sum_{n=1}^N x_n^2}$$"),
                           tags$hr(),
-                          helpText("05. Waveform Length (WL): $$WL = sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
+                          helpText("05. Waveform Length (WL): $$WL = \\sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
                           tags$hr(),
                           helpText(HTML("06. Main Period (MP):  the period obtained by the <b>Maximal Wavelet Variance </b>")),
                           tags$hr(),
@@ -413,11 +444,10 @@ server<-function(input, output, session) {
       return(NULL)                
     data<-read.csv(input$datafile$datapath, header=input$header, sep=input$sep, quote=input$quote)
     ncol<-NCOL(data)
+    dataO<-data
     label<-c()
-    if(input$calibration01 == TRUE){
-      for(l in 2:ncol){
-        data[, l] <- data[, l]-mean(data[, l])
-      }
+    for(l in 2:ncol){
+      data[, l] <- data[, l]-mean(data[, l])
     }
     if(input$colname01 == TRUE){
       for(i in 1:ncol){
@@ -430,13 +460,15 @@ server<-function(input, output, session) {
         }
       }
       colnames(data)<-label
+      colnames(dataO)<-label
     }
-    data
+    
+    return(list(data=data, dataO=dataO))
   })
   waveClust<-eventReactive(input$analyze, {
     if (is.null(input$datafile))
       return(NULL)    
-    similarity<-dataframe()
+    similarity<-dataframe()$data
     withBusyIndicatorServer("analyze", {
       similarity<-WZY.Wavelet.clust(similarity)
     })
@@ -445,18 +477,55 @@ server<-function(input, output, session) {
   res<-eventReactive(input$analyze, {
     if (is.null(input$datafile))
       return(NULL)
-    resin<-dataframe()
+    data<-dataframe()$data
+    dataO<-dataframe()$dataO
+    ncol<- NCOL(data)
     ## Basic feasture
-    resin<-WZY.EMG.F.MPDF(resin)
+    if (input$Sunit01 == "kHz") {
+      Unit <- 10^-3
+    } else if (input$Sunit01 == "Hz") {
+      Unit <- 1
+    } else if (input$Sunit01 == "mHz") {
+      Unit <- 10^3
+    }
+    resin<-WZY.EMG.F.MPDF(data, Unit)
+    resinO<-WZY.EMG.F.MPDF(dataO, Unit)
     resin <- resin$results
-    ## Wavelet Cluster
-    resclust<-waveClust()
-    resclu<-as.matrix(resclust)
-    resclu<-resclu[,1] #the dissimilarity of each cell to region
-    fit <- hclust(resclust, method = "ward.D")
+    resinO <- resinO$results
+    if(input$calibration01 == FALSE){
+      resin$Int<-resinO$Int
+      resin$MAV<-resinO$MAV
+      resin$VAR<-resinO$VAR
+      resin$RMS<-resinO$RMS
+      resin$WL<-resinO$WL
+      resin$MA<-resinO$MA
+    }
+    ## index J add
+    J_index<-c()
+    for(j in 2:ncol){
+      wt.t1<-wt(cbind(data[,1], data[, j]), mother = "morlet", do.sig = FALSE)
+      sampling<-length(data[,1])
+      W<-wt.t1$wave
+      a<-wt.t1$scale
+      v<-5/(2*pi*a)
+      v<-v*Unit #unit factor Hz mHz or MHz
+      E<-rowSums(abs(W)^2)
+      indexj<-c()
+      for(i in 1:sampling) {
+        Wpeaks<-findpeaks(abs(W[,i]))[,1]
+        Wpeaks<-Wpeaks^2
+        vposition<-v[findpeaks(abs(W[,i]))[,2]]
+        temp<-sum(Wpeaks*vposition)/2
+        indexj<-c(indexj, temp)
+      }
+      temp<-mean(indexj)
+      J_index<-c(J_index, temp)
+    }
+    cluster<-dist(J_index)
+    fit <- hclust(cluster, method = "ward.D")
     groups <- cutree(fit, k = 2)
     ## Final combination
-    resin <- cbind(resin, Dissimilarity = resclu, Group = groups)
+    resin <- cbind(resin, Index_J = J_index, Group = groups)
     resin
   })
   dataSpa<-reactive({
@@ -477,7 +546,11 @@ server<-function(input, output, session) {
   #### 01.data View ####
   #=== manipulation part ===#
   plot1<-reactive({ 
-    df <- dataframe()
+    if(input$calibration01 == TRUE) {
+      df <- dataframe()$data
+    } else if(input$calibration01 == FALSE) {
+      df <- dataframe()$dataO
+    }
     gp <- NULL
     wzy<-colnames(df)
     if (!is.null(df)){
@@ -504,7 +577,11 @@ server<-function(input, output, session) {
     gp
   })# wave clust
   plot01.03<-reactive({
-    df<-dataframe()
+    if(input$calibration01 == TRUE) {
+      df <- dataframe()$data
+    } else if(input$calibration01 == FALSE) {
+      df <- dataframe()$dataO
+    }
     df<-df[, -2]
     res<-res()
     res<-res[-1, ]
@@ -519,7 +596,8 @@ server<-function(input, output, session) {
     data03 <- data.frame(Time = Time, Group1 = Group1, Group2 = Group2)
     mdf03 <- melt(data03, id.vars = "Time", measure.vars = colnames(data03[,-1]))
     gp03<-ggplot(data = mdf03, aes_string(x="Time", y = "value", color = "variable")) + geom_line() + 
-      geom_errorbar(aes(ymin=mdf03$value - SD, ymax=mdf03$value + SD), position = position_dodge(0.9))
+      geom_errorbar(aes(ymin=mdf03$value - SD, ymax=mdf03$value + SD), position = position_dodge(0.9)) +
+      ggtitle("Average curve with SEM error bar")
     gp03
   })
   #=== output part ===#
@@ -527,7 +605,11 @@ server<-function(input, output, session) {
   output$plot01.02 <-renderPlot(plot01.02())
   output$plot01.03 <-renderPlot(plot01.03())
   output$table<-renderTable({
-    tablein01 <- dataframe()
+    if(input$calibration01 == TRUE){
+      tablein01 <- dataframe()$data
+    } else if(input$calibration01 == FALSE) {
+      tablein01 <- dataframe()$dataO
+    }
     tablein01 <- as.data.frame(tablein01)
     timein01 <- colnames(tablein01)
     timein01 <- timein01[1]
@@ -624,7 +706,7 @@ server<-function(input, output, session) {
     obin02 <- res()
     dsnames <- row.names(obin02)
     colna02 <- colnames(obin02)
-    colna02 <- c(colna02, "Dissimilarity", "Group")
+    colna02 <- c(colna02, "Index_J", "Group")
     cb_options <- list()
     cb_options[ colna02] <- colna02
     updateRadioButtons(session, "yaxisGrp",
@@ -662,14 +744,14 @@ server<-function(input, output, session) {
   #### 03.graphic results ####
   #=== manipulation part ===#
   waveletTransform<- reactive({
-    df03.00 <- dataframe()
+    df03.00 <- dataframe()$data
     df03.00 <- round(df03.00, digits = 5)
     wt03.00 <- wt(cbind(df03.00[, 1], df03.00[, input$sel03]), do.sig = FALSE)
     wt03.00
   })
   waveletSpectrum <- reactive({
     df03.01<-waveletTransform()
-    res01.01<-dataframe()
+    res01.01<-dataframe()$data
     yv<-c(1:10)
     yl<-2^c(1:10)*(res01.01[3,1]-res01.01[2,1])
     gp03.01<-NULL
@@ -679,7 +761,11 @@ server<-function(input, output, session) {
     return(gp03.01)
   })
   timeSeriesGraph <- reactive({
-    df03.02<-dataframe()
+    if(input$calibration01 == TRUE){
+      df03.02 <- dataframe()$data
+    } else if(input$calibration01 == FALSE) {
+      df03.02 <- dataframe()$dataO
+    }
     gp03.02<-NULL
     x<-df03.02[, 1]
     y<-df03.02[, input$sel03]
@@ -692,18 +778,25 @@ server<-function(input, output, session) {
     return(gp03.02)
   })
   PowerSpectrum <- reactive({
-    df03.03<-dataframe()
+    df03.03<-dataframe()$data
     gp03.03<-NULL
+    if (input$Sunit01 == "kHz") {
+      Unit <- 10^-3
+    } else if (input$Sunit01 == "Hz") {
+      Unit <- 1
+    } else if (input$Sunit01 == "mHz") {
+      Unit <- 10^3
+    }
     if(!is.null(df03.03)){
       fft03.03<-fft(df03.03[, input$sel03])
       sampleSize<-length(fft03.03)
       timeStep<-df03.03[3,1]-df03.03[2,1]
-      gp03.03<-wzy.plot.frequency.spectrum(fft03.03, sampleSize = sampleSize, timeStep = timeStep)
+      gp03.03<-wzy.plot.frequency.spectrum(fft03.03, sampleSize = sampleSize, timeStep = timeStep, Unit = Unit, UnitLabel = input$Sunit01)
     }
     return(gp03.03)
   })
   waveletVariance <- reactive({
-    df03.04<-dataframe()
+    df03.04<-dataframe()$data
     gp03.04<-NULL
     wavelet<-waveletTransform()
     if(!is.null(df03.04)){
@@ -714,15 +807,49 @@ server<-function(input, output, session) {
     return(gp)
   })
   PowerSpectralDensity <- reactive({
-    df03.03<-dataframe()
+    df03.03<-dataframe()$data
     gp03.03<-NULL
+    if (input$Sunit01 == "kHz") {
+      Unit <- 10^-3
+    } else if (input$Sunit01 == "Hz") {
+      Unit <- 1
+    } else if (input$Sunit01 == "mHz") {
+      Unit <- 10^3
+    }
     if(!is.null(df03.03)){
       fft03.03<-fft(df03.03[, input$sel03])
       sampleSize<-length(fft03.03)
       timeStep<-df03.03[3,1]-df03.03[2,1]
-      gp03.03<-wzy.plot.frequency.spectrum.density(fft03.03, sampleSize = sampleSize, timeStep = timeStep)
+      gp03.03<-wzy.plot.frequency.spectrum.density(fft03.03, sampleSize = sampleSize, timeStep = timeStep, Unit = Unit, UnitLabel = input$Sunit01)
     }
     return(gp03.03)
+  })
+  indexJanalysis <- reactive({
+    if (input$Sunit01 == "kHz") {
+      Unit <- 10^-3
+    } else if (input$Sunit01 == "Hz") {
+      Unit <- 1
+    } else if (input$Sunit01 == "mHz") {
+      Unit <- 10^3
+    }
+    wt.t1<-waveletTransform()
+    sampling<-NCOL(wt.t1$wave)
+    W<-wt.t1$wave
+    a<-wt.t1$scale
+    v<-5/(2*pi*a)
+    v<-v*Unit #unit factor Hz mHz or MHz
+    E<-rowSums(abs(W)^2)
+    indexj<-c()
+    for(i in 1:sampling) {
+      Wpeaks<-findpeaks(abs(W[,i]))[,1]
+      Wpeaks<-Wpeaks^2
+      vposition<-v[findpeaks(abs(W[,i]))[,2]]
+      temp<-sum(Wpeaks*vposition)/2
+      indexj<-c(indexj, temp)
+    }
+    indexj<-movavg(indexj, n = sampling*0.1, type = "s")
+    indexjcurve<-data.frame(Time = wt.t1$xaxis, J = indexj)
+    indexj.gp<-plot(x = indexjcurve$Time, y = indexjcurve$J, xlab = "Time (s)", ylab = "J (activity index)", t = "l")
   })
   #=== output part ===#
   output$plot03.01 <- renderPlot(waveletSpectrum())
@@ -730,6 +857,7 @@ server<-function(input, output, session) {
   output$plot03.03 <- renderPlot(PowerSpectrum())
   output$plot03.04 <- renderPlot(waveletVariance())
   output$plot03.05 <- renderPlot(PowerSpectralDensity())
+  output$plot03.06 <- renderPlot(indexJanalysis())
   output$table03.01 <- renderTable({
     f <- res()
     f <- round(f, digits = 3)
@@ -741,7 +869,7 @@ server<-function(input, output, session) {
   })
   #=== input update part ===#
   observe({
-    obin03 <- dataframe()
+    obin03 <- dataframe()$data
     colna03 <-colnames(obin03)
     colna03 <- colna03[-1]
     updateSelectInput(session, "sel03",
@@ -897,6 +1025,13 @@ server<-function(input, output, session) {
     prefix<-substr(fl, 1, prefix_position-1)
     res<-data.frame()
     ids<-c()
+    if(input$unit01 == "kHz") {
+      Unit <- 10^-3
+    } else if (input$unit01 == "Hz") {
+      Unit <- 1
+    } else if (input$unit01 == "mHz") {
+      Unit <- 10^3
+    }
     withBusyIndicatorServer("anB01",{
       id<-c()
       InUseName<-paste(prefix[1], pat01, pat01_01, ".csv", sep = "")
@@ -918,15 +1053,11 @@ server<-function(input, output, session) {
       rawBatchData<-file01
       rawBatchData.cells<-file01[, -2]
       rawBatchData.region<-file01[, 1:2]
-      
-      
       if(input$calibrationB01 == TRUE){
-        res00<-wzy.batch2(wzy = file01, loc = file02, Label1 = input$ThirdColB01)
+        res00<-wzy.batch2(wzy = file01, loc = file02, Label1 = input$ThirdColB01, Unit)
       } else if(input$calibrationB01 == FALSE){
-        res00<-wzy.batch(wzy = file01, loc = file02, Label1 = input$ThirdColB01)
+        res00<-wzy.batch(wzy = file01, loc = file02, Label1 = input$ThirdColB01, Unit)
       }
-      
-      
       label <- c(label, str_c("S", prefix[1], "Moran Index"), str_c("S", prefix[1], "P value"))
       rownames(res00) <- label[-1]
       isolate(values$Row_names <- c(values$Row_names, label[-1]))
@@ -954,11 +1085,10 @@ server<-function(input, output, session) {
         rawBatchData<-cbind(rawBatchData, file01[,-1])
         rawBatchData.cells<-cbind(rawBatchData.cells, file01[, -c(1:2)])
         rawBatchData.region<-cbind(rawBatchData.region, file01[, 2])
-        
         if(input$calibrationB01 == TRUE){
-          res00<-wzy.batch2(wzy = file01, loc = file02, Label1 = input$ThirdColB01)
+          res00<-wzy.batch2(wzy = file01, loc = file02, Label1 = input$ThirdColB01, Unit)
         } else if(input$calibrationB01 == FALSE){
-          res00<-wzy.batch(wzy = file01, loc = file02, Label1 = input$ThirdColB01)
+          res00<-wzy.batch(wzy = file01, loc = file02, Label1 = input$ThirdColB01, Unit)
         }
         
         label <- c(label, str_c("S", prefix[1], "Moran Index"), str_c("S", prefix[1], "P value"))
@@ -1027,7 +1157,8 @@ server<-function(input, output, session) {
       dir.create(paste(parseDirPath(volumes, input$directory), "/AnalysisResults/", sep = ""), showWarnings = FALSE)
       write.csv(values$tableB01.00, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_1.csv", sep = ""), row.names = FALSE)
       write.csv(values$tableB01.01, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_2.csv", sep = ""), row.names = FALSE)
-      write.table(values$tableB01.02, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.csv", sep = ""), row.names = FALSE, col.names = values$colnames, sep = ",")
+      write.table(values$tableB01.02, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.csv", sep = ""), row.names = FALSE, 
+                  col.names = values$colnames, sep = ",")
       write.csv(values$cells, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.cells.csv", sep = ""), row.names = FALSE)
       write.csv(values$region, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_3.region.csv", sep = ""), row.names = FALSE)
       write.csv(values$tableB01.03, file = paste(parseDirPath(volumes, input$directory), "/AnalysisResults/Table_4.csv", sep = ""), row.names = FALSE)
@@ -1123,13 +1254,21 @@ server<-function(input, output, session) {
       fit <- hclust(cluster, method = "ward.D")#define it by cluster analysis
       groups <- cutree(fit, k = 2)
       isolate(values$wavefeatureB02$Group<-groups)
-      threshold<-max(values$wavefeatureB02$J_index[which(values$wavefeatureB02$Group == 1)])
-      #defination end.
+      g1f <- max(values$wavefeatureB02$J_index[which(values$wavefeatureB02$Group == 1)]) # group 1 feature
+      g2f <- max(values$wavefeatureB02$J_index[which(values$wavefeatureB02$Group == 2)]) # group 2 feature
+      if ((g1f-g2f) > 0) {
+        threshold <- g2f
+      } else {
+        threshold <- g1f
+      }
+      #defination end. Then resign the group number
+      values$wavefeatureB02$Group[which(values$wavefeatureB02$J_index > threshold)] <- 2
+      values$wavefeatureB02$Group[which(values$wavefeatureB02$J_index <= threshold)] <- 1
       isolate(values$regionB02 <- values$tableB01.01[grep(input$SecondColB01, values$tableB01.01$Row_names, value = TRUE), ])
       isolate(values$regionB02 <- values$regionB02[order(values$regionB02$Label),])
       ratio<-c()
       for (i in 1:length(values$regionB02$Row_names)) {
-        names<-grep(gsub("Region", "", values$regionB02$Row_names[i]), values$wavefeatureB02$Row_names, value = FALSE)
+        names<-grep(gsub(input$SecondColB01, "", values$regionB02$Row_names[i]), values$wavefeatureB02$Row_names, value = FALSE)
         rationin<-(length(values$wavefeatureB02$Group[as.numeric(names)][values$wavefeatureB02$Group[as.numeric(names)]==2])/length(names))*100
         ratio<-c(ratio, rationin)
       }
@@ -1319,15 +1458,51 @@ server<-function(input, output, session) {
     filename = "Result_1.csv",
     content = function(file) {
       dir.create(paste(parseDirPath(volumes, input$directory), "/Statistic_Results/", sep = ""), showWarnings = FALSE)
-      write.csv(values$wavefeatureB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_1.csv", sep = ""), row.names = FALSE)
-      write.csv(values$regionB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_2.csv", sep = ""), row.names = FALSE)
-      write.csv(values$distributionB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_3.csv", sep = ""), row.names = FALSE)
-      write.csv(values$MoranPB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_4.csv", sep = ""), row.names = FALSE)
-      write.csv(SummaryWaveB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_1.csv", sep = ""), row.names = TRUE)
-      write.csv(SummaryRegionB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_2.csv", sep = ""), row.names = TRUE)
-      write.csv(SummaryMoranIndexB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_3.csv", sep = ""), row.names = TRUE)
-      write.csv(SummaryMoranPB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_4.csv", sep = ""), row.names = TRUE)
-      write.csv(SummaryGroupComparB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_5.csv", sep = ""), row.names = TRUE)
+      write.table(values$wavefeatureB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_1.csv", sep = ""), row.names = FALSE,
+                col.names = c("Sample Name", "Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)", "Group", "Label", "Tag"), sep = ",")
+      write.table(values$regionB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_2.csv", sep = ""), row.names = FALSE, 
+                col.names = c("Sample Name", "Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)", "Group", "Ratio", "Label", "Tag"), sep = ",")
+      write.table(values$distributionB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_3.csv", sep = ""), row.names = FALSE, 
+                col.names = c("Sample Name", "Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)", "Group", "Ratio", "Label", "Tag"), sep = ",")
+      write.table(values$MoranPB02, file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/SplitData_4.csv", sep = ""), row.names = FALSE, 
+                col.names = c("Sample Name", "Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)", "Group", "Ratio", "Label", "Tag"), sep = ",")
+      write.table(SummaryWaveB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_1.csv", sep = ""), row.names = TRUE, 
+                col.names = c("Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)"), sep = ",")
+      write.table(SummaryRegionB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_2.csv", sep = ""), row.names = TRUE, 
+                col.names = c("Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)", "Ratio"), sep = ",")
+      write.table(SummaryMoranIndexB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_3.csv", sep = ""), row.names = TRUE, 
+                col.names = c("Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)", "Group"), sep = ",")
+      write.table(SummaryMoranPB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_4.csv", sep = ""), row.names = TRUE, 
+                col.names = c("Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)", "Group"), sep = ",")
+      write.table(SummaryGroupComparB03(), file = paste(parseDirPath(volumes, input$directory), "/Statistic_Results/Result_5.csv", sep = ""), row.names = TRUE, 
+                col.names = c("Integrated (Int)", "Mean Absolute Value (MAV)", 
+                              "Variance (VAR)", "Root Mean Square (RMS)", "Waveform Length (WL)",
+                              "Main Period (MP)", "Maximal Amplitude (MA)", paste("Mean Power Frequency (MPF in", input$unit01, ")"),
+                              "J (activity index)"), sep = ",")
     }
   )
   output$plotClustB03<-renderPlot(plotClustB03())
@@ -1382,7 +1557,7 @@ server<-function(input, output, session) {
     GroupTag<-"Tag" #to identify
     Pvalue<-round(as.numeric(SummaryWaveB03()["P.value", ]), 10)
     cols <- 3
-    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit")
+    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", input$unit01, "Arbitrary Unit")
     TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J")
     dfx<-c()
     for(i in 1: length(o[, GroupTag])) {
@@ -1460,7 +1635,7 @@ server<-function(input, output, session) {
     GroupTag<-"Tag" #to identify
     Pvalue<-round(as.numeric(SummaryRegionB03()["P.value", ]), 10)
     cols <- 4
-    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit","Percentage (%)")
+    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", input$unit01, "Arbitrary Unit","Percentage (%)")
     TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J","Percentage of Response Cells")
     dfx<-c() #count how many groups
     for(i in 1: length(o[, GroupTag])) {
@@ -1698,7 +1873,7 @@ server<-function(input, output, session) {
     GroupTagL1<-"Tag" #to identify at level 1
     GroupTagL2<-"Group" #to identify at level 2
     cols <- 3
-    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit")
+    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", input$unit01, "Arbitrary Unit")
     TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J")
     dfxL1<-c()
     for(i in 1: length(o[, GroupTagL1])) {
@@ -1792,7 +1967,7 @@ server<-function(input, output, session) {
     end<-10
     cols<-2
     q<-c(start:end)
-    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", "Hz", "Arbitrary Unit")
+    YaxisNames <- c("Gray Level", "Gray Level", "Gray Level", "Gray Level", "Gray Level", input$FirstColB01, "Gray Level", input$unit01, "Arbitrary Unit")
     TitleNames <- c("Integrated", "Mean Absolute value", "Variance", "Root Mean Square", "Waveform Length", "Main Period", "Maximal Amplitude", "Mean Power Frequency", "Index J")
     numPlots <- end - start + 1 #Plots numbers
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
