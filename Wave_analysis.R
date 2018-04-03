@@ -309,16 +309,16 @@ ui <- navbarPage(
           #---end.The result Windows---#
           #============================#
         ) #_mainPanel()_
-              ) #_sidbarLayout()_
-              ) #_fluidPage()_
-              ), #_tabPanel()_
+      ) #_sidbarLayout()_
+    ) #_fluidPage()_
+  ), #_tabPanel()_
   #|||||||||||||||||||||||||||||||#
   #|||||| end.Single Sample ||||||#
   #|||||||||||||||||||||||||||||||#
   #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
-  ####==== Batching Processing ====####
+  ####==== Batch Processing ====####
   tabPanel(
-    "Batching Processing",
+    "Batch Processing",
     fluidPage(
       useShinyjs(),
       #### ++Sidebar input and layout ####
@@ -374,7 +374,11 @@ ui <- navbarPage(
               class = "btn-primary"
             ) #_actionButton()_
           ), #_withBusyIndicatorUI()_
-          downloadButton('GroupedData.zip', 'Download Grouped Data')
+          splitLayout(
+            downloadButton('GroupedData.zip', 'Download Grouped Data'),
+            checkboxInput("B_Mark", "Add conditaion mark", FALSE)
+          ),
+          uiOutput("B_ui02")
         ), #_conditionalPanel()_
         #///////////////////////////////#
         #//end.02 Statistical analysis//#
@@ -473,17 +477,103 @@ ui <- navbarPage(
       ) #_mainPanel()_
     ) #_fluidPage()_
   ), #_tabPanel()_
-  #|||||||||||||||||||||||||||||||||||||#
-  #|||||| end.Batching Processing ||||||#
-  #|||||||||||||||||||||||||||||||||||||#
-  #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
+  #||||||||||||||||||||||||||||||||||#
+  #|||||| end.Batch Processing ||||||#
+  #||||||||||||||||||||||||||||||||||#
+  #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
+  ####==== Batch ANOVA processing ====####
+  tabPanel(
+    "Batch ANOVA processing",
+    fluidPage(
+      useShinyjs(),
+      sidebarLayout(
+        sidebarPanel(
+          #### 01.Data Input ####
+          conditionalPanel(
+            'input.dataset3 === "Data Input"',
+            h4("Data Input"),
+            shinyFilesButton('file', 'File select', 'Please select a file', TRUE),
+            textInput("TI00", "Name for Output:", "temp"),
+            splitLayout(
+              textInput("TI01", "Data in cloumn named:", "Tag"), #TI: Text Input
+              textInput("TI02", "Name of the dataset:", "Static")
+            ),
+            textInput("TI03", "The variables are in the column named:", "Label"),
+            splitLayout(
+              numericInput("NI01", "The start cloumn:", value = 2, min = 1, max = NA, step = 1), #NI: Number Input
+              numericInput("NI02", "The end cloumn:", value = 10, min = 1, max = NA, step = 1)
+            ),
+            sliderInput("NI03", "Significant level:", value = 0.05, min = 0.001, max = 0.1),
+            checkboxInput("Violin01", "Create histogram and mean value", TRUE),#alpha level
+            withBusyIndicatorUI(
+              actionButton("AnB01", "Analyze", class = "btn-primary") #AnB: Analysis Botton
+            )
+          ),
+          #=== 01.End ===#
+          #### 02. Statistical Results ####
+          conditionalPanel(
+            'input.dataset3 === "Results"',
+            h4("Statistical Results"),
+            downloadButton('SRes', 'Download Statistical Results'),
+            helpText(HTML('<p align="justify"> The False Discover Rate (FDR) is controlled using the Benjamini-Yekutieli adjustment (2001), 
+                          a step-down procedure appropriate to depenent tests. p-values are ordered from largest to smallest, 
+                          and adjusted p-values = max[1, pmC/(m+1-i)], where i indexes the ordering, and the constant C = 1 + 1/2 + . . . + 1/m. 
+                          All tests after and including the first to be rejected <b> at the alpha/2 level are rejected</b> <br />
+                          <br />
+                          <b>Reference</b><br />
+                          Benjamini, Y. and Yekutieli, D. (2001) The control of the false discovery rate in multiple testing under dependency. 
+                          Annals of Statistics. 29, 1165–1188.</p>'))
+            ),
+          #=== 02.End ===#
+          #### 03. Plot Output ####
+          conditionalPanel(
+            'input.dataset3 === "Plot"',
+            h4("Plot Output")
+          )
+          #=== 03.End ===#
+            ), #--- sidebarPanel End
+        #=== 03.End ===#
+        #### Main panel parts ####
+        mainPanel(
+          #### 01. Data Input ####
+          tabsetPanel(
+            id = 'dataset3',
+            tabPanel("Data Input",
+                     DT::dataTableOutput('output01'),
+                     verbatimTextOutput('filepaths')
+            ),
+            #=== 01. End ===#
+            #### 02. Statistical Results ####
+            tabPanel("Results",
+                     DT::dataTableOutput('output02')
+            ),
+            #=== 02. End ===#
+            #### 03. Plot Output ####
+            tabPanel("Plot",
+                     htmlOutput("pdf", class = "custom-li-output")
+            )
+            #=== 03. End ===#
+          ) #--- tabPanel End
+        ) #--- mainPanel End
+      ) #--- sidebarLayout End
+    ) #_fluidPage()_
+  ), #_tabPanel()_
+  #||||||||||||||||||||||||||||||||||||||#
+  #||||| end.Batch ANOVA processing |||||#
+  #||||||||||||||||||||||||||||||||||||||#
+  #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
+  ####==== About ====####
   tabPanel(
     "About",
     fluidPage(
       useShinyjs()
     ) #_fluidPage()_
   ) #_tabPanel()_
-              ) #_ui<-navbarPage()_
+  #|||||||||||||||||||||#
+  #||||| end.About |||||#
+  #|||||||||||||||||||||#
+  #@@@@@@@@@@@@@@@@@@@@@#
+) #_ui<-navbarPage()_
 # Shiny server ####
 server <- function(input, output, session) {
   # Global variables ####
@@ -1311,7 +1401,7 @@ server <- function(input, output, session) {
   #|||||| end.Single Sample |||||#
   #||||||||||||||||||||||||||||||#
   #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
-  ####==== Batching Processing ====####
+  ####==== Batch Processing ====####
   #
   volumes <- c('Root'=file.path(getwd(), "/Data"))
   shinyDirChoose(input, 'B_directory', roots=volumes, session = session)
@@ -1859,15 +1949,34 @@ server <- function(input, output, session) {
     content = function(fname) {
       tmpdir <- tempdir()
       setwd(tempdir())
-      write.csv(values$B_table02.02, file = "Table_2ResultsG.csv", row.names = FALSE)
-      write.csv(values$B_table02.03, file = "Table_3GResultG.csv", row.names = FALSE)
-      write.csv(values$B_table02.04, file = "Table_4SpatialG.csv", row.names = FALSE)
+      if(input$B_Mark == FALSE) {
+        write.csv(values$B_table02.02, file = "Table_2ResultsG.csv", row.names = FALSE)
+        write.csv(values$B_table02.03, file = "Table_3GResultG.csv", row.names = FALSE)
+        write.csv(values$B_table02.04, file = "Table_4SpatialG.csv", row.names = FALSE)
+      } else if(input$B_Mark == TRUE) {
+        write.csv(cbind(values$B_table02.02, Condition = rep(input$B_MarkCo, length(values$B_table02.02[, 1])), 
+                        Condition.Label = paste(rep(input$B_MarkCo, length(values$B_table02.02[, 1])), values$B_table02.02$Label, sep = ".")), 
+                  file = "Table_2ResultsG.csv", row.names = FALSE)
+        write.csv(cbind(values$B_table02.03, Condition = rep(input$B_MarkCo, length(values$B_table02.03[, 1])), 
+                        Condition.Label = paste(rep(input$B_MarkCo, length(values$B_table02.03[, 1])), values$B_table02.03$Label, sep = ".")), 
+                  file = "Table_3GResultG.csv", row.names = FALSE)
+        write.csv(cbind(values$B_table02.04, Condition = rep(input$B_MarkCo, length(values$B_table02.04[, 1])), 
+                        Condition.Label = paste(rep(input$B_MarkCo, length(values$B_table02.04[, 1])), values$B_table02.04$Label, sep = ".")), 
+                  file = "Table_4SpatialG.csv", row.names = FALSE)
+      }
       fs <- c(paste(tmpdir,"/Table_2ResultsG.csv", sep = ""),
               paste(tmpdir,"/Table_3GResultG.csv", sep = ""),
               paste(tmpdir,"/Table_4SpatialG.csv", sep = ""))
       zip(zipfile=fname, files = fs, flags = "-j")
     }
   )
+  output$B_ui02 <- renderUI({
+    if(input$B_Mark == FALSE) {
+      return(NULL)
+    } else if(input$B_Mark == TRUE) {
+      textInput("B_MarkCo", "Enter the mark", value = "Drug1")
+    }
+  })
   #/////////////////////////////////#
   #///end.02 Statistical analysis///#
   #/////////////////////////////////#
@@ -2388,48 +2497,233 @@ server <- function(input, output, session) {
     )
   })
   output$B_ui01 <- renderUI({
-    switch(input$B_level,
-           "Cell Level" = list(
-             tags$h4("Wave feature for each cell"),
-             tags$hr(),
-             plotOutput("B_plotBox04.01", width = "800px", height = "800px")
-           ),
-           "Region Level" = list(
-             tags$h4("Wave feature for Region"),
-             tags$hr(),
-             plotOutput("B_plotBox04.02", width = "800px", height = "1067px")
-           ),
-           "Moran Index" = list(
-             tags$h4("Moran index for each wave feature"),
-             tags$hr(),
-             plotOutput("B_plotBox04.03", width = "800px", height = "800px")
-           ),
-           "Significance of Moran Index" = list(
-             tags$h4("P value of Moran index for each wave feature"),
-             tags$hr(),
-             plotOutput("B_plotBox04.04", width = "800px", height = "800px")
-           ),
-           "Comparsion among Groups" = list(
-             tags$h4("Comparsion among Groups"),
-             tags$hr(),
-             plotOutput("B_plotBox04.05", width = "800px", height = "1067px")
-           ),
-           "Histogram" = list(
-             tags$h4("Histogram"),
-             tags$hr(),
-             plotOutput("B_plotBox04.06", width = "1200px", height = "1300px")
-           )
-    )
+    if(is.null(values$B_table01.01) | is.null(values$B_table01.02) |
+       is.null(values$B_table01.03) | is.null(values$B_table01.04) | 
+       is.null(values$B_table01.05) | is.null(values$B_table01.06) |
+       is.na(values$B_table02.01$Group)) {
+      return(NULL)
+    } else {
+      switch(input$B_level,
+             "Cell Level" = list(
+               tags$h4("Wave feature for each cell"),
+               tags$hr(),
+               plotOutput("B_plotBox04.01", width = "800px", height = "800px")
+             ),
+             "Region Level" = list(
+               tags$h4("Wave feature for Region"),
+               tags$hr(),
+               plotOutput("B_plotBox04.02", width = "800px", height = "1067px")
+             ),
+             "Moran Index" = list(
+               tags$h4("Moran index for each wave feature"),
+               tags$hr(),
+               plotOutput("B_plotBox04.03", width = "800px", height = "800px")
+             ),
+             "Significance of Moran Index" = list(
+               tags$h4("P value of Moran index for each wave feature"),
+               tags$hr(),
+               plotOutput("B_plotBox04.04", width = "800px", height = "800px")
+             ),
+             "Comparsion among Groups" = list(
+               tags$h4("Comparsion among Groups"),
+               tags$hr(),
+               plotOutput("B_plotBox04.05", width = "800px", height = "1067px")
+             ),
+             "Histogram" = list(
+               tags$h4("Histogram"),
+               tags$hr(),
+               plotOutput("B_plotBox04.06", width = "1200px", height = "1300px")
+             )
+      )
+    }
   })
   #////////////////////////#
   #///end.04 Plot Output///#
   #////////////////////////#
   #========================#
   #
-  #||||||||||||||||||||||||||||||||||||#
-  #|||||| end.Batching Processing |||||#
-  #||||||||||||||||||||||||||||||||||||#
-  #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
+  #|||||||||||||||||||||||||||||||||#
+  #|||||| end.Batch Processing |||||#
+  #|||||||||||||||||||||||||||||||||#
+  #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
+  ####==== Batch ANOVA Processing ====####
+  values$Groups <- NULL                                 #How many groups in the dataset
+  shinyFileChoose(input, 'file', roots=volumes, session=session, restrictions=system.file(package='base'))
+  BDC <- reactive({
+    if (is.null(input$file))
+      return(NULL) 
+    else
+      FileNo <- length(c(parseFilePaths(volumes, input$file)$datapath))
+    data <- as.vector(parseFilePaths(volumes, input$file)$datapath)
+    ResBind<-c()
+    for(i in 1:FileNo) {
+      ResBind0<-read.csv(data[i], header=TRUE, sep = ",")
+      ResBind <- rbind(ResBind, ResBind0)
+    }
+    isolate(values$Wdir<-sub(pattern = parseFilePaths(volumes, input$file)$name[1], 
+                             replacement = "", 
+                             x = parseFilePaths(volumes, input$file)$datapath[1], fixed = TRUE))
+    return(ResBind)
+  })                                #BDC: Batch Data Combination
+  SRes <- eventReactive(input$AnB01, {
+    withBusyIndicatorServer("AnB01",{
+      if(is.null(input$file)) {
+        stop("Please input files first")
+      }
+      data <- BDC()
+      if(input$TI01 != "NA" && input$TI02 != "NA") {
+        data <- data[data[, input$TI01] == input$TI02, ]
+      }
+      KWtest <- c("Kruskal-Walls rank sum test")                                                                       #Kruskal-Walls rank sum test
+      DuTest <- c()                                                                                                    #Dunn's test of multiple comparisons
+      GSD <- describeBy(data[, input$NI01 : input$NI02], data[, input$TI03])                                           #GSD: General Statistical Describe
+      group.n <- length(GSD)                                                                                           #Amount of group in GSD
+      isolate(values$group.names<-names(GSD))
+      if(group.n <3 ) {
+        stop("At least three groups")
+      }
+      isolate(values$Groups<-group.n)                                                                                  #pass value to the indepented variable
+      GSDout <- data.frame()                                                                                           #GSDout: General Statistical Describe for Output
+      for(i in 1: group.n) {
+        GSDout <- rbind(GSDout, as.data.frame(t(as.data.frame(GSD[i]))), stringsAsFactors=FALSE)
+      }
+      GSDout <- cbind(rep(names(GSD), each = 13),                                                                      #Repeat each element 13 times
+                      GSDout, 
+                      stringsAsFactors=FALSE
+      )
+      colnames(GSDout) <- c("Comparisons", colnames(data[input$NI01:input$NI02]))
+      for(i in input$NI01 : input$NI02) {
+        KWtest0 <- kruskal.test(data[, i] ~ data[, input$TI03])                                                        #Kruskal-Walls rank sum test
+        KWtest0 <- as.numeric(KWtest0$p.value)
+        KWtest <- c(KWtest, KWtest0)
+        DuTest0 <- dunn.test(as.numeric(data[, i]), data[, input$TI03], kw = FALSE, method = "by", alpha = input$NI03) #Dunn's test of multiple comparisons
+        if (i == input$NI01) {
+          DuTest <- data.frame(DuTest0$comparisons, DuTest0$P.adjusted, stringsAsFactors=FALSE)
+        } else {
+          DuTest <- cbind(DuTest, DuTest0$P.adjusted, stringsAsFactors=FALSE)
+        }
+      }
+      SRes<-rbind(DuTest, KWtest, stringsAsFactors=FALSE)
+      colnames(SRes) <- c("Comparisons", colnames(data[input$NI01:input$NI02]))
+      SRes <- rbind(SRes, GSDout, stringsAsFactors=FALSE)
+      #Follow part is to output the pdf file for plot the results
+      Data <- data
+      RES <- SRes 
+      comparN <- factorial(values$Groups)/(2*factorial(values$Groups-2))                                               #How many combinations in Dunn's test
+      xmax<-xmax(values$Groups)
+      xmin<-xmin(values$Groups)
+      pos<-position(values$Groups)
+      end<-(input$NI02-input$NI01+2)
+      dfx<-as.character(values$group.names)
+      pdf(paste(values$Wdir, input$TI00, ".pdf", sep = ""))                                                            #PDF write start
+      for(i in 2:end){
+        gp<-NULL
+        seq<-c(input$NI01 : input$NI02)
+        GeomAnnoSet <- c()
+        for(j in 1:comparN){
+          pvalue<-as.numeric(round(as.numeric(RES[j,i]), 10))
+          anno0 <- if(pvalue >= 0.9999) {
+            "P>0.999"
+          } else if(pvalue> input$NI03/2) {
+            paste("P>", format(floor(as.numeric(RES[j, i])*1000)/1000, digits = 3), sep = "")
+          } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03))) && pvalue< as.numeric(input$NI03/2)) {
+            "*"
+          } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03)+1)) && pvalue< as.numeric(decimallength(decimalplaces(input$NI03)))) {
+            "**"
+          } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03)+2)) && pvalue< as.numeric(decimallength(decimalplaces(input$NI03)+1))) {
+            "***"
+          } else { "****" }
+          p<-as.numeric(seq[(i-1)])
+          anno <- geom_signif(annotations = c(anno0),
+                              y_position = as.numeric(max(Data[, p]))*pos[j], xmin = xmin[j]+0.1, xmax = xmax[j]-0.1, textsize = 5,
+                              tip_length = c(0,0)
+          )
+          GeomAnnoSet <- c(GeomAnnoSet, anno)
+        } #single items finished & annotation finished
+        q<-as.numeric(seq[(i-1)])
+        n<-i-1
+        #convert the original data for customize the boxplot
+        y0<-c()
+        y25<-c()
+        y50<-c()
+        y75<-c()
+        y100<-c()
+        ymean<-c()
+        for(i02 in 1:length(dfx)) {
+          temp<-Data[Data[, input$TI03] == dfx[i02], q]
+          y0<-c(y0, min(temp))
+          y25<-c(y25, quantile(temp, 0.25))
+          y50<-c(y50, median(temp))
+          y75<-c(y75, quantile(temp, 0.75))
+          y100<-c(y100, max(temp))
+          ymean<-c(ymean, mean(temp))
+        }
+        df1<-data.frame(
+          x=dfx,
+          y0=y0,
+          y25=y25,
+          y50=y50,
+          y75=y75,
+          y100=y100,
+          ymean=ymean
+        )
+        #convert the original data for customize the boxplot
+        gp <- ggplot(df1, aes(x = x, y = y100))+
+          geom_boxplot(position = position_dodge(1), aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100, colour = factor(x)),
+                       stat = "identity")+GeomAnnoSet+
+          labs(colour = colnames(Data)[q])+
+          theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+                axis.title.x=element_blank(), axis.title.y=element_blank(), axis.text=element_text(size=14), 
+                axis.title=element_text(size=14,face="bold")) + ylim(NA, max(Data[, q])*(max(pos)+0.05))
+        if(input$Violin01 == TRUE) {
+          gp<-gp+geom_violin(data = Data, aes(x=Data[, input$TI03], y= Data[, q], alpha = 0.3))+
+            geom_point(colour = "red", aes(y=ymean))+scale_alpha(guide = "none")
+        }
+        print(gp)
+      }                                                                                             #entire measurements finished $ Graph finished
+      dev.off()#PDF write end
+      file.copy(paste(values$Wdir, input$TI00, ".pdf", sep = ""), "www/temp.pdf", overwrite = TRUE)
+      #Multi-plot in loop end
+      return(SRes)
+    })#--- withBusyIndicatorServer End
+  })             #SRes: Statistical Results
+  IFO01 <- observe({
+    if(is.null(SRes()))
+      return(NULL)
+    else
+      return(NULL)
+  })                               #IFO: Interface Optimize
+  output$filepaths <- renderPrint({parseFilePaths(volumes, input$file)$datapath[1]})
+  output$output01 <- DT::renderDataTable(
+    if (is.null(input$file))
+      return(NULL) 
+    else
+      format(BDC(), digits = 3, scientific = FALSE),
+    caption = 'Combined dataset'
+  )
+  output$output02 <- DT::renderDataTable(
+    if (is.null(BDC()))
+      return(NULL)
+    else
+      SRes()
+  )
+  output$SRes<-downloadHandler(
+    filename = input$TI00,
+    content = function(file){
+      write.csv(SRes(), file = paste(values$Wdir, input$TI00, ".csv", sep = ""), row.names = TRUE)
+    }
+  )
+  output$pdf <- renderUI({
+    if(is.null(SRes())){
+      return(NULL)
+    } else {
+      tags$iframe(style="height:800px; width:800px; scrolling=yes", src="temp.pdf", sep = "")
+    }
+  })
+  #||||||||||||||||||||||||||||||||||||||#
+  #|||||| end.Batch ANOVA Processing|||||#
+  #||||||||||||||||||||||||||||||||||||||#
+  #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
   ###### Global Setting ######
   options(scipen = 5)
   session$onSessionEnded(stopApp)
