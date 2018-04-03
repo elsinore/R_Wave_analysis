@@ -1,298 +1,301 @@
-#################################
-# WZY	Basic Functions Collection#
-#################################
-#===============================#
-###################### Basic Functions for Data Manipulation
-#=== Convert Object of Class "dist" into Data Frame in R ####
-# User: A5C1D2H2I1M1N2O1R2T1 From:(https://stackoverflow.com/questions/23474729/convert-object-of-class-dist-into-data-frame-in-r)
-WZY.convertDist <- function(inDist) {
-  if (class(inDist) != "dist") stop("wrong input type")
-  A <- attr(inDist, "Size")
-  B <- if (is.null(attr(inDist, "Labels"))) sequence(A) else attr(inDist, "Labels")
-  if (isTRUE(attr(inDist, "Diag"))) attr(inDist, "Diag") <- FALSE
-  if (isTRUE(attr(inDist, "Upper"))) attr(inDist, "Upper") <- FALSE
-  data.frame(
-    row = B[unlist(lapply(sequence(A)[-1], function(x) x:A))],
-    col = rep(B[-length(B)], (length(B)-1):1),
-    value = as.vector(inDist))
-}
-####### Example: Input############################################
-#            CONT       INTG       DMNR       DILG
-# INTG 0.56659545                                 
-# DMNR 0.57684427 0.01769236                      
-# DILG 0.49380400 0.06424445 0.08157452           
-# CFMG 0.43154385 0.09295712 0.09332092 0.02060062
-####### Example: Output################################################
-#     row  col      value
-# 1  INTG CONT 0.56659545
-# 2  DMNR CONT 0.57684427
-# 3  DILG CONT 0.49380400
-# 4  CFMG CONT 0.43154385
-# 5  DMNR INTG 0.01769236
-# 6  DILG INTG 0.06424445
-# 7  CFMG INTG 0.09295712
-# 8  DILG DMNR 0.08157452
-# 9  CFMG DMNR 0.09332092
-# 10 CFMG DILG 0.02060062
-#=== Mathematical Representation of Widely used Wave Feature Extraction ####
-WZY.EMG.F <- function(wzy, Unit = 1) {
-  library("biwavelet")
-  require("biwavelet")
+#=== Widely Used Mathmatical Extraction of Interested wave signal ####
+WZY.Wumei <- function(Data,Unit = 1, MeCe = FALSE, ChangeColName = FALSE, 
+                      AddPrefix = FALSE, ProRep = TRUE, loc = NULL, Prefix = NULL,
+                      FirstCol.name = NULL, SecondCol.name = NULL, RestCol.name = NULL) { 
+  # MeCe: Mean Centering
+  # Reference.name: first simple name
+  #
+  if(ProRep == TRUE) {
+    on.exit(progress$close())
+    progress <- Progress$new(min = 0, max = 1)
+    progress$set(message = "Wave feature calculation")
+    Sys.sleep(1)
+  }
   #### Global Variabels ####
-  wzyo<-wzy
-  wzy<-wzy[,-1]
-  ncol <- ncol(wzy)
-  nrow <- nrow(wzy)
-  ncolo <- ncol(wzyo)
-  nrowo <- nrow(wzyo)
-  #### Easy calculation features ####
-  iemg <- colSums(abs(wzy)) # Integrated EMG (IEMG)
-  mav <- iemg/nrow # Mean Absolute Value (MAV)
-  var <- colSums(wzy^2)/(nrow-1) # Variance of EMG (VAR)
-  rms <- sqrt(colSums(wzy^2)/nrow) # Root Mean Square (RMS)
-  # Finished easy part
-  ###
-  #### calculate the maximum amplitude (MA) ####
-  main<-0
-  ma<-c()
-  for (main in 1:ncol){
-    ma<-c(ma, max(wzy[, main])-min(wzy[, main]))
-  }
-  # finished calculation of Maximum Amplitude (MA)
-  ###
-  #### calculate the Waveform Length (WL) ####
-  wl <- c(0)
-  absDiff <-0
-  y<-0
-  for(j in 1:ncol) {
-    y <- 0
-    for(i in 1:(nrow-1)) {
-      absDiff <- abs(wzy[i+1,j]-wzy[i,j])
-      y <- y + absDiff
+  Nrow <- nrow(Data)    # How many time points (sampling)
+  Ncol <- ncol(Data)    # How many column in original data
+  Data <- as.matrix(Data)
+  #---end---#
+  #
+  if (ChangeColName == TRUE && AddPrefix == TRUE) {
+    for (i in 1:Ncol) {
+      if (i == 1) {
+        colnames(Data)[i] <- FirstCol.name
+      } else if (i == 2) {
+        colnames(Data)[i] <- str_c("S", Prefix, SecondCol.name)
+      } else {
+        colnames(Data)[i] <- str_c("S", Prefix, RestCol.name, ".", i-2)
+      }
     }
-    wl[j]<-y
+  } else if (ChangeColName == TRUE && AddPrefix == FALSE) {
+    for (i in 1:Ncol) {
+      if (i == 1) {
+        colnames(Data)[i] <- FirstCol.name
+      } else if (i == 2) {
+        colnames(Data)[i] <- SecondCol.name
+      } else {
+        colnames(Data)[i] <- str_c(RestCol.name, " ", i-2)
+      }
+    }
+  } else if (ChangeColName == FALSE && AddPrefix == TRUE) {
+    for (i in 1:Ncol) {
+      if (i == 1) {
+        colnames(Data)[i] <- colnames(Data)[i]
+      } else if (i == 2) {
+        colnames(Data)[i] <- str_c("S", Prefix, colnames(Data)[i])
+      } else {
+        colnames(Data)[i] <- str_c("S", Prefix, colnames(Data)[i])
+      }
+    }
   }
-  # Finished calculation of Waveform Length (WL)
-  ###
-  #### calculate the Main Period (MP) ####
-  dw<-0
-  mp<-c()
-  for(dw in 2:ncolo){
-    x<-c()
-    y<-c()
-    s<-c()
-    max<-0
-    row<-0
-    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]), do.sig = FALSE)
-    y<-rowSums(abs(dwt$wave)^2)
-    x<-dwt$period
-    s<-cbind(x, y)
-    max<-max(y)
-    row<-which(s[, 2] == max)
-    out <- s[row, 1]
-    mp<-c(mp, out)
+  Co.Na <- colnames(Data)
+  #### Mean centering processing ####
+  if(ProRep == TRUE) {
+    progress$set(value = 0.02, message = "Mean centering processing")
+    Sys.sleep(1)
   }
-  mp<-as.vector(mp)
-  # Finished calculation of Main Period (MP)
-  ###
-  #### calculate the Mean Power Frequency (MPF) ####
-  timeStep <- wzyo[3, 1]-wzyo[2, 1]
-  sampleSize <- nrow
+  if (MeCe == TRUE) {
+    for (i in 2:Ncol) {
+      Data[, i] <- Data[, i]-mean(Data[, i])
+    }
+  }
+  #### simple features ####
+  if(ProRep == TRUE) {
+    progress$set(value = 0.04, message = "simple features")
+    Sys.sleep(1)
+  }
+  iemg <- as.vector(colSums(abs(Data[, -1])))        # Integrated Signal (Int)
+  mav <- as.vector(iemg/Nrow)                        # Mean Absolute Value (MAV)
+  var <- as.vector(colSums(Data[, -1]^2)/(Nrow-1))   # variance of signal (Var)
+  rms <- as.vector(sqrt(colSums(Data[, -1]^2)/Nrow)) # Root Mean Square (RMS)
+  #---end---#
+  #
+  #### Calculate the maximum amplitude (MA) ####
+  if(ProRep == TRUE) {
+    progress$set(value = 0.06, message = "Calculate the maximum amplitude (MA)")
+    Sys.sleep(1)
+  }
+  ma <- c()
+  for (i in 2:Ncol) {
+    ma <- c(ma, max(Data[, i]) - min(Data[, i]))
+  }
+  ma <- as.vector(ma)
+  #---end---#
+  #
+  #### Calculate the waveform Length (WL) ####
+  if(ProRep == TRUE) {
+    progress$set(value = 0.08, message = "Calculate the waveform Length (WL)")
+    Sys.sleep(1)
+  }
+  wl <- c()
+  absDiff <- 0 # Absolute difference between two points
+  for (j in 2:Ncol) {
+    y<-0       # final result
+    for (i in 1:(Nrow-1)) {
+      absDiff <- abs(Data[i+1, j]-Data[i, j])
+      y <- y+absDiff
+    }
+    wl <-c(wl, y)  # Results from all samples
+  }
+  wl <- as.vector(wl)
+  #---end---#
+  #
+  #### Mean centering processing for follow calculation ####
+  for (i in 2:Ncol) {
+    Data[, i] <- Data[, i]-mean(Data[, i])
+  }
+  #---end---#
+  #
+  #### Calculate the Mean Power Frequency (MPF) ---- using fast Fourier transform ####
+  # From: (http://www.di.fc.ul.pt/~jpn/r/fourier/fourier.html)
+  # Reset parameters
+  mpf <- c()
+  #---
+  timeStep <- Data[3, 1]-Data[2, 1]
+  sampleSize <- Nrow
   Fs <- sampleSize/(sampleSize*timeStep)
   N <- sampleSize
-  seq <- c(1:(N/2))
-  xv <-(seq/N)*Fs
+  seq <- c(1:(N/2)) # Frequency array
+  xv <- (seq/N)*Fs
   xv <- c(0, xv)
-  mpfin <- 0
-  mpf<-c()
-  for (mpfin in 1:ncol){
-    X.k <- fft(wzy[, mpfin])
-    mod <- Mod(X.k)
-    mod<-mod[1:((N/2)+1)]
+  for (i in 2:Ncol) {
+    x.k <- fft(Data[, i])
+    mod <- Mod(x.k)
+    mod <- mod[1:((N/2)+1)]
+    mod <- (mod^2)/N
     mpf <- c(mpf, sum(mod*xv)/sum(mod))
-  }
-  #= finished calculation of Mean Power Frequency
-  ###
-  ##### result construction ####
-  res<-data.frame(
-    row.names = colnames(wzy),
-    Int = iemg,
-    MAV = mav,
-    VAR = var,
-    RMS = rms,
-    WL = wl,
-    MP = mp,
-    MA = ma,
-    MPF = mpf * Unit
-  )
-  return(list(data=wzyo, results=res))
-}
-WZY.EMG.F.MPDF <- function(wzy, Unit = 1) {
-  library("biwavelet")
-  require("biwavelet")
-  #### Global Variabels ####
-  wzyo<-wzy
-  wzy<-wzy[,-1]
-  ncol <- ncol(wzy)
-  nrow <- nrow(wzy)
-  ncolo <- ncol(wzyo)
-  nrowo <- nrow(wzyo)
-  #### Easy calculation features ####
-  iemg <- colSums(abs(wzy)) # Integrated EMG (IEMG)
-  mav <- iemg/nrow # Mean Absolute Value (MAV)
-  var <- colSums(wzy^2)/(nrow-1) # Variance of EMG (VAR)
-  rms <- sqrt(colSums(wzy^2)/nrow) # Root Mean Square (RMS)
-  # Finished easy part
-  ###
-  #### calculate the maximum amplitude (MA) ####
-  main<-0
-  ma<-c()
-  for (main in 1:ncol){
-    ma<-c(ma, max(wzy[, main])-min(wzy[, main]))
-  }
-  # finished calculation of Maximum Amplitude (MA)
-  ###
-  #### calculate the Waveform Length (WL) ####
-  wl <- c(0)
-  absDiff <-0
-  y<-0
-  for(j in 1:ncol) {
-    y <- 0
-    for(i in 1:(nrow-1)) {
-      absDiff <- abs(wzy[i+1,j]-wzy[i,j])
-      y <- y + absDiff
+    if(ProRep == TRUE) {
+      progress$inc(amount = 0.32/(Ncol-1))
     }
-    wl[j]<-y
   }
-  # Finished calculation of Waveform Length (WL)
-  ###
-  #### calculate the Main Period (MP) ####
-  dw<-0
-  mp<-c()
-  for(dw in 2:ncolo){
-    x<-c()
-    y<-c()
-    s<-c()
-    max<-0
-    row<-0
-    dwt<-wt(cbind(wzyo[, 1], wzyo[, dw]), do.sig = FALSE)
-    y<-rowSums(abs(dwt$wave)^2)
-    x<-dwt$period
-    s<-cbind(x, y)
-    max<-max(y)
-    row<-which(s[, 2] == max)
+  #---end---#
+  #
+  #### Calculate the main period (MP) and J index (J_index) ---- by wavelet transform  ####
+  if(ProRep == TRUE) {
+    progress$set(value = 0.4, message = "Calculate the J index (J_index)")
+    Sys.sleep(1)
+  }
+  mp <- c()
+  indexJ <- c()
+  x <- c()
+  y <- c()
+  s <- c()
+  dwt <- wt(cbind(Data[ , 1], Data[ , 2]), mother = "morlet", do.sig = FALSE) # Diecrete Wavelet Transform
+  y <- rowSums(abs(dwt$wave)^2)
+  x <- dwt$scale
+  s <- cbind(x, y)
+  max <- max(y)
+  row <- which(s[, 2] == max)
+  out <- s[row, 1]
+  mp <- c(mp, out)
+  W <- dwt$wave
+  a <- dwt$scale
+  v <- 5/(2*pi*a)
+  v <- v*Unit
+  indexj<-c()
+  for (i in 1:sampleSize) {
+    Wpeaks <- findpeaks(abs(W[, i]))[, 1]
+    Wpeaks <- Wpeaks^2
+    vposition <- v[findpeaks((abs(W[, i])))[, 2]]
+    temp <- sum(Wpeaks*vposition)/2
+    indexj <- c(indexj, temp)
+    if(ProRep == TRUE) {
+      progress$inc(amount = 0.125/sampleSize)
+    }
+  }
+  temp <- mean(indexj)
+  indexJ<-c(indexJ, temp)
+  w.arr <- array(NA, dim = c(Ncol-2, NROW(dwt$wave), NCOL(dwt$wave)))
+  if(ProRep == TRUE) {
+    progress$set(value = 0.525, message = "Calculate the main period (MP)")
+    Sys.sleep(1)
+  }
+  for (i in 3:Ncol) {
+    # Reset all parameters
+    x <- c()
+    y <- c()
+    s <- c()
+    #---
+    dwt <- wt(cbind(Data[, 1], Data[, i]), mother = "morlet", do.sig = FALSE) # Diecrete Wavelet Transform
+    y <- rowSums(abs(dwt$wave)^2)
+    x <- dwt$scale
+    s <- cbind(x, y)
+    max <- max(y)
+    row <- which(s[, 2] == max)
     out <- s[row, 1]
-    mp<-c(mp, out)
+    mp <- c(mp, out)
+    w.arr[i-2, , ]<-dwt$wave                                                  # Array of wavelet results from all samples (except the first column, the reference sample)
+    W <- dwt$wave
+    indexj <- c()
+    for (j in 1:sampleSize) {
+      Wpeaks <- findpeaks(abs(W[, j]))[, 1]
+      Wpeaks <- Wpeaks^2
+      vposition <- v[findpeaks((abs(W[, j])))[, 2]]
+      temp <- sum(Wpeaks*vposition)/2
+      indexj <- c(indexj, temp)
+      if(ProRep == TRUE) {
+        progress$inc(amount = 0.0625/(sampleSize*(Ncol-3)))
+      }
+    }
+    temp <- mean(indexj)
+    indexJ<-c(indexJ, temp)
+    if(ProRep == TRUE) {
+      progress$inc(amount = 0.0625/(Ncol-3))
+    }
   }
   mp<-as.vector(mp)
-  # Finished calculation of Main Period (MP)
-  ###
-  #### calculate the Mean Power Frequency (MPF) ####
-  timeStep <- wzyo[3, 1]-wzyo[2, 1]
-  sampleSize <- nrow
-  Fs <- sampleSize/(sampleSize*timeStep)
-  N <- sampleSize
-  seq <- c(1:(N/2))
-  xv <-(seq/N)*Fs
-  xv <- c(0, xv)
-  mpfin <- 1
-  mpf<-c()
-  for (mpfin in 1:ncol){
-    X.k <- fft(wzy[, mpfin])
-    mod <- Mod(X.k)
-    mod <-mod[1:((N/2)+1)]
-    mpf <- c(mpf, sum(mod*xv)/sum(mod))
+  w.arr <- round(w.arr, digits = 8)                                           # Aovid un-convergence error
+  if(ProRep == TRUE) {
+    progress$set(value = 0.65, message = "Doing Wave cluster analysis")
   }
-  #### calculate the Mean Power Density Frequency (MPDF) ####
-  mpdfin <- 1
-  mpdf<-c()
-  for (mpdfin in 1:ncol){
-    X.kd <- fft(wzy[, mpdfin])
-    modd <- Mod(X.kd)
-    modd <-modd[1:((N/2)+1)]
-    modd <- (modd^2)/N 
-    mpdf <- c(mpdf, sum(modd*xv)/sum(modd))
-  }
-  #= finished calculation of Mean Power Frequency
-  ###
-  ##### result construction ####
-  res<-data.frame(
-    row.names = colnames(wzy),
-    Int = iemg,
-    MAV = mav,
-    VAR = var,
-    RMS = rms,
-    WL = wl,
-    MP = mp,
-    MA = ma,
-    MPF = mpf * Unit,
-    MPDF = mpdf * Unit
+  w.arr.dis <- wclust(w.arr, quiet = TRUE)                                    # Wavelet clust
+  w.arr.dis <- w.arr.dis$dist.mat                                             # Dissimilarity matrix
+  w.arr.dis <- as.matrix(w.arr.dis)                                           # Convert to matrix for name changing
+  row.names(w.arr.dis) <- Co.Na[-c(1,2)]
+  w.arr.dis <- as.dist(w.arr.dis)                                             # Convert back to dist type
+  #---end---#
+  #
+  #### Result construction for features extraction ####
+  res <- data.frame(
+    row.names = colnames(Data)[-c(1,2)],
+    Int = iemg[-1],
+    MAV = mav[-1],
+    VAR = var[-1],
+    RMS = rms[-1],
+    WL = wl[-1],
+    MP = mp[-1],
+    MA = ma[-1],
+    MPF = (mpf*Unit)[-1],
+    J_index = indexJ[-1]
   )
-  return(list(data=wzyo, results=res))
-}
-#=== Wavelet Analysis ####
-WZY.Wavelet.clust <- function(input){ # wave clust in a same sample
-  library("biwavelet")
-  library("stringr")
-  require("stringr")
-  require("biwavelet")
-  ncol<-NCOL(input)
-  wt.t1 <- wt(cbind(input[ , 1], input[ , 2]), do.sig = FALSE)
-  w.arr <- array(NA, dim = c(ncol-1, NROW(wt.t1$wave), NCOL(wt.t1$wave)))
-  for(i in 2:ncol) {
-    wt.t<-wt(cbind(input[ , 1], input[ , i]), do.sig = FALSE)
-    w.arr[i-1, , ] <- wt.t$wave
+  #---end---#
+  #
+  #### Calculate the Spatial Auto-correlection ####
+  if(ProRep == TRUE) {
+    progress$set(value = 0.85, message = "Calculate the Moran's Index")
+    Sys.sleep(1)
   }
-  w.arr <- round(w.arr, digits = 4)
-  w.arr.dis<-wclust(w.arr)
-  w.arr.dis<-w.arr.dis$dist.mat
-  w.arr.dis<-as.matrix(w.arr.dis)
-  label <- colnames(input[, 2:ncol])
-  label[1] <- str_c("====>", label[1])
-  colnames(w.arr.dis)<-label
-  row.names(w.arr.dis)<-label
-  w.arr.dis<-as.dist(w.arr.dis)
-  return(w.arr.dis)
-}
-WZY.Wavelet.clust2 <- function(input){ # wave clust in a same sample
-  library("biwavelet")
-  library("stringr")
-  require("stringr")
-  require("biwavelet")
-  ncol<-NCOL(input)
-  wt.t1 <- wt(cbind(input[ , 1], input[ , 2]), do.sig = FALSE)
-  w.arr <- array(NA, dim = c(ncol-1, NROW(wt.t1$wave), NCOL(wt.t1$wave)))
-  for(i in 2:ncol) {
-    wt.t<-wt(cbind(input[ , 1], input[ , i]), do.sig = FALSE)
-    w.arr[i-1, , ] <- wt.t$wave
+  if (is.null(loc) == FALSE) {
+    loc <- loc[-1, ]                                      # Remove the reference sample
+    Dist <- dist(cbind(loc[, 2], loc[, 3]))               # Spatial distance matrix
+    #--- Moran index ( from: https://stats.idre.ucla.edu/r/faq/how-can-i-calculate-morans-i-in-r/ )
+    ozone.dists.inv <- 1/as.matrix(Dist)                  # Take inverse values of the spatial distance matrix values
+    diag(ozone.dists.inv) <- 0                            # Replace the diagonal entries with zero
+    moran.I <- c()
+    moran.I.p <- c()
+    for (i in 1:ncol(res)) {
+      moran <- Moran.I(res[, i], ozone.dists.inv)
+      moran.I <-c(moran.I, moran$observed)
+      moran.I.p <- c(moran.I.p, moran$p.value)
+    }
+    moran.I <- as.numeric(moran.I)
+    moran.I.p <- as.numeric(moran.I.p)
+    #--- Spearman's Rho and Dissimilarity matrix
+    if(ProRep == TRUE) {
+      progress$set(value = 0.95, message = "Calculate the Spearman's Rho")
+      Sys.sleep(1)
+    }
+    SRD <- cor.test(w.arr.dis, Dist, method = "spearman") # Spearman's rank test for the correlation between Dissimilarity matrix and Spatial Distance matrix
+    SRD.Rho <- SRD$estimate                               # Spearman's Rho
+    SRD.p <- SRD$p.value                                  # P value of Spearman's Rho
+    #---end---#
+    #
+    #### Result construction for global level ####
+    res.r <- rbind("Region" = c(iemg[1], mav[1], var[1], rms[1], wl[1], mp[1], ma[1], (mpf*Unit)[1], indexJ[1]),
+                   "Moran Index" = moran.I, "p value of Moran Index" = moran.I.p) # results at global level
+    res.r <- as.data.frame(res.r)
+    colnames(res.r)<-colnames(res)
+    rownames(res.r)<- c(colnames(Data)[2], "Moran Index", "p value of Moran Index")
+    res.s <- data.frame("Spearman's Rho" = SRD.Rho, "p value of Spearman's Rho" = SRD.p)
+    #---end---#
+    #
+    #### Final result construction ####
+    out <- list(Result = res, 
+                G_Result = res.r, 
+                S_Result = res.s, 
+                matrix = w.arr.dis, 
+                Data = Data,
+                Data.L = loc) # G_Result, Global result; S_Result, Spearman's Rho Result
+  } else if(is.null(loc) == TRUE) {
+    res.r <- rbind("Region" = c(iemg[1], mav[1], var[1], rms[1], wl[1], mp[1], ma[1], (mpf*Unit)[1], indexJ[1]))
+    colnames(res.r) <- colnames(res)
+    rownames(res.r) <- colnames(Data)[2]
+    out <- list(Result = res, 
+                G_Result = res.r, 
+                S_Result = NULL, 
+                matrix = w.arr.dis, 
+                Data = Data,
+                Data.L = NULL) # G_Result, Global result; S_Result, Spearman's Rho Result
   }
-  w.arr <- round(w.arr, digits = 4)
-  w.arr.dis <- wclust(w.arr)
-  w.arr.dis <- w.arr.dis$dist.mat
-  w.arr.dis <- as.matrix(w.arr.dis)
-  label <- colnames(input[, 2:ncol])
-  colnames(w.arr.dis)<-label
-  row.names(w.arr.dis)<-label
-  w.arr.dis<-as.dist(w.arr.dis)
-  return(w.arr.dis)
+  if(ProRep == TRUE) {
+    progress$set(value = 1, message = "Complete")
+    Sys.sleep(1)
+  }
+  return(out)
 }
-#=== Frequency Spectrum ===####
+#=== Plot Frequency Spectrum ===####
 # From: (http://www.di.fc.ul.pt/~jpn/r/fourier/fourier.html)
-wzy.plot.frequency.spectrum <- function(X.k, sampleSize, timeStep, Unit, UnitLabel) {
-  X.k[1]<-0
-  Fs<-sampleSize/(sampleSize*timeStep)
-  N<-sampleSize
-  seq<-c(1:(N/2))
-  xv=(seq/N)*Fs
-  mod<-Mod(X.k)
-  mod<-mod[1:(N/2)]
-  plot.data  <- cbind(c(0, xv[1:((N/2)-1)])*Unit, mod)
-  plot.data[xv[2:(N/2)],2] <- 2*plot.data[xv[2:(N/2)],2] 
-  plot(plot.data, t="h", lwd=2, main="", 
-       xlab=paste("Frequency (", UnitLabel, ")", sep = ""), ylab="Power Spectrum",
-       ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectrum")
-}
-wzy.plot.frequency.spectrum.density <- function(X.k, sampleSize, timeStep, Unit, UnitLabel) {
+wzy.plot.MPF <- function(X.k, sampleSize, timeStep, Unit, UnitLabel) {
   X.k[1]<-0
   Fs <- sampleSize/(sampleSize*timeStep) 
   N <- sampleSize
@@ -306,155 +309,6 @@ wzy.plot.frequency.spectrum.density <- function(X.k, sampleSize, timeStep, Unit,
   plot(plot.data, t="h", lwd=2, main="", 
        xlab=paste("Frequency (", UnitLabel, ")", sep = ""), ylab="Power Spectral Density",
        ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectral Density")
-}
-mav <- function(x,n=5){filter(x,rep(1/n,n), sides=1)}
-#=== Function for Batching Processing ===####
-wzy.batch <- function (wzy, loc, Label1, Unit) {
-  library("biwavelet")
-  require("biwavelet")
-  if (class(wzy) != "matrix") {
-    data <- as.matrix(wzy)
-  }
-  dataO<-data
-  #### Global Variabels ####
-  ncol <- NCOL(wzy)
-  for(i in 2:ncol){
-    data[, i]<-data[, i]-mean(data[, i])
-  }
-  res<-WZY.EMG.F(data, Unit) # for Frequency domin
-  res<-res$results
-  resin<-WZY.EMG.F(dataO, Unit) # for Moran Index
-  resin<-resin$results
-  res$Int<-resin$Int
-  res$MAV<-resin$MAV
-  res$VAR<-resin$VAR
-  res$RMS<-resin$RMS
-  res$WL<-resin$WL
-  res$MA<-resin$MA
-  #### calculate the dissimilarity ####
-  J_index<-c()
-  for(j in 2:ncol){
-    wt.t1<-wt(cbind(data[,1], data[, j]), do.sig = FALSE)
-    sampling<-length(data[,1])
-    fft.t1<-fft(data[,ncol])
-    W<-wt.t1$wave
-    a<-wt.t1$scale
-    v<-5/(2*pi*a)
-    v<-v*Unit #unit factor for frequency
-    E<-rowSums(abs(W)^2)
-    indexj<-c()
-    for(i in 1:sampling) {
-      Wpeaks<-findpeaks(abs(W[,i]))[,1]
-      Wpeaks<-Wpeaks^2
-      vposition<-v[findpeaks(abs(W[,i]))[,2]]
-      temp<-sum(Wpeaks*vposition)/2
-      indexj<-c(indexj, temp)
-    }
-    temp<-mean(indexj)
-    J_index<-c(J_index, temp)
-  }
-  groups<-c(rep(0, length(rownames(res))))
-  index1<-grep(Label1, rownames(res), value = FALSE)
-  tempindexj<-J_index[c(index1)]
-  cluster<-dist(tempindexj)
-  fit <- hclust(cluster, method = "ward.D")
-  groups[c(index1)] <- cutree(fit, k = 2)
-  ratio <- as.numeric(length(groups[groups == 2])/(length(groups[groups == 1])+length(groups[groups == 2])))*100
-  ##### result construction ####
-  res<-cbind(res,
-    Index_J = J_index,
-    Group = groups
-  )
-  resin<-cbind(resin,
-    Index_J = J_index,
-    Group = groups
-  )
-  res.m<-resin[-1, ] #remove the data from region
-  loc<-loc[-1, ] #remove the data from region
-  ncol04 <- ncol(resin)
-  rownames04 <- colnames(resin)
-  ozone.dists<- as.matrix(dist(cbind(loc[, 2], loc[, 3])))
-  ozone.dists.inv <- 1/ozone.dists
-  diag(ozone.dists.inv) <- 0
-  P.value <- c()
-  Moran.I <- c()
-  for(resin04 in 1:ncol04){
-    moran <- Moran.I(res.m[, resin04], ozone.dists.inv)
-    Moran.I <- c(Moran.I, moran$observed)
-    P.value <- c(P.value, moran$p.value)
-  }
-  Moran.I <- as.numeric(Moran.I)
-  P.value <- as.numeric(P.value)
-  res<-rbind(res, "Moran Index" = Moran.I, "P value" = P.value)
-  res<-cbind(res, Ratio = ratio)
-  return(res)
-}
-wzy.batch2 <- function (wzy, loc, Label1, Unit) {
-  library("biwavelet")
-  require("biwavelet")
-  if (class(wzy) != "matrix") {
-    data <- as.matrix(wzy)
-  }
-  #### Global Variabels ####
-  ncol <- NCOL(wzy)
-  for(i in 2:ncol){
-    data[, i]<-data[, i]-mean(data[, i])
-  }
-  res<-WZY.EMG.F(data, Unit)
-  res<-res$results
-  #### calculate the index J ####
-  J_index<-c()
-  for(j in 2:ncol){
-    wt.t1<-wt(cbind(data[,1], data[, j]), mother = "morlet", do.sig = FALSE)
-    sampling<-length(data[,1])
-    fft.t1<-fft(data[,ncol])
-    W<-wt.t1$wave
-    a<-wt.t1$scale
-    v<-5/(2*pi*a)
-    v<-v*Unit #unit factor Hz mHz or MHz
-    E<-rowSums(abs(W)^2)
-    indexj<-c()
-    for(i in 1:sampling) {
-      Wpeaks<-findpeaks(abs(W[,i]))[,1]
-      Wpeaks<-Wpeaks^2
-      vposition<-v[findpeaks(abs(W[,i]))[,2]]
-      temp<-sum(Wpeaks*vposition)/2
-      indexj<-c(indexj, temp)
-    }
-    temp<-mean(indexj)
-    J_index<-c(J_index, temp)
-  }
-  groups<-c(rep(0, length(rownames(res))))
-  index1<-grep(Label1, rownames(res), value = FALSE)
-  tempindexj<-J_index[c(index1)]
-  cluster<-dist(tempindexj)
-  fit <- hclust(cluster, method = "ward.D")
-  groups[c(index1)] <- cutree(fit, k = 2)
-  ratio <- as.numeric(length(groups[groups == 2])/(length(groups[groups == 1])+length(groups[groups == 2])))*100
-  ##### result construction ####
-  res<-cbind(res,
-             J_index = J_index,
-             Group = groups
-  )
-  res.m<-res[-1, ] #remove the data from region
-  loc<-loc[-1, ] #remove the data from region
-  ncol04 <- ncol(res)
-  rownames04 <- colnames(res)
-  ozone.dists<- as.matrix(dist(cbind(loc[, 2], loc[, 3])))
-  ozone.dists.inv <- 1/ozone.dists
-  diag(ozone.dists.inv) <- 0
-  P.value <- c()
-  Moran.I <- c()
-  for(resin04 in 1:ncol04){
-    moran <- Moran.I(res.m[, resin04], ozone.dists.inv)
-    Moran.I <- c(Moran.I, moran$observed)
-    P.value <- c(P.value, moran$p.value)
-  }
-  Moran.I <- as.numeric(Moran.I)
-  P.value <- as.numeric(P.value)
-  res<-rbind(res, "Moran Index" = Moran.I, "P value" = P.value)
-  res<-cbind(res, Ratio = ratio)
-  return(res)
 }
 #=== UI Functions ####
 # All the code in this file needs to be copied to your Shiny app, and you need
@@ -530,94 +384,7 @@ withMathJax.local <- function(...) {
     tags$script(HTML('if (window.MathJax) MathJax.Hub.Queue(["Typeset", MathJax.Hub]);'))
   )
 }
-# other useful but unused this time
 wzy.force.format.colname <- function(x, colname) {
   colnames(x)<-colname
   return(x)
-}
-multiplot.wzy <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  require(grid)
-  
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-  
-  if (numPlots==1) {
-    print(plots[[1]])
-    
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
-decimalplaces <- function(x) {
-  if ((x %% 1) != 0) {
-    nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]])
-  } else {
-    return(0)
-  }
-}
-decimallength <- function(x) {
-  res <- paste("0.", str_dup("0", x-1), "1", sep = "")
-  return(res)
-}
-xmax<-function(x){
-  row<-c(1:(x-1))
-  col<-c(2:x)
-  cout<-rep(col, row)
-  return(cout)
-}
-xmin<-function(x){
-  cout<-c(1)
-  for(i in 3:x) {
-    cout <- c(cout, c(1:(i-1)))
-  }
-  return(cout)
-}
-position <- function(x) {
-  if(x == 3) {
-    cout <- c(1.05, 1.17, 1.05)
-    return(cout)
-  } else if(x == 4) {
-    cout <- c(1.17, 1.29, 1.17, 1.41, 1.05, 1.29)
-    return(cout)
-  } else {
-    OE <- x %% 2 #Odd or Even
-    RowNo<-sum(rep(c(2:((x+1) %/% 2)), each = 2)[1:(x-3)])+2
-  }
-}
-wzy.plot.frequency.spectrum.density.line <- function(X.k, sampleSize, timeStep) {
-  X.k[1]<-0
-  Fs <- sampleSize/(sampleSize*timeStep)
-  N <- sampleSize
-  seq <- c(1:(N/2))
-  xv=(seq/N)*Fs
-  mod <- Mod(X.k)
-  mod <- mod[1:(N/2)]
-  mod <- (mod^2)/N 
-  plot.data  <- cbind(c(0, xv[1:((N/2)-1)]), mod)
-  plot.data[xv[2:(N/2)],2] <- 2*plot.data[xv[2:(N/2)],2] 
-  plot(plot.data, t="l", lwd=2, main="", 
-       xlab="Frequency (Hz)", ylab="Power Spectral Density",
-       ylim=c(0,max(Mod(plot.data[,2]))))+title(main = "Power Spectral Density")
 }
