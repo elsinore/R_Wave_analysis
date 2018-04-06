@@ -535,7 +535,7 @@ ui <- navbarPage(
         #=== 03.End ===#
         #### Main panel parts ####
         mainPanel(
-          #### 01. Data Input ####
+            #### 01. Data Input ####
           tabsetPanel(
             id = 'dataset3',
             tabPanel("Data Input",
@@ -653,7 +653,7 @@ server <- function(input, output, session) {
                        choices = cb_options,
                        selected = cb_options[1])
   })                                         # monitor and update the ui input
-  ##### ++01.Data View #####
+  #### ++01.Data View #####
   S_res <- eventReactive(input$S_analyze, {
     withBusyIndicatorServer("S_analyze", {
       if (is.null(input$S_File.data)) {
@@ -857,7 +857,7 @@ server <- function(input, output, session) {
   #//////////////////////////#
   #==========================#
   #
-  ##### ++03.Graphic View #####
+  #### ++03.Graphic View #####
   S_waveletTransform <- reactive({
     if(is.null(S_res())) {
       return(NULL)
@@ -1411,13 +1411,21 @@ server <- function(input, output, session) {
   values$sampleSize <- NULL
   values$Cells <- NULL
   values$Region <- NULL
-  values$B_table01.01 <- NULL
-  values$B_table01.02 <- NULL
-  values$B_table01.03 <- NULL
-  values$B_table01.04 <- NULL
-  values$B_table01.05 <- NULL
-  values$B_table01.06 <- NULL
-  values$B_table02.01 <- NULL
+  values$B_table01.01 <- data.frame(Empty = "No available data")
+  values$B_table01.02 <- data.frame(Empty = "No available data")
+  values$B_table01.03 <- data.frame(Empty = "No available data")
+  values$B_table01.04 <- data.frame(Empty = "No available data")
+  values$B_table01.05 <- data.frame(Empty = "No available data")
+  values$B_table01.06 <- data.frame(Empty = "No available data")
+  values$B_table02.01 <- data.frame(Empty = "No available data")
+  values$B_table02.02 <- data.frame(Empty = "No available data")
+  values$B_table02.03 <- data.frame(Empty = "No available data")
+  values$B_table02.04 <- data.frame(Empty = "No available data")
+  values$B_table03.01 <- data.frame(Empty = "No available data")
+  values$B_table03.02 <- data.frame(Empty = "No available data")
+  values$B_table03.03 <- data.frame(Empty = "No available data")
+  values$B_table03.04 <- data.frame(Empty = "No available data")
+  values$B_table03.05 <- data.frame(Empty = "No available data")
   values$theme_ed <- theme(
     legend.position = "bottom",
     panel.background = element_rect(fill = NA),
@@ -1684,6 +1692,8 @@ server <- function(input, output, session) {
               paste(tmpdir,"/Table_5RawData_Cells.csv", sep = ""),
               paste(tmpdir,"/Table_5RawData_Global.csv", sep = ""))
       zip(zipfile=fname, files = fs, flags = "-j")
+      if(file.exists(paste0(fname, ".zip"))) 
+        {file.rename(paste0(fname, ".zip"), fname)}
     }
   )
   #///////////////////////#
@@ -1867,16 +1877,22 @@ server <- function(input, output, session) {
         # Statistic Results among groups
         values$B_table03.04<- values$B_table02.04[PMI, ]
         P.value <- c()
+        P.value.KW <- c()
         statistic <- c()
         out <- data.frame()
         summary <- NULL
         GroupName <- paste(values$B_table02.02$Label, values$B_table02.02$Group, sep = "")
         for (i in Inv.Col.CS) {
           test<-dunn.test(as.numeric(values$B_table02.02[, i]), GroupName, kw = FALSE, method = "bh")
+          test.KW <- kruskal.test(as.numeric(values$B_table02.02[, i]), factor(GroupName))
           if (i == 2) {
             P.value <- data.frame(test$comparisons, test$P.adjusted)
+            P.value.KW <- data.frame("Kruskal Wallis Test P-value", test.KW$p.value)
+            statistic <- data.frame("Kruskal Wallis Chi-squared", test.KW$statistic)
           } else {
             P.value <- cbind(P.value, test$P.adjusted)
+            P.value.KW <- cbind(P.value.KW, test.KW$p.value)
+            statistic <- cbind(statistic, test.KW$statistic)
           }
         }
         summary <- describeBy(values$B_table02.02[, Inv.Col.CS], GroupName)
@@ -1885,7 +1901,9 @@ server <- function(input, output, session) {
         }
         out <- cbind(Terms = rownames(out), out)
         colnames(P.value) <- colnames(out)
-        out <- rbind(out, P.value = P.value)
+        colnames(P.value.KW) <- colnames(out)
+        colnames(statistic) <- colnames(out)
+        out <- rbind(out, P.value = P.value, Kruskal.Wallis.Chi.squared = statistic, Kruskal.Wallis.Test = P.value.KW)
         values$B_table03.05 <- out
       }
     })
