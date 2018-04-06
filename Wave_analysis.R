@@ -329,7 +329,7 @@ ui <- navbarPage(
           h4("Data Input"),
           textInput("B_postfix", "File format", ".csv"),
           splitLayout(
-            shinyDirButton('B_directory', 'Folder select', 'Please select a folder'),
+            fileInput('B_directory', 'Submit your data in .zip', accept = ".zip"),
             checkboxInput("B_Mean.centering", "Mean-centering your data", TRUE)
           ),
           textInput("B_pat01", "Prefix mark", "TIF"),
@@ -344,7 +344,7 @@ ui <- navbarPage(
           ),
           tags$hr(),
           verticalLayout(
-            shinyDirButton('B_uploadAnaRes', 'Upload a analysis result', 'Please select a folder'),
+            fileInput('B_uploadAnaRes', 'Upload previous analysis result in .zip', accept = ".zip"),
             downloadButton('AnalysisResults.zip', 'Download the analysis result'),
             helpText(HTML('<p align="justify">Please download those files <b>immediately</b> after hitting the "<b>Analyze</b>" botton</p>'))
           )
@@ -492,7 +492,7 @@ ui <- navbarPage(
           conditionalPanel(
             'input.dataset3 === "Data Input"',
             h4("Data Input"),
-            shinyFilesButton('file', 'File select', 'Please select a file', TRUE),
+            fileInput('file', 'Please submit your files', multiple = TRUE),
             textInput("TI00", "Name for Output:", "temp"),
             splitLayout(
               textInput("TI01", "Data in cloumn named:", "Tag"), #TI: Text Input
@@ -550,7 +550,7 @@ ui <- navbarPage(
             #=== 02. End ===#
             #### 03. Plot Output ####
             tabPanel("Plot",
-                     htmlOutput("pdf", class = "custom-li-output")
+                     plotOutput("A_plot", width = "800px", height = "1207px")
             )
             #=== 03. End ===#
           ) #--- tabPanel End
@@ -1403,9 +1403,6 @@ server <- function(input, output, session) {
   #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
   ####==== Batch Processing ====####
   #
-  volumes <- c('Root'=file.path(getwd(), "/Data"))
-  shinyDirChoose(input, 'B_directory', roots=volumes, session = session)
-  shinyDirChoose(input, 'B_uploadAnaRes', roots=volumes, session = session)
   values<-reactiveValues()
   values$colnames<-NULL
   values$sampleSize <- NULL
@@ -1438,9 +1435,10 @@ server <- function(input, output, session) {
   B_res <- eventReactive(input$B_Ana, {
     withBusyIndicatorServer("B_Ana", {
       if(is.null(values$B_table01.01)) {
-        stop("Please select a directory")
         return(NULL)
       } else {
+        setwd(tempdir())
+        unzip(input$B_directory$datapath, overwrite = TRUE)
         progress <- Progress$new(min = 0, max = 1)
         progress$set(message = "Batching Processing Ready")
         if(input$B_Unit == "kHz") {
@@ -1450,12 +1448,11 @@ server <- function(input, output, session) {
         } else if (input$B_Unit == "mHz") {
           Unit <- 10^3
         }
-        fl <- values$B_table01.01
-        Dir <- parseDirPath(volumes, input$B_directory)
+        fl <- values$B_table01.01[, 2]
+        Dir <- tempdir()
         pat01 <- input$B_pat01
         pat02 <- input$B_pat02
         pat03 <- input$B_pat03
-        fl <- fl[unlist(grep(pattern = pat01, fl))]
         prefix_position <- unlist(gregexpr(pattern = pat01, fl))   # gregexpr(), search for matches to argument pattern within each element of a character vector
         prefix <- substr(fl, start = 1, stop = prefix_position-1)  # Extract substrings in a character vector.
         size <- length(unique(prefix))
@@ -1563,8 +1560,7 @@ server <- function(input, output, session) {
     }) # _withBusyIndicatorServer()_
   })             # B_res, main results for batching processing
   observeEvent(input$B_directory, {
-    B_table01.01 <- list.files(path = parseDirPath(volumes, input$B_directory),
-                               all.files = FALSE)
+    B_table01.01 <- unzip(input$B_directory$datapath, list = TRUE)[, 1]
     B_table01.01 <- grep(pattern = input$B_postfix, B_table01.01, value = TRUE)
     B_table01.01 <- sort(B_table01.01)
     No.<-c(1:length(B_table01.01))
@@ -1572,7 +1568,10 @@ server <- function(input, output, session) {
     values$B_table01.01<-B_table01.01
   })
   observeEvent(input$B_uploadAnaRes, {
-    B_table01.01<-read.csv(paste(parseDirPath(volumes, input$B_uploadAnaRes), 
+    tmpdir <- tempdir()
+    setwd(tempdir())
+    unzip(input$B_uploadAnaRes$datapath, overwrite = TRUE)
+    B_table01.01<-read.csv(paste(tmpdir, 
                                  "/Table_1FileList.csv", sep = ""), 
                            header=TRUE, sep=",")
     values$B_table01.01<-B_table01.01
@@ -1593,22 +1592,25 @@ server <- function(input, output, session) {
       B_table01.03 <- cbind(SampleID = rownames(B_table01.03), B_table01.03)
       B_table01.04 <- cbind(SampleID = rownames(B_table01.04), B_table01.04)
     } else if(! is.null(input$B_uploadAnaRes)){
-      B_table01.02 <- read.csv(paste(parseDirPath(volumes, input$B_uploadAnaRes), 
+      tmpdir <- tempdir()
+      setwd(tempdir())
+      unzip(input$B_uploadAnaRes$datapath, overwrite = TRUE)
+      B_table01.02 <- read.csv(paste(tmpdir, 
                                    "/Table_2Results.csv", sep = ""), 
                              header=TRUE, sep=",")
       rownames(B_table01.02) <- as.character(B_table01.02$SampleID)
-      B_table01.03 <- read.csv(paste(parseDirPath(volumes, input$B_uploadAnaRes), 
+      B_table01.03 <- read.csv(paste(tmpdir, 
                                    "/Table_3GResult.csv", sep = ""), 
                              header=TRUE, sep=",")
       rownames(B_table01.03) <- as.character(B_table01.03$SampleID)
-      B_table01.04 <- read.csv(paste(parseDirPath(volumes, input$B_uploadAnaRes), 
+      B_table01.04 <- read.csv(paste(tmpdir, 
                                    "/Table_4Spatial.csv", sep = ""), 
                              header=TRUE, sep=",")
       rownames(B_table01.04) <- as.character(B_table01.04$SampleID)
-      B_table01.05 <- read.csv(paste(parseDirPath(volumes, input$B_uploadAnaRes), 
+      B_table01.05 <- read.csv(paste(tmpdir, 
                                    "/Table_5RawData.csv", sep = ""), 
                              header=TRUE, sep=",")
-      B_table01.06 <- read.csv(paste(parseDirPath(volumes, input$B_uploadAnaRes), 
+      B_table01.06 <- read.csv(paste(tmpdir, 
                                    "/Table_6IDs.csv", sep = ""), 
                              header=TRUE, sep=",")
     }
@@ -2566,21 +2568,20 @@ server <- function(input, output, session) {
   #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
   ####==== Batch ANOVA Processing ====####
   values$Groups <- NULL                                 #How many groups in the dataset
-  shinyFileChoose(input, 'file', roots=volumes, session=session, restrictions=system.file(package='base'))
   BDC <- reactive({
     if (is.null(input$file))
       return(NULL) 
     else
-      FileNo <- length(c(parseFilePaths(volumes, input$file)$datapath))
-    data <- as.vector(parseFilePaths(volumes, input$file)$datapath)
+      FileNo <- length(c(input$file$datapath))
+    data <- as.vector(input$file$datapath)
     ResBind<-c()
     for(i in 1:FileNo) {
       ResBind0<-read.csv(data[i], header=TRUE, sep = ",")
       ResBind <- rbind(ResBind, ResBind0)
     }
-    isolate(values$Wdir<-sub(pattern = parseFilePaths(volumes, input$file)$name[1], 
+    isolate(values$Wdir<-sub(pattern = input$file$name[1], 
                              replacement = "", 
-                             x = parseFilePaths(volumes, input$file)$datapath[1], fixed = TRUE))
+                             x = input$file$datapath[1], fixed = TRUE))
     return(ResBind)
   })                                #BDC: Batch Data Combination
   SRes <- eventReactive(input$AnB01, {
@@ -2624,94 +2625,99 @@ server <- function(input, output, session) {
       SRes<-rbind(DuTest, KWtest, stringsAsFactors=FALSE)
       colnames(SRes) <- c("Comparisons", colnames(data[input$NI01:input$NI02]))
       SRes <- rbind(SRes, GSDout, stringsAsFactors=FALSE)
-      #Follow part is to output the pdf file for plot the results
-      Data <- data
-      RES <- SRes 
-      comparN <- factorial(values$Groups)/(2*factorial(values$Groups-2))                                               #How many combinations in Dunn's test
-      xmax<-xmax(values$Groups)
-      xmin<-xmin(values$Groups)
-      pos<-position(values$Groups)
-      end<-(input$NI02-input$NI01+2)
-      dfx<-as.character(values$group.names)
-      pdf(paste(values$Wdir, input$TI00, ".pdf", sep = ""))                                                            #PDF write start
-      for(i in 2:end){
-        gp<-NULL
-        seq<-c(input$NI01 : input$NI02)
-        GeomAnnoSet <- c()
-        for(j in 1:comparN){
-          pvalue<-as.numeric(round(as.numeric(RES[j,i]), 10))
-          anno0 <- if(pvalue >= 0.9999) {
-            "P>0.999"
-          } else if(pvalue> input$NI03/2) {
-            paste("P>", format(floor(as.numeric(RES[j, i])*1000)/1000, digits = 3), sep = "")
-          } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03))) && pvalue< as.numeric(input$NI03/2)) {
-            "*"
-          } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03)+1)) && pvalue< as.numeric(decimallength(decimalplaces(input$NI03)))) {
-            "**"
-          } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03)+2)) && pvalue< as.numeric(decimallength(decimalplaces(input$NI03)+1))) {
-            "***"
-          } else { "****" }
-          p<-as.numeric(seq[(i-1)])
-          anno <- geom_signif(annotations = c(anno0),
-                              y_position = as.numeric(max(Data[, p]))*pos[j], xmin = xmin[j]+0.1, xmax = xmax[j]-0.1, textsize = 5,
-                              tip_length = c(0,0)
-          )
-          GeomAnnoSet <- c(GeomAnnoSet, anno)
-        } #single items finished & annotation finished
-        q<-as.numeric(seq[(i-1)])
-        n<-i-1
-        #convert the original data for customize the boxplot
-        y0<-c()
-        y25<-c()
-        y50<-c()
-        y75<-c()
-        y100<-c()
-        ymean<-c()
-        for(i02 in 1:length(dfx)) {
-          temp<-Data[Data[, input$TI03] == dfx[i02], q]
-          y0<-c(y0, min(temp))
-          y25<-c(y25, quantile(temp, 0.25))
-          y50<-c(y50, median(temp))
-          y75<-c(y75, quantile(temp, 0.75))
-          y100<-c(y100, max(temp))
-          ymean<-c(ymean, mean(temp))
-        }
-        df1<-data.frame(
-          x=dfx,
-          y0=y0,
-          y25=y25,
-          y50=y50,
-          y75=y75,
-          y100=y100,
-          ymean=ymean
-        )
-        #convert the original data for customize the boxplot
-        gp <- ggplot(df1, aes(x = x, y = y100))+
-          geom_boxplot(position = position_dodge(1), aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100, colour = factor(x)),
-                       stat = "identity")+GeomAnnoSet+
-          labs(colour = colnames(Data)[q])+
-          theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
-                axis.title.x=element_blank(), axis.title.y=element_blank(), axis.text=element_text(size=14), 
-                axis.title=element_text(size=14,face="bold")) + ylim(NA, max(Data[, q])*(max(pos)+0.05))
-        if(input$Violin01 == TRUE) {
-          gp<-gp+geom_violin(data = Data, aes(x=Data[, input$TI03], y= Data[, q], alpha = 0.3))+
-            geom_point(colour = "red", aes(y=ymean))+scale_alpha(guide = "none")
-        }
-        print(gp)
-      }                                                                                             #entire measurements finished $ Graph finished
-      dev.off()#PDF write end
-      file.copy(paste(values$Wdir, input$TI00, ".pdf", sep = ""), "www/temp.pdf", overwrite = TRUE)
-      #Multi-plot in loop end
+
       return(SRes)
     })#--- withBusyIndicatorServer End
   })             #SRes: Statistical Results
+  A_plot <- reactive({
+    #Follow part is to output the pdf file for plot the results
+    Data <- BDC()
+    RES <- SRes() 
+    comparN <- factorial(values$Groups)/(2*factorial(values$Groups-2))                                               #How many combinations in Dunn's test
+    xmax<-xmax(values$Groups)
+    xmin<-xmin(values$Groups)
+    pos<-position(values$Groups)
+    end<-(input$NI02-input$NI01+2)
+    dfx<-as.character(values$group.names)
+    layout <- matrix(seq(1,9), 3, 3)
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow = 3, ncol = 3)))                                                           
+    for(i in 2:end){
+      matchidx<-as.data.frame(which(layout == i-1, arr.ind = TRUE))
+      gp<-NULL
+      seq<-c(input$NI01 : input$NI02)
+      GeomAnnoSet <- c()
+      for(j in 1:comparN){
+        pvalue<-as.numeric(round(as.numeric(RES[j,i]), 10))
+        anno0 <- if(pvalue >= 0.9999) {
+          "P>0.999"
+        } else if(pvalue> input$NI03/2) {
+          paste("P>", format(floor(as.numeric(RES[j, i])*1000)/1000, digits = 3), sep = "")
+        } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03))) && pvalue< as.numeric(input$NI03/2)) {
+          "*"
+        } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03)+1)) && pvalue< as.numeric(decimallength(decimalplaces(input$NI03)))) {
+          "**"
+        } else if(pvalue>as.numeric(decimallength(decimalplaces(input$NI03)+2)) && pvalue< as.numeric(decimallength(decimalplaces(input$NI03)+1))) {
+          "***"
+        } else { "****" }
+        p<-as.numeric(seq[(i-1)])
+        anno <- geom_signif(annotations = c(anno0),
+                            y_position = as.numeric(max(Data[, p]))*pos[j], xmin = xmin[j]+0.1, xmax = xmax[j]-0.1, textsize = 5,
+                            tip_length = c(0,0)
+        )
+        GeomAnnoSet <- c(GeomAnnoSet, anno)
+      } #single items finished & annotation finished
+      q<-as.numeric(seq[(i-1)])
+      n<-i-1
+      #convert the original data for customize the boxplot
+      y0<-c()
+      y25<-c()
+      y50<-c()
+      y75<-c()
+      y100<-c()
+      ymean<-c()
+      for(i02 in 1:length(dfx)) {
+        temp<-Data[Data[, input$TI03] == dfx[i02], q]
+        y0<-c(y0, min(temp))
+        y25<-c(y25, quantile(temp, 0.25))
+        y50<-c(y50, median(temp))
+        y75<-c(y75, quantile(temp, 0.75))
+        y100<-c(y100, max(temp))
+        ymean<-c(ymean, mean(temp))
+      }
+      df1<-data.frame(
+        x=dfx,
+        y0=y0,
+        y25=y25,
+        y50=y50,
+        y75=y75,
+        y100=y100,
+        ymean=ymean
+      )
+      #convert the original data for customize the boxplot
+      gp <- ggplot(df1, aes(x = x, y = y100))+
+        geom_boxplot(position = position_dodge(1), aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100, colour = factor(x)),
+                     stat = "identity")+GeomAnnoSet+
+        labs(colour = colnames(Data)[q], title = colnames(RES)[i])+
+        theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+              axis.title.x=element_blank(), axis.title.y=element_blank(), axis.text=element_text(size=14), 
+              axis.title=element_text(size=14,face="bold")) + ylim(NA, max(Data[, q])*(max(pos)+0.05)) + 
+        values$theme_ed
+      if(input$Violin01 == TRUE) {
+        gp<-gp+geom_violin(data = Data, aes(x=Data[, input$TI03], y= Data[, q], alpha = 0.3))+
+          geom_point(colour = "red", aes(y=ymean))+scale_alpha(guide = "none")
+      }
+      print(gp, vp = viewport(layout.pos.row = matchidx$row,layout.pos.col = matchidx$col))
+    }                                                                                             #entire measurements finished $ Graph finished
+    #Multi-plot in loop end
+  })
   IFO01 <- observe({
     if(is.null(SRes()))
       return(NULL)
     else
       return(NULL)
   })                               #IFO: Interface Optimize
-  output$filepaths <- renderPrint({parseFilePaths(volumes, input$file)$datapath[1]})
+  output$filepaths <- renderPrint({input$file$datapath})
   output$output01 <- DT::renderDataTable(
     if (is.null(input$file))
       return(NULL) 
@@ -2731,13 +2737,7 @@ server <- function(input, output, session) {
       write.csv(SRes(), file = paste(values$Wdir, input$TI00, ".csv", sep = ""), row.names = TRUE)
     }
   )
-  output$pdf <- renderUI({
-    if(is.null(SRes())){
-      return(NULL)
-    } else {
-      tags$iframe(style="height:800px; width:800px; scrolling=yes", src="temp.pdf", sep = "")
-    }
-  })
+  output$A_plot <- renderPlot({A_plot()})
   #||||||||||||||||||||||||||||||||||||||#
   #|||||| end.Batch ANOVA Processing|||||#
   #||||||||||||||||||||||||||||||||||||||#
