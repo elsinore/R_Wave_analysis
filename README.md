@@ -16,6 +16,7 @@
 To get the pesudocolored video directly, please intall the ImageMagick first (http://www.imagemagick.org/script/download.php#windows).
 #### For Mac users
 To get the pesudocolored video directly, please intall the FFmpeg first (http://ffmpeg.org/download.html).
+Here is a guide video to show how to install FFmpeg in Mac OS (https://www.youtube.com/watch?v=qu7tvO-Pmko).
 ## To run this App
 Drop the Wave_analysis.R to your RStudio, then click the button "Run App" on the up right corner.
 
