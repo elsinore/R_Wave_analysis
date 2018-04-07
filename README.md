@@ -11,8 +11,11 @@
 	5. Select Path variable and click Edit button
 	6. If there is nothing as a "Variable Value" you can simply write C:\Rtools\bin. If there is already a value, then add ;C:\Rtools\bin to the end of it.
 	7). Click OK, OK...Restart R
-### Install ImageMagick to make the pesudocolored video
-To get the pesudocolored video directly, please intall the ImageMagick first(http://www.imagemagick.org/script/download.php#windows)
+### Install FFmpeg to make the pesudocolored video
+#### For Windows users
+To get the pesudocolored video directly, please intall the ImageMagick first (http://www.imagemagick.org/script/download.php#windows).
+#### For Mac users
+To get the pesudocolored video directly, please intall the FFmpeg first (http://ffmpeg.org/download.html).
 ## To run this App
 Drop the Wave_analysis.R to your RStudio, then click the button "Run App" on the up right corner.
 
