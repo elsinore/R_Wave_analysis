@@ -1706,10 +1706,7 @@ server <- function(input, output, session) {
   #### ++02.Statistical Analysis ####
   observeEvent(input$B_Sta, {
     withBusyIndicatorServer("B_Sta", {
-      if(is.null(values$B_table01.01) | is.null(values$B_table01.02) |
-         is.null(values$B_table01.03) | is.null(values$B_table01.04) | 
-         is.null(values$B_table01.05) | is.null(values$B_table01.06) |
-         is.na(values$B_table02.01$Group)) {
+      if(is.null(values$B_table01.01) | anyNA(values$B_table02.01$Group)) {
         return(NULL)
       } else {
         # Cluster analysis based on Index J
@@ -2517,10 +2514,7 @@ server <- function(input, output, session) {
     )
   })
   output$B_ui01 <- renderUI({
-    if(is.null(values$B_table01.01) | is.null(values$B_table01.02) |
-       is.null(values$B_table01.03) | is.null(values$B_table01.04) | 
-       is.null(values$B_table01.05) | is.null(values$B_table01.06) |
-       is.na(values$B_table02.01$Group)) {
+    if(is.null(values$B_table02.02) | anyNA(values$B_table02.01$Group)) {
       return(NULL)
     } else {
       switch(input$B_level,
