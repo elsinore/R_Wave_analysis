@@ -566,7 +566,8 @@ ui <- navbarPage(
   tabPanel(
     "About",
     fluidPage(
-      useShinyjs()
+      useShinyjs(),
+      htmlTemplate("www/index.html")
     ) #_fluidPage()_
   ) #_tabPanel()_
   #|||||||||||||||||||||#
