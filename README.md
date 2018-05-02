@@ -21,7 +21,7 @@ Here is a guide video to show how to install FFmpeg in Mac OS (https://www.youtu
 	7). Click OK, OK...Restart R
 
 ## To run this App
-Drop the Wave_analysis.R to your RStudio, then click the button "Run App" on the up right corner.
+Drop the Wave_analysis.R to your [RStudio](https://www.rstudio.com/products/rstudio/download/#download), then click the button "Run App" on the up right corner.
 
 ## Acknowledgement
 MathJax file was copy form https://github.com/mathjax/MathJax, which as the local file to show the math equation.
