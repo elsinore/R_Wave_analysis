@@ -1,11 +1,12 @@
-# Wave analysis
+# [Click here to run this app online!!!](https://wong-ziyi.shinyapps.io/wave_analysis/)
 
+# Follow steps below to run this app locally
 ##### Install FFmpeg to make the pesudocolored video
 ###### For Windows users
-To get the pesudocolored video directly, please intall the ImageMagick first (http://www.imagemagick.org/script/download.php#windows).
+To get the pesudocolored video directly, please intall the [ImageMagick](http://www.imagemagick.org/script/download.php#windows) first.
 ###### For Mac users
-To get the pesudocolored video directly, please intall the FFmpeg first (http://ffmpeg.org/download.html).
-Here is a guide video to show how to install FFmpeg in Mac OS (https://www.youtube.com/watch?v=qu7tvO-Pmko).
+To get the pesudocolored video directly, please intall the [FFmpeg](http://ffmpeg.org/download.html) first.
+[Here](https://www.youtube.com/watch?v=qu7tvO-Pmko) is a guide video to show how to install FFmpeg in Mac OS.
 
 ##### For windows users, please complete the followed steps first:
 ###### Install Rtools for download .zip file
