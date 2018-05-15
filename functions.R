@@ -130,9 +130,9 @@ WZY.Wumei <- function(Data,Unit = 1, MeCe = FALSE, ChangeColName = FALSE,
   }
   #---end---#
   #
-  #### Calculate the main period (MP) and J index (J_index) ---- by wavelet transform  ####
+  #### Calculate the main period (MP) and time average J index (TAJ) ---- by wavelet transform  ####
   if(ProRep == TRUE) {
-    progress$set(value = 0.4, message = "Calculate the J index (J_index)")
+    progress$set(value = 0.4, message = "Calculate the time average J index (TAJ)")
     Sys.sleep(1)
   }
   mp <- c()
@@ -141,7 +141,7 @@ WZY.Wumei <- function(Data,Unit = 1, MeCe = FALSE, ChangeColName = FALSE,
   y <- c()
   s <- c()
   dwt <- wt(cbind(Data[ , 1], Data[ , 2]), mother = "morlet", do.sig = FALSE) # Diecrete Wavelet Transform
-  y <- rowSums(abs(dwt$wave)^2)
+  y <- rowMeans(abs(dwt$wave)^2)
   x <- dwt$scale
   s <- cbind(x, y)
   max <- max(y)
@@ -226,7 +226,7 @@ WZY.Wumei <- function(Data,Unit = 1, MeCe = FALSE, ChangeColName = FALSE,
     MP = mp[-1],
     MA = ma[-1],
     MPF = (mpf*Unit)[-1],
-    J_index = indexJ[-1]
+    TAJ = indexJ[-1]
   )
   #---end---#
   #
@@ -444,6 +444,30 @@ errorFunc <- function(err, buttonId) {
   errMessage <- gsub("^ddpcr: (.*)", "\\1", err$message)
   shinyjs::html(html = errMessage, selector = errElMsg)
   shinyjs::show(selector = errEl, anim = TRUE, animType = "fade")
+}
+popover <- function(
+  title, 
+  content, 
+  header = NULL, 
+  html = TRUE,
+  class = "btn-link",                    
+  placement = c('right', 'top', 'left', 'bottom'),
+  trigger = c('click', 'hover', 'focus', 'manual')) {
+  
+  tagList(
+    singleton(
+      tags$head(
+        tags$script("$(function() { $(\"[data-toggle='popover']\").popover(); })")
+      )
+    ),
+    tags$a(
+      tabindex = "0", href = NULL, role = "button", class = class, `data-toggle` = "popover",
+      title = header, `data-content` = content, `data-animation` = TRUE, 'data-html' = html,
+      `data-placement` = match.arg(placement, several.ok=TRUE)[1],
+      `data-trigger` = match.arg(trigger, several.ok=TRUE)[1],
+      title
+    )
+  )
 }
 # use withMathJax locally 
 withMathJax.local <- function(...) {

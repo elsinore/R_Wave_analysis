@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {{ headContent() }}
+  <script src="./MathJaxConfig.js" type="text/javascript"></script>
+  <style>
+  .formula {
+    min-height: 35px;
+  }
+  .note{
+      margin-top: 5px;
+      padding-left: 25px;
+      font-size: 90%;
+      color: gray;
+      text-align: justify;
+    }
+  ul {
+      padding: 0 0 0 2px;
+    }
+  b {
+      font-style: italic;
+      font-family: "Times New Roman";
+    }
+  code {
+    background-color: silver;
+    color: black;
+  }
+  </style>
+</head>
+<body>
+	<!-- start -->
+  <h3> <b>Details of each feature:</b> </h3>
+  <p style="text-align: justify;">Suppose a signal with a \(N\) length result sequence against a \(N\) length arithmetic progression time sequence with positive difference. Here the time sequence was denoted by \(\{t_n\}:=t_0, t_1, ..., t_{N-1}\). Then the result sequence can be denoted by \(f(t_n)\), and \(f(t_n)\) is one to one.</p>
+  <p>01. Integrated <b>(Int)</b>:</p>
+  <div class="formula">
+    $$Int = \frac{1}{N} \sum_{n=0}^{N-1} |f(t_n)| \tag{1}$$
+  </div>
+  <p>02. Mean Absolute Value <b>(MAV)</b>:</p>
+  <div class="formula">
+    $$MAV = \frac{1}{N} \sum_{n=0}^{N-1} |f(t_n)| \tag{2}$$
+  </div>
+  <p>03. Variance <b>(VAR)</b>:</p>
+  <div class="formula">
+    $$VAR = \frac{1}{N-1} \sum_{n=0}^{N-1} (f(t_n))^2 \tag{3}$$
+  </div>
+  <p>04. Root Mean Square <b>(RMS)</b>:</p>
+  <div class="formula">
+    $$RMS = \sqrt{\frac{1}{N} \sum_{n=0}^{N-1} (f(t_n))^2} \tag{4}$$
+  </div>
+  <p>05. Waveform Length (<b>WL</b>):</p>
+  <div class="formula">
+    $$WL = \sum_{n=0}^{N-1} \vert f(t_{n+1}) - f(t_n) \vert \tag{5}$$
+  </div>
+  <p>06. Main Period <b>(MP)</b> was obtained by the <b>Maximal Wavelet Variance</b>:</p>
+  <p class="note">Here we have chosen the Morlet function as mother wavelet:</p>
+  <div class="formula">
+    $$\psi(t) = \tfrac{c_s}{\pi^{1/4}}e^{-\frac{1}{2}t^2}(e^{ist}-k_s) \tag{6}$$
+  </div>
+  <p class="note">where <span class="formula">\(k_s = e^{-\tfrac{1}{2}s^2}\)</span>  and <span class="formula">\(c_s=(1+e^{-s^2}-2e^{-\tfrac{3}{4}s^2})^{-1/2}\) </span> is the normalization constant. Usually the parameter \(s\) is taken to be equal or larger than 5, so that \(k_s\simeq 0\) and \(c_s\simeq 1\): <i>Eq.(5)</i> becomes</p>
+  <div class="formula">
+    $$\psi (t) \simeq \tfrac{1}{\pi ^{1/4}}e^{\tfrac{2ist-t^2}{2}} \tag{7}$$
+  </div>
+  <p class="note">The wavelets transform is</p>
+  <div class="formula" style="min-height:75px">
+    $$\begin{eqnarray}
+    & & W(a,b) = \frac{1}{|a|^{1/2}} \sum_{n=0}^{N-1} f(t_n) \psi (\tfrac{t-b}{a}) \tag{8} \\[3pt]
+    & & \hspace{ 35pt } = \tfrac{1}{(\pi a^2)^1/4}\sum_{n=0}^{N-1}f(t_n)e^{- \tfrac{(t-b)^2+2ais(t-b)}{2a^2}}\\
+    \end{eqnarray}$$
+  </div>
+  <p class="note">where \(a\) is a scaling parameter which measures the degree of compression or scale of the Morlet wavelet, \(b\) a translation parameter which determines the time location of the Morlet wavelet, and we have used \(s=5\). Then the wavelet variance function:</p>
+  <div class="formula">
+    $$V(a) = \frac{1}{N} \sum_{b=0}^{N-1} (W(a,b))^2 \tag{9}$$
+  </div>
+  <div class="formula">
+    $$MP = V^{-1}(\max V(a)) \tag{10}$$
+  </div>
+  <p>07. Maximal Amplitude <b>(MA)</b>:</p>
+  <div class="formula">
+    $$MA = \max(f(t_n))-\min(f(t_n)) \tag{11}$$
+  </div>
+  <p>08. Mean Power Frequency <b>(MPF)</b>:</p>
+  <div class="formula">
+    $$P_k = \Bigg| \sum_{n=0}^{N-1} f(t) \cdot e^{-\frac{2 \pi i}{N} kn}\Bigg|^2, \hspace{ 3pt } k \in [0, N-1] \tag{12}$$
+  </div>
+  <p class="note">The frequency sequence was obtained by</p>
+  <div class="formula">
+    $$ F_k = \frac{t_n}{t_{N-1}}, \hspace{ 3pt } k \in [0, N-1] \tag{13}$$
+  </div>
+  <div class="formula">
+    $$MPF = \frac{\sum_{k=0}^{N-1} F_k P_k}{\sum_{k=0}^{N-1} P_k} \tag{14}$$
+  </div>
+  <p>09. Time Average of index J <b>(TAJ)</b>:</p>
+  <p class="note">In Eq.(7), it should be noted that \(b\) is a time variable and that \(s/a\) is related to the distance \(T\) between successive peaks of the mother wavelet by the relation \(s/a = 2 \pi /T\). Thus, in the following the \(W(a, b)\) will be denoted by \(W(t, v)\). The index \(J\) of energy density was defined as</p>
+  <div class="formula">
+    $$ J(f(t_n))=\frac{1}{2}\sum_{l=1}^{m(\tau)}|W(\tau, v_l)|^2 v_l(\tau) \tag{15} $$
+  </div>
+  <p class="note">where \(v_i(\tau)\) is exactly the set of directional local maxima of \(W\) along the \(v\) axis, at time \(\tau\). Since the number of these maxima changes in time, the parameter \(m\) is expressed as a function of \(\tau\). Then, a global measure can be derived simply by taking the time average of \(J\) <b>(TAJ)</b>:</p>
+  <div class="formula">
+    $$ TAJ=\frac{1}{N}\sum_{n=0}^{N-1} J(f(t_n)) \tag{16}$$
+  </div>
+  <p>10. Define the high active cells by clustering <b>TAJ</b> using Ward's method
+    <p class="note">
+      In order to find out the high calcium activie cells, Ward’s Agglomerative Hierarchical Clustering Method was performed by <a href="https://www.rdocumentation.org/packages/fastcluster/versions/1.1.24/topics/hclust" target="_blank"><code>hclust</code></a> function in <i>R</i> software to the TAJ (term 09 above). Please click the {{ button1 }} to see more.
+    </p>
+  </p>
+  <p>11. Moran's Index <b>(I)</b></p>
+  <div class="formula">
+    $$ I=\frac{M\sum \sum w_{ij} (a_i - \bar{a})(a_j - \bar{a})}{\sum\sum w_{ij} \sum(a_i - \bar{a})(a_i - \bar{a})} \tag{17}$$
+  </div>
+  <p class="note">
+    where \(M\) is the number of cells being analyzed; \(a_i\) is the attribute value (terms 01 to 09 above) of cell \(i\); \(\bar{a}\) is the mean of all \(a\); and \(w_{ij}\) is a weight defined for events \(i\) and \(j\), which is spatial weights in our case. Please click the {{ button2 }} to see more.
+  </p>
+  <p>12. Indicate singal synchronization by spearman's Rho
+    <p class="note">
+      After getting the wavelet spectra from the wavelets transform of <i>Eq.(7)</i> to all the signals, a method based on the maximum correlation analysis was applied to calculate the dissimilarities among all of the wavelet spectra (by <a href="https://www.rdocumentation.org/packages/biwavelet/versions/0.20.11/topics/wclust" target="_blank"><code>wclust</code></a> function in <i>R</i> software). In order to test the intercellular synchronization, the Spearman's rank correlation coefficient was applied to test the correlation between dissimilarities of wavelet spectra and intercellular distance. Please click the {{ button3 }} to see more.
+    </p>
+  </p>
+  <h3> <b>References:</b> </h3>
+  <ul>
+    <p style="text-align: justify;">1.Lee J, Li S. "<b>Extending moran's index for measuring spatiotemporal clustering of geographic events</b>." <i>Geographical Analysis</i>. 2017 Jan 1;49(1):36-57.</p>
+    <p style="text-align: justify;">2.Chowdhury RH, Reaz MB, Ali MA, Bakar AA, Chellappan K, Chang TG. "<b>Surface electromyography signal processing and classification techniques</b>." <i>Sensors</i>. 2013 Sep 17;13(9):12431-66.</p>
+    <p style="text-align: justify;">3.Phinyomark A, Thongpanja S, Hu H, Phukpattaranont P, Limsakul C. "<b>The Usefulness of Mean and Median Frequencies in Electromyography Analysis</b>." in: Naik GR, editor. <i>Computational Intelligence in Electromyography Analysis - A Perspective on Current Applications and Future Challenges</i>. InTech; 2012. pp. 195–220</p>
+    <p style="text-align: justify;">4.Ruffinatti FA, Lovisolo D, Distasi C, Ariano P, Erriquez J, Ferraro M. "<b>Calcium signals: analysis in time and frequency domains</b>." <i>Journal of neuroscience methods</i>. 2011 Aug 15;199(2):310-20.</p>
+    <p style="text-align: justify;">5.Rouyer T, Fromentin JM, Stenseth NC, Cazelles B. "<b>Analysing multiple time series and extending significance testing in wavelet analysis</b>." <i>Marine Ecology Progress Series</i>. 2008 May 5;359:11-23.</p>
+  </ul>
+</body>
+</html>

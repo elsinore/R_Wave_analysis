@@ -1,7 +1,7 @@
 # Required Packages and Functions -----------------------------------------
 list.of.packages <- c("shiny", "magrittr", "pracma","ggplot2", "fields", 
                       "biwavelet", "data.table", "stringr", "ape", "DT", 
-                      "shinyFiles", "shinyjs", "psych", "ggsignif", "grid", 
+                      "shinyjs", "psych", "ggsignif", "grid", 
                       "dunn.test", "animation")
 new.packages <- list.of.packages[!(list.of.packages %in% 
                                      installed.packages()[,"Package"])]
@@ -17,7 +17,6 @@ library(data.table)
 library(stringr)
 library(ape)
 library(DT)
-library(shinyFiles)
 library(shinyjs)
 library(psych)
 library(ggsignif)
@@ -28,7 +27,7 @@ library(animation)
 source("functions.R")
 ###=== end of packages and functions loading ===###
 ui <- navbarPage(
-  "Wave Analysis",
+  "Wave Analysis", id = "WA",
   ####==== Single Sample ====####
   tabPanel(
     "Single Sample Explore",
@@ -43,11 +42,32 @@ ui <- navbarPage(
             h4("Data Overview"),
             # File Input
             verticalLayout(
-              fileInput('S_File.data', 'Upload your wave signal in .csv file:', 
+              fileInput('S_File.data', 
+                        label = h4(popover(title = "?", 
+                                           content = a("Please click here to see an example",
+                                                       href="./Examples/Calcium_concentration_example_results.csv",
+                                                       download="Calcium_concentration_example_results.csv",
+                                                       target="_blank"), 
+                                           trigger = "focus", html = TRUE),
+                                   "Upload your wave signal in .csv file:"), 
                         accept = c('csv', 'comma-separated-values', '.csv')),
-              fileInput('S_File.shape', 'Upload the shape of your samples in .csv file:', 
+              fileInput('S_File.shape', 
+                        label = h4(popover(title = "?", 
+                                           content = a("Please click here to see an example",
+                                                       href="./Examples/Cells_shape_example_results.csv",
+                                                       download="Cells_shape_example_results.csv",
+                                                       target="_blank"), 
+                                           trigger = "focus", html = TRUE),
+                                   "Upload the shape file of your samples in .csv file:"), 
                         accept = c('csv', 'comma-separated-values', '.csv')),
-              fileInput('S_File.loc', 'Upload the location of your samples in .csv file:', 
+              fileInput('S_File.loc', 
+                        label = h4(popover(title = "?", 
+                                           content = a("Please click here to see an example",
+                                                       href="./Examples/Cells_location_example_file.csv",
+                                                       download="Cells_location_example_file.csv",
+                                                       target="_blank"), 
+                                           trigger = "focus", html = TRUE),
+                                   "Upload the location of your samples in .csv file:"), 
                         accept = c('csv', 'comma-separated-values', '.csv')),
               splitLayout(
                 checkboxInput('S_SelAll', 'Select All IDs', TRUE),
@@ -92,41 +112,11 @@ ui <- navbarPage(
               checkboxInput('S_ResSel', 'Select All IDs', TRUE),
               checkboxGroupInput('S_SelFea', 'Select features', choices = NULL)
             ),
-            withMathJax.local(
-              helpText("Details of each feature:"),
-              helpText("Here \\(N\\) denotes the length of the signal and \\(x_n\\) represents the wave in a segment"),
-              helpText("01. Integrated (Int): $$Int = \\sum_{n=1}^N |x_n|$$"),
-              tags$hr(),
-              helpText("02. Mean Absolute Value (MAV): $$MAV = \\frac{1}{N} \\sum_{n=1}^N |x_n|$$"),
-              tags$hr(),
-              helpText("03. Variance (VAR): $$VAR = \\frac{1}{N-1} \\sum_{n=1}^N x_n^2 $$"),
-              tags$hr(),
-              helpText("04. Root Mean Square (RMS): $$RMS = \\sqrt{\\frac{1}{N}\\sum_{n=1}^N x_n^2}$$"),
-              tags$hr(),
-              helpText("05. Waveform Length (WL): $$WL = \\sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
-              tags$hr(),
-              helpText(HTML("06. Main Period (MP):  the period obtained by the <b>Maximal Wavelet Variance </b>")),
-              tags$hr(),
-              helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
-              tags$hr(),
-              helpText("08. Mean Power Frequency (MPF): 
-                       $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)"),
-              tags$hr(),
-              helpText(HTML("<p align='justify'> See more details of term 01 to term 08 in Ref.1.")),
-              tags$hr(),
-              helpText(HTML("09. Index J: 
-                            $$J(t) = \\frac{1}{2\\epsilon} \\int_{t-\\epsilon}^{1+\\epsilon} \\sum_{i=1}^{n(\\tau)} |W(\\tau,v_i)|^2 v_i(\\tau)d\\tau $$
-                            <p align='justify'> where \\({v_i(\\tau)}\\) is exactly the set of directional local maxima of \\(W\\) along the \\(v\\) axis, at time \\(\\epsilon\\). Since the number
-                            of these maxima changes in time, the parameter \\(n\\) is expressed as a function of \\(\\epsilon\\). Integration simply serves to regularize the 
-                            index, by avoiding abrupt variations due to discontinuities of frequency paths. See more details in Ref.2.")),
-              tags$hr(),
-              helpText(HTML("<b>References</b><br />
-                            <p align='justify'> 1.Chowdhury RH, Reaz MB, Ali MA, Bakar AA, Chellappan K, Chang TG. 
-                            Surface electromyography signal processing and classification techniques. Sensors. 2013 Sep 17;13(9):12431-66.</p>
-                            <p align='justify'> 2.Ruffinatti FA, Lovisolo D, Distasi C, Ariano P, Erriquez J, Ferraro M. Calcium signals: 
-                            analysis in time and frequency domains. Journal of neuroscience methods. 2011 Aug 15;199(2):310-20.</p>"))
-              )
-              ), #_conditionalPanel()_
+            htmlTemplate("www/MathRepresent.html", 
+                         button1 = actionButton("Tutorial1.1", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                         button2 = actionButton("Tutorial1.2", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                         button3 = actionButton("Tutorial1.3", "Tutorial", style='padding:0px 2px; font-size:90%'))
+          ), #_conditionalPanel()_
           #///////////////////////#
           #//end.02 Wave Features/#
           #///////////////////////#
@@ -138,41 +128,11 @@ ui <- navbarPage(
             selectInput("S_SelID03", label = "Select a Single ID", choices = NULL, multiple = FALSE),
             checkboxInput("S_indecator", label = "Show stimuli indicator", value = TRUE),
             tags$hr(),
-            withMathJax.local(
-              helpText("Details of each feature:"),
-              helpText("Here \\(N\\) denotes the length of the signal and \\(x_n\\) represents the wave in a segment"),
-              helpText("01. Integrated (Int): $$Int = \\sum_{n=1}^N |x_n|$$"),
-              tags$hr(),
-              helpText("02. Mean Absolute Value (MAV): $$MAV = \\frac{1}{N} \\sum_{n=1}^N |x_n|$$"),
-              tags$hr(),
-              helpText("03. Variance (VAR): $$VAR = \\frac{1}{N-1} \\sum_{n=1}^N x_n^2 $$"),
-              tags$hr(),
-              helpText("04. Root Mean Square (RMS): $$RMS = \\sqrt{\\frac{1}{N}\\sum_{n=1}^N x_n^2}$$"),
-              tags$hr(),
-              helpText("05. Waveform Length (WL): $$WL = \\sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
-              tags$hr(),
-              helpText(HTML("06. Main Period (MP):  the period obtained by the <b>Maximal Wavelet Variance </b>")),
-              tags$hr(),
-              helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
-              tags$hr(),
-              helpText("08. Mean Power Frequency (MPF): 
-                       $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)"),
-              tags$hr(),
-              helpText(HTML("<p align='justify'> See more details of term 01 to term 08 in Ref.1.")),
-              tags$hr(),
-              helpText(HTML("09. Index J: 
-                            $$J(t) = \\frac{1}{2\\epsilon} \\int_{t-\\epsilon}^{1+\\epsilon} \\sum_{i=1}^{n(\\tau)} |W(\\tau,v_i)|^2 v_i(\\tau)d\\tau $$
-                            <p align='justify'> where \\({v_i(\\tau)}\\) is exactly the set of directional local maxima of \\(W\\) along the \\(v\\) axis, at time \\(\\epsilon\\). Since the number
-                            of these maxima changes in time, the parameter \\(n\\) is expressed as a function of \\(\\epsilon\\). Integration simply serves to regularize the 
-                            index, by avoiding abrupt variations due to discontinuities of frequency paths. See more details in Ref.2.")),
-              tags$hr(),
-              helpText(HTML("<b>References</b><br />
-                            <p align='justify'> 1.Chowdhury RH, Reaz MB, Ali MA, Bakar AA, Chellappan K, Chang TG. 
-                            Surface electromyography signal processing and classification techniques. Sensors. 2013 Sep 17;13(9):12431-66.</p>
-                            <p align='justify'> 2.Ruffinatti FA, Lovisolo D, Distasi C, Ariano P, Erriquez J, Ferraro M. Calcium signals: 
-                            analysis in time and frequency domains. Journal of neuroscience methods. 2011 Aug 15;199(2):310-20.</p>"))
-              )
-              ), #_conditionalPanel()_
+            htmlTemplate("www/MathRepresent.html", 
+                         button1 = actionButton("Tutorial2.1", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                         button2 = actionButton("Tutorial2.2", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                         button3 = actionButton("Tutorial2.3", "Tutorial", style='padding:0px 2px; font-size:90%'))
+          ), #_conditionalPanel()_
           #///////////////////////////#
           #////end.03.Graphic View////#
           #///////////////////////////#
@@ -188,41 +148,11 @@ ui <- navbarPage(
               uiOutput("S_ui")
             ),
             radioButtons("S_SelFea02","Choose Method", c("NULL"="NULL")),
-            withMathJax.local(
-              helpText("Details of each feature:"),
-              helpText("Here \\(N\\) denotes the length of the signal and \\(x_n\\) represents the wave in a segment"),
-              helpText("01. Integrated (Int): $$Int = \\sum_{n=1}^N |x_n|$$"),
-              tags$hr(),
-              helpText("02. Mean Absolute Value (MAV): $$MAV = \\frac{1}{N} \\sum_{n=1}^N |x_n|$$"),
-              tags$hr(),
-              helpText("03. Variance (VAR): $$VAR = \\frac{1}{N-1} \\sum_{n=1}^N x_n^2 $$"),
-              tags$hr(),
-              helpText("04. Root Mean Square (RMS): $$RMS = \\sqrt{\\frac{1}{N}\\sum_{n=1}^N x_n^2}$$"),
-              tags$hr(),
-              helpText("05. Waveform Length (WL): $$WL = \\sum_{n=1}^N \\vert x_n+1 - x_n \\vert$$"),
-              tags$hr(),
-              helpText(HTML("06. Main Period (MP):  the period obtained by the <b>Maximal Wavelet Variance </b>")),
-              tags$hr(),
-              helpText("07. Maximal Amplitude (MA): $$\\max x_n - \\min x_n$$"),
-              tags$hr(),
-              helpText("08. Mean Power Frequency (MPF): 
-                       $$MPF = \\frac{\\sum_{n=1}^N x_n P_n}{\\sum_{n=1}^N P_n}$$ Here \\(P\\) represents the power spectrum at the frequency segment \\(n\\)"),
-              tags$hr(),
-              helpText(HTML("<p align='justify'> See more details of term 01 to term 08 in Ref.1.")),
-              tags$hr(),
-              helpText(HTML("09. Index J: 
-                            $$J(t) = \\frac{1}{2\\epsilon} \\int_{t-\\epsilon}^{1+\\epsilon} \\sum_{i=1}^{n(\\tau)} |W(\\tau,v_i)|^2 v_i(\\tau)d\\tau $$
-                            <p align='justify'> where \\({v_i(\\tau)}\\) is exactly the set of directional local maxima of \\(W\\) along the \\(v\\) axis, at time \\(\\epsilon\\). Since the number
-                            of these maxima changes in time, the parameter \\(n\\) is expressed as a function of \\(\\epsilon\\). Integration simply serves to regularize the 
-                            index, by avoiding abrupt variations due to discontinuities of frequency paths. See more details in Ref.2.")),
-              tags$hr(),
-              helpText(HTML("<b>References</b><br />
-                            <p align='justify'> 1.Chowdhury RH, Reaz MB, Ali MA, Bakar AA, Chellappan K, Chang TG. 
-                            Surface electromyography signal processing and classification techniques. Sensors. 2013 Sep 17;13(9):12431-66.</p>
-                            <p align='justify'> 2.Ruffinatti FA, Lovisolo D, Distasi C, Ariano P, Erriquez J, Ferraro M. Calcium signals: 
-                            analysis in time and frequency domains. Journal of neuroscience methods. 2011 Aug 15;199(2):310-20.</p>"))
-              )
-              ) #_conditionalPanel()_
+            htmlTemplate("www/MathRepresent.html", 
+                         button1 = actionButton("Tutorial3.1", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                         button2 = actionButton("Tutorial3.2", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                         button3 = actionButton("Tutorial3.3", "Tutorial", style='padding:0px 2px; font-size:90%'))
+          ) #_conditionalPanel()_
           #///////////////////////////#
           #//end.04.Spatial Features//#
           #///////////////////////////#
@@ -230,7 +160,7 @@ ui <- navbarPage(
           #-----------------------------------#
           #---end. sidebar input and layout---#
           #===================================#
-              ), #_sidebarPanel()_
+        ), #_sidebarPanel()_
         #### ++The result windows ####
         mainPanel(
           tabsetPanel(
@@ -328,12 +258,17 @@ ui <- navbarPage(
           'input.dataset2 === "Data Input"',
           h4("Data Input"),
           textInput("B_postfix", "File format", ".csv"),
-          splitLayout(
-            fileInput('B_directory', 'Submit your data in .zip', accept = ".zip"),
-            checkboxInput("B_Mean.centering", "Mean-centering your data", TRUE)
-          ),
-          textInput("B_pat01", "Prefix mark", "TIF"),
-          textInput("B_pat02", "Image file number", "00"),
+          fileInput('B_directory', 
+                    label = h4(popover(title = "?", 
+                                       content = a("Please click here to see an example",
+                                                   href="./Examples/Examples_for_BatchProcessing.zip",
+                                                   download="Examples_for_BatchProcessing.zip",
+                                                   target="_blank"), 
+                                       trigger = "focus", html = TRUE),
+                               "Submit your data in .zip file"), accept = ".zip"),
+          checkboxInput("B_Mean.centering", "Mean-centering your data", TRUE),
+          textInput("B_pat01", "Prefix mark", "tif"),
+          textInput("B_pat02", "Results file number", "00"),
           textInput("B_pat03", "Location file number", "02.Location"),
           textInput("B_FirstCol", "First column Name", "Time (s)"),
           textInput("B_SecondCol", "Second column Name", "Region"),
@@ -357,15 +292,26 @@ ui <- navbarPage(
         conditionalPanel(
           'input.dataset2 === "Statistical Analysis"',
           h4("Statistical Analysis"),
-          splitLayout(
-            numericInput("B_GroupMark", "Select rows and Number", value = 0, min = 0),
-            textInput("B_label", "Set Group Name", placeholder = "Type a group label")
-          ),
+          numericInput("B_GroupMark", "Select rows and Number", value = 0, min = 0),
+          textInput("B_label", "Set Group Name", placeholder = "Type a group label"),
           actionButton("B_Assig", "Assign"),
           actionButton("B_Initi", "Initialize"),
+          popover(title = "?", 
+                  content = a("Please click here to watch a tutorial video",
+                              href="#",
+                              target="_blank"), 
+                  trigger = "focus", html = TRUE),
           downloadButton('Group_Set.csv', 'Download Group Setting'),
           tags$hr(),
-          fileInput('B_GroupSetInput', 'Upload Group Set', accept=c('csv', '.csv')),
+          fileInput('B_GroupSetInput', 
+                    label = h4(popover(title = "?", 
+                                       content = a("Please click here to see an example",
+                                                   href="./Examples/Group_Set.csv",
+                                                   download="Group_Set.csv",
+                                                   target="_blank"), 
+                                       trigger = "focus", html = TRUE),
+                               "Upload your group setting in .csv file:"), 
+                    accept=c('csv', '.csv')),
           tags$hr(),
           withBusyIndicatorUI(
             actionButton(
@@ -388,7 +334,11 @@ ui <- navbarPage(
         conditionalPanel(
           'input.dataset2 === "Results"',
           h4("Statistical Results"),
-          downloadButton('Statistic_Results.zip', 'Download Statistic Results')
+          downloadButton('Statistic_Results.zip', 'Download Statistic Results'),
+          htmlTemplate("www/MathRepresent.html", 
+                       button1 = actionButton("Tutorial4.1", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                       button2 = actionButton("Tutorial4.2", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                       button3 = actionButton("Tutorial4.3", "Tutorial", style='padding:0px 2px; font-size:90%'))
         ), #_conditionalPanel()_
         #//////////////////#
         #//end.03.Results//#
@@ -402,7 +352,11 @@ ui <- navbarPage(
           selectInput("B_level", "Select the view tab", 
                       c("Cell Level", "Region Level", "Moran Index", "Significance of Moran Index", "Comparsion among Groups", "Histogram")
           ),
-          uiOutput("B_ui01.side")
+          uiOutput("B_ui01.side"),
+          htmlTemplate("www/MathRepresent.html", 
+                       button1 = actionButton("Tutorial5.1", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                       button2 = actionButton("Tutorial5.2", "Tutorial", style='padding:0px 2px; font-size:90%'),
+                       button3 = actionButton("Tutorial5.3", "Tutorial", style='padding:0px 2px; font-size:90%'))
         ) #_conditionalPanel()_
         #//////////////////////#
         #//end.04 Plot Output//#
@@ -488,7 +442,7 @@ ui <- navbarPage(
       useShinyjs(),
       sidebarLayout(
         sidebarPanel(
-          #### 01.Data Input ####
+          #### ++++01.Data Input ####
           conditionalPanel(
             'input.dataset3 === "Data Input"',
             h4("Data Input"),
@@ -510,14 +464,14 @@ ui <- navbarPage(
             )
           ),
           #=== 01.End ===#
-          #### 02. Statistical Results ####
+          #### ++++02. Statistical Results ####
           conditionalPanel(
             'input.dataset3 === "Results"',
             h4("Statistical Results"),
             downloadButton('SRes', 'Download Statistical Results'),
             helpText(HTML('<p align="justify"> The False Discover Rate (FDR) is controlled using the Benjamini-Yekutieli adjustment (2001), 
                           a step-down procedure appropriate to depenent tests. p-values are ordered from largest to smallest, 
-                          and adjusted p-values = max[1, pmC/(m+1-i)], where i indexes the ordering, and the constant C = 1 + 1/2 + . . . + 1/m. 
+                          and adjusted p-values = max[1, pmC/(m+1-i)], where i indexes the ordering, and the constant C = 1 + 1/2 + . . . + 1/m.
                           All tests after and including the first to be rejected <b> at the alpha/2 level are rejected</b> <br />
                           <br />
                           <b>Reference</b><br />
@@ -525,7 +479,7 @@ ui <- navbarPage(
                           Annals of Statistics. 29, 1165–1188.</p>'))
             ),
           #=== 02.End ===#
-          #### 03. Plot Output ####
+          #### ++++03. Plot Output ####
           conditionalPanel(
             'input.dataset3 === "Plot"',
             h4("Plot Output")
@@ -533,9 +487,9 @@ ui <- navbarPage(
           #=== 03.End ===#
             ), #--- sidebarPanel End
         #=== 03.End ===#
-        #### Main panel parts ####
+        #### ++Main panel parts ####
         mainPanel(
-            #### 01. Data Input ####
+          #### ++++01. Data Input ####
           tabsetPanel(
             id = 'dataset3',
             tabPanel("Data Input",
@@ -543,42 +497,57 @@ ui <- navbarPage(
                      verbatimTextOutput('filepaths')
             ),
             #=== 01. End ===#
-            #### 02. Statistical Results ####
+            #### ++++02. Statistical Results ####
             tabPanel("Results",
                      DT::dataTableOutput('output02')
             ),
             #=== 02. End ===#
-            #### 03. Plot Output ####
+            #### ++++03. Plot Output ####
             tabPanel("Plot",
                      plotOutput("A_plot", width = "800px", height = "1207px")
             )
             #=== 03. End ===#
           ) #--- tabPanel End
         ) #--- mainPanel End
-      ) #--- sidebarLayout End
-    ) #_fluidPage()_
-  ), #_tabPanel()_
+            ) #--- sidebarLayout End
+          ) #_fluidPage()_
+      ), #_tabPanel()_
   #||||||||||||||||||||||||||||||||||||||#
   #||||| end.Batch ANOVA processing |||||#
   #||||||||||||||||||||||||||||||||||||||#
   #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
-  ####==== About ====####
+  ####==== Tutorial ====####
   tabPanel(
-    "About",
+    "Tutorial", value = "Tutorial",
     fluidPage(
       useShinyjs(),
       htmlTemplate("www/index.html")
     ) #_fluidPage()_
   ) #_tabPanel()_
-  #|||||||||||||||||||||#
-  #||||| end.About |||||#
-  #|||||||||||||||||||||#
-  #@@@@@@@@@@@@@@@@@@@@@#
-) #_ui<-navbarPage()_
+  #||||||||||||||||||||||||#
+  #||||| end.Tutorial |||||#
+  #||||||||||||||||||||||||#
+  #@@@@@@@@@@@@@@@@@@@@@@@@#
+    ) #_ui<-navbarPage()_
 # Shiny server ####
 server <- function(input, output, session) {
   # Global variables ####
   options(shiny.maxRequestSize=100*1024^2)
+  observeEvent({
+    if({
+      input$Tutorial1.1|input$Tutorial1.2|input$Tutorial1.3|
+        input$Tutorial2.1|input$Tutorial2.2|input$Tutorial2.3|
+        input$Tutorial3.1|input$Tutorial3.2|input$Tutorial3.3|
+        input$Tutorial4.1|input$Tutorial4.2|input$Tutorial4.3|
+        input$Tutorial5.1|input$Tutorial5.2|input$Tutorial5.3
+    }==TRUE){
+      return(TRUE)
+    } else {
+      return(NULL)
+    }
+  }, {
+    updateTabsetPanel(session, inputId = "WA", selected = "Tutorial")
+  })
   #////////////////////////////#
   #////end.Global variables////#
   #////////////////////////////#
@@ -683,16 +652,16 @@ server <- function(input, output, session) {
                          SecondCol.name = input$S_SecondCol,
                          RestCol.name = input$S_ThirdCol,
                          AddPrefix = FALSE )
-
+        
         if(is.null(input$S_File.loc)) {
           res$Result <- rbind(res$G_Result, res$Result)      # Add first sample back
         } else if (is.null(input$S_File.loc) == FALSE) {
           res$Result <- rbind(res$G_Result[1, ], res$Result) # Add first sample back
         }
-        group.J <- res$Result$J_index          %>% 
-                   dist()                      %>%
-                   hclust(, method = "ward.D") %>%
-                   cutree(, k =2)                            # Hierarchical cluster analysis based on index J
+        group.J <- res$Result$TAJ          %>% 
+          dist()                      %>%
+          hclust(, method = "ward.D") %>%
+          cutree(, k =2)                            # Hierarchical cluster analysis based on index J
         res$Result<-cbind(res$Result, Group = group.J)
         res$G_Result[1, ] <- colnames(res$G_Result)
         rownames(res$G_Result)[1] <- "Features"
@@ -705,8 +674,8 @@ server <- function(input, output, session) {
       return(NULL)
     else
       Data.S<-read.csv(input$S_File.shape$datapath,
-                      header = TRUE,
-                      sep = ",")
+                       header = TRUE,
+                       sep = ",")
     return(Data.S)
   })                         # File of shape of all samples
   S_plot01.01 <- reactive({
@@ -793,13 +762,13 @@ server <- function(input, output, session) {
                                 measure.vars = input$S_xaxisGrp)) + 
                geom_point(aes(x=melt(as.data.frame(S_res()$Result), 
                                      id.vars = input$S_yaxisGrp, 
-                                    measure.vars = input$S_xaxisGrp)[, 1], 
-                             y=melt(as.data.frame(S_res()$Result), 
-                                    id.vars = input$S_yaxisGrp, 
-                                    measure.vars = input$S_xaxisGrp)[, 3],
-                             color=melt(as.data.frame(S_res()$Result), 
-                                        id.vars = input$S_yaxisGrp, 
-                                        measure.vars = input$S_xaxisGrp)[, 2])) +
+                                     measure.vars = input$S_xaxisGrp)[, 1], 
+                              y=melt(as.data.frame(S_res()$Result), 
+                                     id.vars = input$S_yaxisGrp, 
+                                     measure.vars = input$S_xaxisGrp)[, 3],
+                              color=melt(as.data.frame(S_res()$Result), 
+                                         id.vars = input$S_yaxisGrp, 
+                                         measure.vars = input$S_xaxisGrp)[, 2])) +
                labs(x = input$S_xaxisGrp, y = input$S_yaxisGrp) + 
                guides(colour=FALSE) +
                theme(axis.text=element_text(size=14), 
@@ -839,7 +808,7 @@ server <- function(input, output, session) {
     } else {
       DT::datatable(as.data.frame(S_res()$Result[input$S_SelID02, 
                                                  input$S_SelFea])) %>%
-      formatRound(columns=c(input$S_SelFea), digits=3)
+        formatRound(columns=c(input$S_SelFea), digits=3)
     }
   })      # S_table2.01 output
   output$S_plot02.01 <- renderPlot(S_plot02.01())        # S_plot02.01 output
@@ -1072,7 +1041,7 @@ server <- function(input, output, session) {
               theme(plot.margin = margin(12, 12, 12, 0, unit = "pt")), 
             vp=viewport(layout.pos.row = 5, layout.pos.col = 1))
     }
-
+    
   })                   # Illustration of Index J calculation
   output$S_table03.01 <- renderTable({
     if(is.null(S_res())) {
@@ -1321,76 +1290,76 @@ server <- function(input, output, session) {
     content = function(file) {
       withProgress(message = 'Making Video',
                    detail = 'This may take a while...', value = 0, {
-        plots <- list()
-        jet.colors <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", 
-                                         "#7FFF7F", "yellow", "#FF7F00", "red", 
-                                         "#7F0000"))
-        res <- S_res()$Data[, -c(1, 2)] # Remove time column and the data from region
-        spa <- S_DataShape()
-        spa <- spa[spa$id > 0, ]
-        loc <- S_res()$Data.L[-1, ]
-        colnames(loc)<-c("id", "x", "y")
-        colnames(spa)<-c("id", "x", "y")
-        col.res<-colnames(res)
-        col.spa<-colnames(spa)
-        ln<-length(res[1, ])
-        lnT <- length(unlist(res[, 1]))
-        for(j in 1:lnT) {
-          final <- c()
-          aribitrary <- c()
-          n <- NULL
-          for(i in 1:ln){
-            times <- 0
-            times <- length(unlist(spa[spa$id == i, "x"]))
-            aribitrary <- rep(res[j, i], times)
-            final <- c(final, aribitrary)
-          }
-          n<-cbind(spa, final)
-          colnames(n)<-c("id", "x", "y", input$S_SelFea02)
-          n<-as.data.frame(n)
-          if(input$S_labelIDs == TRUE){
-            gp <- ggplot(n, aes(x=x, y=y))+
-              geom_polygon(
-                aes_string(x="x", y="y", group = "id", fill = input$S_SelFea02), 
-                colour = "black")+
-              geom_text(
-                data = loc, aes(x = x, y = y, label = id), 
-                alpha = 1, color = "black")+scale_y_reverse()
-          } else if(input$S_labelIDs == FALSE) {
-            gp <- ggplot(n, aes(x=x, y=y))+
-              geom_polygon(
-                aes_string(x="x", y="y", group = "id", fill = input$S_SelFea02), 
-                colour = "black")+
-              scale_y_reverse()
-          }
-          gp<- gp + coord_fixed(ratio = 1, xlim = c(0, max(S_DataShape()[, 2])), 
-                                ylim =c(0, max(S_DataShape()[, 2]))) + 
-            geom_polygon(data = S_DataShape()[S_DataShape()$id == 0, ], 
-                         aes_string(x="x", y="y", group = "id"), 
-                         colour = "black", fill = NA) +
-            theme(plot.background = element_blank(), 
-                  panel.grid.major = element_blank(), 
-                  panel.grid.minor = element_blank(),
-                  panel.border = element_blank(),
-                  axis.text = element_blank(), 
-                  axis.line = element_blank(), axis.title = element_blank(), 
-                  axis.ticks = element_blank(),panel.background = element_blank())+ 
-            scale_fill_gradientn(colours = jet.colors(7), 
-                                 limits = c(min(res), max(res)))
-          plots[[j]] <- gp
-          incProgress(1/(lnT+1))
-        }
-        saveVideo(
-          for (k in 1:lnT) {
-            print(plots[[k]])
-            ani.options(interval = 1/input$S_FPS, autobrowse = FALSE)
-          },
-          ffmpeg = ani.options("ffmpeg"),
-          video.name = "Video.mp4"
-        )
-        file.rename('Video.mp4', file)
-        incProgress(1/(lnT+1))
-      })
+                     plots <- list()
+                     jet.colors <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", 
+                                                      "#7FFF7F", "yellow", "#FF7F00", "red", 
+                                                      "#7F0000"))
+                     res <- S_res()$Data[, -c(1, 2)] # Remove time column and the data from region
+                     spa <- S_DataShape()
+                     spa <- spa[spa$id > 0, ]
+                     loc <- S_res()$Data.L[-1, ]
+                     colnames(loc)<-c("id", "x", "y")
+                     colnames(spa)<-c("id", "x", "y")
+                     col.res<-colnames(res)
+                     col.spa<-colnames(spa)
+                     ln<-length(res[1, ])
+                     lnT <- length(unlist(res[, 1]))
+                     for(j in 1:lnT) {
+                       final <- c()
+                       aribitrary <- c()
+                       n <- NULL
+                       for(i in 1:ln){
+                         times <- 0
+                         times <- length(unlist(spa[spa$id == i, "x"]))
+                         aribitrary <- rep(res[j, i], times)
+                         final <- c(final, aribitrary)
+                       }
+                       n<-cbind(spa, final)
+                       colnames(n)<-c("id", "x", "y", input$S_SelFea02)
+                       n<-as.data.frame(n)
+                       if(input$S_labelIDs == TRUE){
+                         gp <- ggplot(n, aes(x=x, y=y))+
+                           geom_polygon(
+                             aes_string(x="x", y="y", group = "id", fill = input$S_SelFea02), 
+                             colour = "black")+
+                           geom_text(
+                             data = loc, aes(x = x, y = y, label = id), 
+                             alpha = 1, color = "black")+scale_y_reverse()
+                       } else if(input$S_labelIDs == FALSE) {
+                         gp <- ggplot(n, aes(x=x, y=y))+
+                           geom_polygon(
+                             aes_string(x="x", y="y", group = "id", fill = input$S_SelFea02), 
+                             colour = "black")+
+                           scale_y_reverse()
+                       }
+                       gp<- gp + coord_fixed(ratio = 1, xlim = c(0, max(S_DataShape()[, 2])), 
+                                             ylim =c(0, max(S_DataShape()[, 2]))) + 
+                         geom_polygon(data = S_DataShape()[S_DataShape()$id == 0, ], 
+                                      aes_string(x="x", y="y", group = "id"), 
+                                      colour = "black", fill = NA) +
+                         theme(plot.background = element_blank(), 
+                               panel.grid.major = element_blank(), 
+                               panel.grid.minor = element_blank(),
+                               panel.border = element_blank(),
+                               axis.text = element_blank(), 
+                               axis.line = element_blank(), axis.title = element_blank(), 
+                               axis.ticks = element_blank(),panel.background = element_blank())+ 
+                         scale_fill_gradientn(colours = jet.colors(7), 
+                                              limits = c(min(res), max(res)))
+                       plots[[j]] <- gp
+                       incProgress(1/(lnT+1))
+                     }
+                     saveVideo(
+                       for (k in 1:lnT) {
+                         print(plots[[k]])
+                         ani.options(interval = 1/input$S_FPS, autobrowse = FALSE)
+                       },
+                       ffmpeg = ani.options('ffmpeg'),
+                       video.name = "Video.mp4"
+                     )
+                     file.rename('Video.mp4', file)
+                     incProgress(1/(lnT+1))
+                   })
     }
   )                                                      # Create a video
   #/////////////////////////////#
@@ -1578,8 +1547,8 @@ server <- function(input, output, session) {
     values$B_table01.01<-B_table01.01
   })
   observe({
-  if(is.null(input$B_uploadAnaRes) && is.null(input$B_directory)){
-    values$B_table01.01 <- NULL
+    if(is.null(input$B_uploadAnaRes) && is.null(input$B_directory)){
+      values$B_table01.01 <- NULL
     }
   })                                         
   observe({
@@ -1597,23 +1566,23 @@ server <- function(input, output, session) {
       setwd(tempdir())
       unzip(input$B_uploadAnaRes$datapath, overwrite = TRUE)
       B_table01.02 <- read.csv(paste(tmpdir, 
-                                   "/Table_2Results.csv", sep = ""), 
-                             header=TRUE, sep=",")
+                                     "/Table_2Results.csv", sep = ""), 
+                               header=TRUE, sep=",")
       rownames(B_table01.02) <- as.character(B_table01.02$SampleID)
       B_table01.03 <- read.csv(paste(tmpdir, 
-                                   "/Table_3GResult.csv", sep = ""), 
-                             header=TRUE, sep=",")
+                                     "/Table_3GResult.csv", sep = ""), 
+                               header=TRUE, sep=",")
       rownames(B_table01.03) <- as.character(B_table01.03$SampleID)
       B_table01.04 <- read.csv(paste(tmpdir, 
-                                   "/Table_4Spatial.csv", sep = ""), 
-                             header=TRUE, sep=",")
+                                     "/Table_4Spatial.csv", sep = ""), 
+                               header=TRUE, sep=",")
       rownames(B_table01.04) <- as.character(B_table01.04$SampleID)
       B_table01.05 <- read.csv(paste(tmpdir, 
-                                   "/Table_5RawData.csv", sep = ""), 
-                             header=TRUE, sep=",")
+                                     "/Table_5RawData.csv", sep = ""), 
+                               header=TRUE, sep=",")
       B_table01.06 <- read.csv(paste(tmpdir, 
-                                   "/Table_6IDs.csv", sep = ""), 
-                             header=TRUE, sep=",")
+                                     "/Table_6IDs.csv", sep = ""), 
+                               header=TRUE, sep=",")
     }
     isolate({
       values$B_table01.02<-B_table01.02
@@ -1696,7 +1665,7 @@ server <- function(input, output, session) {
               paste(tmpdir,"/Table_5RawData_Global.csv", sep = ""))
       zip(zipfile=fname, files = fs, flags = "-j")
       if(file.exists(paste0(fname, ".zip"))) 
-        {file.rename(paste0(fname, ".zip"), fname)}
+      {file.rename(paste0(fname, ".zip"), fname)}
     }
   )
   #///////////////////////#
@@ -1714,17 +1683,17 @@ server <- function(input, output, session) {
         groups <- cutree(
           hclust(
             dist(
-              c(values$B_table01.02$J_index)
+              c(values$B_table01.02$TAJ)
             ), #_dist()_
             method = "ward.D"
           ), #_hclust()_
           k = 2
         ) #==== groups <- cutree() ====#
         G1.mean <- mean(
-          c(values$B_table01.02$J_index)[groups == 1]
+          c(values$B_table01.02$TAJ)[groups == 1]
         )
         G2.mean <- mean(
-          c(values$B_table01.02$J_index)[groups == 2]
+          c(values$B_table01.02$TAJ)[groups == 2]
         )
         if(G1.mean > G2.mean) {
           groups[groups == 2] <- 0
@@ -2378,7 +2347,7 @@ server <- function(input, output, session) {
     o<-values$B_table02.02 #input data
     start<-2
     end<-10
-    GroupLabel<-"Tag" #to sort
+    GroupLabel<-"Tag"   #to sort
     GroupTagL1<-"Label" #to identify at level 1
     GroupTagL2<-"Group" #to identify at level 2
     cols <- 3
@@ -2404,6 +2373,7 @@ server <- function(input, output, session) {
         dfxL2[j] <-as.character(o[order(o[, GroupLabel]), ][, GroupTagL2][i])
       }
     }
+    dfxL2<-sort(dfxL2)
     q<-c(start:end)
     # Make the panel
     # ncol: Number of columns of plots
@@ -2457,7 +2427,7 @@ server <- function(input, output, session) {
       gp <- ggplot(df, aes(x=x, y=y100)) +
         geom_boxplot(aes(ymin = y0, lower = y25, middle = y50, upper = y75, ymax = y100, colour = factor(df$x2)),
                      stat = "identity", position=position_dodge(width = 1.01), varwidth = TRUE) +signif[1:6]+
-        labs(y = YaxisNames[i], title = TitleNames[i] , colour = "Group by\n Index J cluster") +
+        labs(y = YaxisNames[i], title = TitleNames[i] , colour = "Grouped by\n clustering TAJ") +
         theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
               axis.title.x=element_blank(), axis.text=element_text(size=14), 
               axis.title=element_text(size=14,face="bold"))+ylim(NA, max(df$y100)*1.43) + 
@@ -2620,7 +2590,7 @@ server <- function(input, output, session) {
       SRes<-rbind(DuTest, KWtest, stringsAsFactors=FALSE)
       colnames(SRes) <- c("Comparisons", colnames(data[input$NI01:input$NI02]))
       SRes <- rbind(SRes, GSDout, stringsAsFactors=FALSE)
-
+      
       return(SRes)
     })#--- withBusyIndicatorServer End
   })             #SRes: Statistical Results
@@ -2744,5 +2714,5 @@ server <- function(input, output, session) {
   #////end.Global Setting////#
   #//////////////////////////#
   #==========================#
-} #_Server<-function(input, output, session){}_
+  } #_Server<-function(input, output, session){}_
 shinyApp(ui = ui, server = server)
