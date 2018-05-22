@@ -1,5 +1,6 @@
 # [Click here to run this app online!!!](https://wong-ziyi.shinyapps.io/wave_analysis/)
-[Please click here to watch a tutorial](http://wong-ziyi.github.io/SubContent/others/index.html)
+[Please click here to watch a tutorial.](http://wong-ziyi.github.io/SubContent/others/index.html)
+
 Welcome to [contact me](https://www.wong-ziyi.com), I'm glad to help people to make customised shiny app for their research project!
 # Follow steps below to run this app locally
 ##### Install FFmpeg to make the pesudocolored video
