@@ -469,17 +469,6 @@ popover <- function(
     )
   )
 }
-# use withMathJax locally 
-withMathJax.local <- function(...) {
-  path <- "MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-  tagList(
-    tags$head(
-      singleton(tags$script(src = path, type = 'text/javascript'))
-    ),
-    ...,
-    tags$script(HTML('if (window.MathJax) MathJax.Hub.Queue(["Typeset", MathJax.Hub]);'))
-  )
-}
 wzy.force.format.colname <- function(x, colname) {
   colnames(x)<-colname
   return(x)

@@ -353,6 +353,8 @@ ui <- navbarPage(
                       c("Cell Level", "Region Level", "Moran Index", "Significance of Moran Index", "Comparsion among Groups", "Histogram")
           ),
           uiOutput("B_ui01.side"),
+          tags$h3("Annotation for the plot"),
+          tags$img(src='./resources/images/00.Annotation01_whisker-box&violin graph.jpg', width="95%", align="center"),
           htmlTemplate("www/MathRepresent.html", 
                        button1 = actionButton("Tutorial5.1", "Tutorial", style='padding:0px 2px; font-size:90%'),
                        button2 = actionButton("Tutorial5.2", "Tutorial", style='padding:0px 2px; font-size:90%'),
