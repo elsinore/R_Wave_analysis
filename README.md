@@ -1,4 +1,4 @@
-# [Click here to run this app online!!!](https://wong-ziyi.shinyapps.io/wave_analysis/)
+# [Click here to run this app online!!!](https://wong-ziyi.shinyapps.io/wave_analysis_wzy/)
 [Please click here to watch a tutorial.](http://wong-ziyi.github.io/SubContent/others/index.html)
 
 Welcome to [contact me](https://www.wong-ziyi.com), I'm glad to help people to make customised shiny app for their research project!
